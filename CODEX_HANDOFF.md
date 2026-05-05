@@ -79,6 +79,12 @@ In `justin-trading-bot-web`:
   - Flex/card buttons are clickable in the web UI.
   - `K線` switches to the internal K-bar card drawn from the bot `/kbar` cache, with Yahoo retained only as an external backup link.
   - `權證` switches to the warrant card, `財報` opens the financial page, `即時` and `回測` route to web-side read-only views, and `+自選` is held until authenticated write/LIFF is added.
+- Rebuilt `index.html` again after user feedback that old prototype data still appeared.
+  - The page is now a mobile-first LINE scan-card browser rather than a dashboard.
+  - Removed the built-in fake stock fallback from runtime by resetting `stocks = []` and loading only live `/api/web/scan-results`.
+  - If API loading fails, the page shows an API error instead of showing fake 2330/3491/2327 data.
+  - Bottom navigation is now 小卡 / K線 / 權證 / 狀態.
+  - Backend status view remains because the user liked that feature.
 
 In `justin-trading-bot`:
 
@@ -118,12 +124,14 @@ Important implementation notes:
 - Confirmed live `/api/web/stock/6933/card` returns canonical Flex JSON and text summary.
 - JavaScript syntax check with local `node` was attempted but blocked by Windows access denied in this environment.
 - JavaScript syntax check was not rerun after the scan-card/button-routing update because local `node.exe` remains blocked in this environment.
+- Confirmed live Render API still returns `Access-Control-Allow-Origin: *`, so GitHub Pages should be allowed to call it from the browser.
+- The full rebuild has not been browser-verified yet after this edit; refresh GitHub Pages and check that first card is from live API, currently expected to start with `2355 敬鵬` for the 2026-05-05 scan payload.
 
 ## Recommended Next Implementation Step
 
 1. Open a PR from `codex/web-readonly-api` into the original bot repo main branch, test it on Render/staging, then merge only if the live bot remains stable.
-2. Open the GitHub Pages URL and verify the mobile page shows the same scan candidates as LINE.
-3. Improve the Flex JSON renderer if any LINE card sections render too plain compared with LINE.
+2. Open the GitHub Pages URL and verify the mobile page shows the same scan candidates as LINE. It should not show the old prototype names like `2330 台積電` unless those are actually in live scan-results.
+3. Improve visual fidelity of the scan cards if they still differ from LINE, but keep using the bot API fields and do not revive fake data.
 4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 

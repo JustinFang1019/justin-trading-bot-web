@@ -3,24 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Justin Trading Bot Mobile</title>
+  <title>Justin Trading Bot Web</title>
   <style>
     :root {
-      --bg: #f4f6f8;
+      --bg: #eef2f7;
       --surface: #ffffff;
-      --surface-2: #f8fafc;
-      --ink: #17202a;
+      --ink: #182230;
       --muted: #667085;
-      --line: #d9dee7;
+      --line: #d9e1ec;
+      --navy: #17172d;
       --blue: #1d4ed8;
-      --blue-soft: #eaf2ff;
+      --blue-soft: #dbeafe;
       --green: #047857;
-      --green-soft: #e8f7ef;
+      --green-soft: #dcfce7;
       --red: #b42318;
-      --red-soft: #fdecec;
+      --red-soft: #fee2e2;
       --amber: #a16207;
-      --amber-soft: #fff7df;
-      --shadow: 0 14px 32px rgba(16, 24, 40, .08);
+      --amber-soft: #fef3c7;
+      --purple: #6d28d9;
+      --purple-soft: #ede9fe;
+      --shadow: 0 12px 30px rgba(16, 24, 40, .08);
     }
 
     * { box-sizing: border-box; }
@@ -35,180 +37,248 @@
 
     button, input { font: inherit; }
 
-    .shell {
-      max-width: 1180px;
+    .app {
+      max-width: 960px;
       margin: 0 auto;
       min-height: 100vh;
-      padding: 18px 18px 92px;
+      padding: 12px 10px 84px;
     }
 
     .topbar {
+      align-items: center;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      align-items: start;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .eyebrow {
-      color: var(--blue);
-      font-size: 12px;
-      font-weight: 800;
-      margin-bottom: 6px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
     h1 {
+      font-size: 20px;
+      line-height: 1.25;
       margin: 0;
-      font-size: 24px;
-      line-height: 1.2;
     }
 
     .sub {
-      margin: 6px 0 0;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 3px 0 0;
     }
 
-    .sync-pill {
-      border: 1px solid var(--line);
+    .status-pill {
       background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 9px 11px;
-      min-width: 178px;
-      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+      min-width: 118px;
+      padding: 8px 9px;
+      text-align: right;
     }
 
-    .sync-pill strong {
+    .status-pill strong {
       display: block;
       font-size: 12px;
     }
 
-    .sync-pill span {
+    .status-pill span {
       color: var(--muted);
       display: block;
-      font-size: 11px;
-      margin-top: 3px;
+      font-size: 10px;
+      margin-top: 2px;
     }
 
     .toolbar {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
       gap: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
-    .search,
-    .segmented {
+    .search {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 8px;
       display: flex;
-      align-items: center;
       overflow: hidden;
     }
 
     .search input {
-      width: 100%;
-      border: 0;
-      outline: 0;
-      padding: 10px 12px;
       background: transparent;
+      border: 0;
       color: var(--ink);
+      outline: 0;
+      padding: 11px 12px;
+      width: 100%;
     }
 
-    .segmented button,
-    .chipbar button {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      padding: 10px 12px;
-      white-space: nowrap;
-    }
-
-    .segmented button.active,
-    .chipbar button.active {
-      background: var(--blue);
-      color: #fff;
-    }
-
-    .chipbar {
+    .filters {
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      margin-bottom: 14px;
       padding-bottom: 2px;
     }
 
-    .chipbar button {
-      border: 1px solid var(--line);
+    .filters button,
+    .icon-btn,
+    .card-button {
       background: var(--surface);
-      border-radius: 999px;
-      min-width: max-content;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: #475467;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
-    .section { display: none; }
-    .section.active { display: block; }
-
-    .grid {
-      display: grid;
-      gap: 12px;
+    .filters button {
+      padding: 8px 11px;
     }
 
-    .dashboard {
-      grid-template-columns: minmax(0, 1fr) 360px;
-      align-items: start;
+    .filters button.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
     }
 
-    .cards {
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .feed {
       display: grid;
       gap: 10px;
     }
 
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .metric,
-    .panel,
-    .signal-card,
-    .status-card,
-    .line-phone {
+    .line-card,
+    .panel {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
-    }
-
-    .metric {
-      padding: 12px;
-    }
-
-    .metric small {
-      color: var(--muted);
-      display: block;
-      font-size: 12px;
-    }
-
-    .metric strong {
-      display: block;
-      font-size: 24px;
-      margin-top: 4px;
-    }
-
-    .metric span {
-      color: var(--muted);
-      display: block;
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .panel {
       overflow: hidden;
+    }
+
+    .line-card.selected {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(29, 78, 216, .12);
+    }
+
+    .card-head {
+      background: var(--navy);
+      color: #fff;
+      padding: 11px 12px;
+    }
+
+    .card-title {
+      align-items: baseline;
+      display: flex;
+      gap: 7px;
+      justify-content: space-between;
+    }
+
+    .card-title strong {
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .score {
+      color: #facc15;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .signal-line {
+      color: #c7d2fe;
+      display: flex;
+      font-size: 12px;
+      gap: 8px;
+      justify-content: space-between;
+      line-height: 1.35;
+      margin-top: 4px;
+    }
+
+    .card-body {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .quote-row,
+    .info-row {
+      background: #f8fafc;
+      border-radius: 7px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      padding: 7px;
+    }
+
+    .info-row {
+      grid-template-columns: 84px minmax(0, 1fr);
+    }
+
+    .cell small,
+    .info-row small {
+      color: var(--muted);
+      display: block;
+      font-size: 11px;
+    }
+
+    .cell strong,
+    .info-row strong {
+      color: var(--ink);
+      display: block;
+      font-size: 14px;
+      line-height: 1.25;
+      margin-top: 2px;
+      overflow-wrap: anywhere;
+    }
+
+    .pills {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .pill {
+      border-radius: 7px;
+      min-height: 48px;
+      padding: 7px;
+    }
+
+    .pill small {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .pill strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .pill.entry { background: var(--blue-soft); color: #1e3a8a; }
+    .pill.rr { background: var(--green-soft); color: #14532d; }
+    .pill.rs { background: #e0f2fe; color: #075985; }
+
+    .card-actions {
+      display: grid;
+      gap: 7px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card-button {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 800;
+      min-height: 38px;
+      padding: 8px 4px;
+      text-align: center;
+    }
+
+    .card-button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
     }
 
     .panel-head {
@@ -217,332 +287,94 @@
       display: flex;
       justify-content: space-between;
       gap: 10px;
-      padding: 13px 14px;
+      padding: 12px;
     }
 
     .panel-title {
-      font-size: 15px;
-      font-weight: 800;
+      font-size: 16px;
+      font-weight: 900;
     }
 
     .panel-sub {
       color: var(--muted);
       font-size: 12px;
-      line-height: 1.45;
+      line-height: 1.4;
       margin-top: 3px;
     }
 
     .panel-body {
-      padding: 14px;
-    }
-
-    .signal-card {
-      cursor: pointer;
-      padding: 13px;
-      transition: border-color .16s ease, transform .16s ease;
-    }
-
-    .signal-card:hover,
-    .signal-card.selected {
-      border-color: #8bb3ff;
-      transform: translateY(-1px);
-    }
-
-    .card-top,
-    .card-mid,
-    .fact-row,
-    .warrant-row,
-    .status-row,
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .symbol strong {
-      display: block;
-      font-size: 19px;
-      line-height: 1;
-    }
-
-    .symbol span {
-      color: var(--muted);
-      display: block;
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .price {
-      font-size: 24px;
-      font-weight: 850;
-    }
-
-    .up { color: var(--red); }
-    .down { color: var(--green); }
-
-    .badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
+      padding: 12px;
     }
 
     .badge {
       border-radius: 999px;
       display: inline-flex;
-      align-items: center;
-      min-height: 23px;
-      padding: 4px 8px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
+      padding: 5px 8px;
     }
 
-    .badge.blue { background: var(--blue-soft); color: var(--blue); }
     .badge.green { background: var(--green-soft); color: var(--green); }
-    .badge.red { background: var(--red-soft); color: var(--red); }
+    .badge.blue { background: var(--blue-soft); color: var(--blue); }
     .badge.amber { background: var(--amber-soft); color: var(--amber); }
-    .badge.gray { background: #eef2f6; color: #475467; }
-
-    .card-mid {
-      border-top: 1px solid var(--line);
-      margin-top: 11px;
-      padding-top: 11px;
-    }
-
-    .facts {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
-      margin: 12px 0;
-    }
-
-    .fact {
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
-      min-width: 0;
-    }
-
-    .fact small {
-      color: var(--muted);
-      display: block;
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
-
-    .fact strong {
-      display: block;
-      font-size: 13px;
-      overflow-wrap: anywhere;
-    }
-
-    .reason-list {
-      margin: 0;
-      padding-left: 18px;
-      color: #344054;
-      font-size: 13px;
-      line-height: 1.65;
-    }
+    .badge.red { background: var(--red-soft); color: var(--red); }
 
     .chart-wrap {
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 8px;
-      height: 300px;
+      height: 320px;
       overflow: hidden;
-      margin-bottom: 12px;
     }
 
     canvas {
-      width: 100%;
+      display: block;
       height: 100%;
-      display: block;
+      width: 100%;
     }
 
-    .layer-grid {
+    .detail-grid,
+    .status-grid,
+    .warrant-list {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      margin: 12px 0;
-    }
-
-    .layer {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
-      background: var(--surface-2);
-    }
-
-    .layer strong {
-      display: block;
-      font-size: 13px;
-    }
-
-    .layer span {
-      color: var(--muted);
-      display: block;
-      font-size: 12px;
-      margin-top: 4px;
+      gap: 10px;
     }
 
     .warrant-row,
     .status-row {
-      align-items: flex-start;
-      border-bottom: 1px solid var(--line);
-      padding: 12px 0;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
     }
 
-    .warrant-row:first-child,
-    .status-row:first-child {
-      padding-top: 0;
+    .warrant-row strong,
+    .status-row strong {
+      display: block;
+      font-size: 14px;
     }
 
-    .warrant-row:last-child,
-    .status-row:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .warrant-meta,
-    .status-meta {
+    .meta {
       color: var(--muted);
       display: flex;
       flex-wrap: wrap;
-      gap: 7px 12px;
-      font-size: 12px;
-      margin-top: 7px;
-    }
-
-    .funnel-row {
-      display: grid;
-      grid-template-columns: 92px minmax(0, 1fr) 58px;
-      align-items: center;
       gap: 8px;
       font-size: 12px;
-      margin-bottom: 9px;
+      line-height: 1.45;
+      margin-top: 5px;
     }
 
-    .bar {
-      background: #eef2f6;
-      border-radius: 999px;
-      height: 10px;
-      overflow: hidden;
-    }
-
-    .bar span {
-      background: var(--blue);
-      border-radius: inherit;
-      display: block;
-      height: 100%;
-    }
-
-    .line-phone {
-      background: #edf1f7;
-      overflow: hidden;
-    }
-
-    .line-head {
-      background: #06c755;
-      color: #fff;
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 12px;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .chat {
-      padding: 14px;
-      min-height: 420px;
-    }
-
-    .bubble {
-      background: #fff;
-      border-radius: 8px;
-      padding: 12px;
-      max-width: 330px;
-      box-shadow: var(--shadow);
-    }
-
-    .bubble-title {
-      font-size: 17px;
-      font-weight: 850;
-      margin-bottom: 8px;
-    }
-
-    .bubble-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .canonical-card {
-      background: #ffffff;
+    .message {
+      background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .canonical-head {
-      background: #1a1a2e;
-      color: #ffffff;
-      padding: 12px;
-    }
-
-    .canonical-head strong {
-      display: block;
-      font-size: 16px;
-    }
-
-    .canonical-head span {
-      color: rgba(255,255,255,.72);
-      display: block;
-      font-size: 11px;
-      margin-top: 4px;
-    }
-
-    .canonical-body {
-      display: grid;
-      gap: 9px;
-      padding: 12px;
-    }
-
-    .canonical-row {
-      display: grid;
-      grid-template-columns: 78px minmax(0, 1fr);
-      gap: 8px;
-      font-size: 12px;
-      line-height: 1.5;
-    }
-
-    .canonical-row small {
       color: var(--muted);
-      font-size: 11px;
-      font-weight: 800;
+      line-height: 1.6;
+      padding: 16px;
+      text-align: center;
     }
 
-    .canonical-pills {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
-    }
-
-    .canonical-pill {
-      border-radius: 6px;
-      padding: 6px;
-      font-size: 11px;
-      font-weight: 800;
-      line-height: 1.35;
-      min-height: 44px;
-    }
-
-    .canonical-pill.entry { background: #dce8ff; color: #1a3a8a; }
-    .canonical-pill.rr { background: #dcf5e8; color: #1b5e20; }
-    .canonical-pill.rs { background: #e1f5fe; color: #01579b; }
-
-    .line-text-preview {
+    .text-summary {
       background: #f8fafc;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -555,67 +387,13 @@
       white-space: pre-wrap;
     }
 
-    .flex-preview {
-      display: grid;
-      gap: 8px;
-    }
-
-    .flex-bubble {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .flex-box {
-      display: flex;
-      gap: 6px;
-    }
-
-    .flex-box.vertical { flex-direction: column; }
-    .flex-box.horizontal { align-items: stretch; flex-direction: row; }
-
-    .flex-text {
-      color: #344054;
-      font-size: 12px;
-      line-height: 1.35;
-      overflow-wrap: anywhere;
-    }
-
-    .flex-text.lg,
-    .flex-text.xl { font-size: 16px; }
-    .flex-text.md { font-size: 14px; }
-    .flex-text.xs,
-    .flex-text.xxs { font-size: 11px; }
-    .flex-text.bold { font-weight: 800; }
-
-    .flex-separator {
-      border-top: 1px solid var(--line);
-      min-height: 1px;
-    }
-
-    .flex-button {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      color: var(--blue);
-      cursor: pointer;
-      display: block;
-      font-size: 12px;
-      font-weight: 800;
-      font: inherit;
-      padding: 7px;
-      text-align: center;
-      width: 100%;
-    }
-
     .bottom-nav {
-      background: rgba(255,255,255,.96);
+      background: rgba(255,255,255,.97);
       border-top: 1px solid var(--line);
       bottom: 0;
-      box-shadow: 0 -8px 20px rgba(16, 24, 40, .08);
+      box-shadow: 0 -8px 22px rgba(16, 24, 40, .08);
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       left: 0;
       position: fixed;
       right: 0;
@@ -623,8 +401,8 @@
     }
 
     .bottom-nav button {
-      border: 0;
       background: transparent;
+      border: 0;
       color: var(--muted);
       cursor: pointer;
       font-size: 11px;
@@ -635,1042 +413,464 @@
       display: block;
       font-size: 16px;
       line-height: 1;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .bottom-nav button.active {
       color: var(--blue);
-      font-weight: 800;
+      font-weight: 900;
     }
 
-    @media (max-width: 900px) {
-      .dashboard,
+    @media (min-width: 760px) {
       .toolbar {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
       }
 
-      .metrics {
+      .feed {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .sync-pill {
-        display: none;
-      }
-    }
-
-    @media (max-width: 640px) {
-      body { background: #fff; }
-
-      .shell {
-        padding: 14px 12px 82px;
-      }
-
-      .topbar {
-        display: block;
-      }
-
-      h1 {
-        font-size: 21px;
-      }
-
-      .toolbar {
-        gap: 9px;
-      }
-
-      .segmented button {
-        flex: 1;
-      }
-
-      .metrics,
-      .facts,
-      .layer-grid,
-      .bubble-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .panel-head,
-      .card-top,
-      .card-mid,
-      .warrant-row,
-      .status-row {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      .chart-wrap {
-        height: 230px;
-      }
-
-      .bubble {
-        max-width: none;
+      .detail-grid {
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
       }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
+  <main class="app">
     <header class="topbar">
       <div>
-        <div class="eyebrow">Mobile companion for the existing LINE bot</div>
-        <h1 id="pageTitle">今日訊號</h1>
-        <p id="pageSub">保留原本 LINE 小卡與策略邏輯，手機 Web 只負責深度查看與篩選。</p>
+        <h1 id="pageTitle">掃描小卡</h1>
+        <p class="sub" id="pageSub">直接使用原 LINE bot 掃描結果與小卡欄位，Web 只做手機瀏覽與延伸資訊。</p>
       </div>
-      <div class="sync-pill">
-        <strong id="syncTitle">資料快照</strong>
-        <span id="syncMeta">載入中</span>
+      <div class="status-pill">
+        <strong id="syncTitle">連線中</strong>
+        <span id="syncMeta">讀取原 bot</span>
       </div>
     </header>
 
     <div class="toolbar">
       <label class="search" aria-label="搜尋股票">
-        <input id="searchInput" placeholder="搜尋代號或名稱，例如 2330、台積電">
+        <input id="searchInput" placeholder="搜尋代號或名稱">
       </label>
-      <div class="segmented" aria-label="市場">
-        <button class="active" data-market="all">全部</button>
-        <button data-market="twse">上市</button>
-        <button data-market="tpex">上櫃</button>
-      </div>
-      <div class="segmented" aria-label="策略">
-        <button class="active" data-strategy="all">全部</button>
-        <button data-strategy="START">START</button>
-        <button data-strategy="CONT">CONT</button>
+      <div class="filters">
+        <button class="active" data-filter="all">全部</button>
+        <button data-filter="START">START</button>
+        <button data-filter="CONT">CONT</button>
+        <button data-filter="rs90">RS 90+</button>
+        <button data-filter="repeat">連續</button>
       </div>
     </div>
 
-    <div class="chipbar" aria-label="快速篩選">
-      <button class="active" data-chip="all">全部訊號</button>
-      <button data-chip="rs90">RS 90+</button>
-      <button data-chip="score10">10 分以上</button>
-      <button data-chip="box">BOX</button>
-      <button data-chip="repeat">連續入選</button>
-    </div>
-
-    <section id="today" class="section active">
-      <div class="metrics" id="metrics"></div>
-      <div class="grid dashboard">
-        <div class="cards" id="signalList"></div>
-        <aside class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">策略摘要</div>
-              <div class="panel-sub">內容對齊完整 bot 的 START / CONT 與 Flex 小卡欄位。</div>
-            </div>
-            <span class="badge blue" id="selectedBadge">START</span>
-          </div>
-          <div class="panel-body" id="summaryPanel"></div>
-        </aside>
+    <section class="view active" id="scanView">
+      <div class="feed" id="cardFeed">
+        <div class="message">正在讀取原 LINE bot 掃描小卡...</div>
       </div>
     </section>
 
-    <section id="detail" class="section">
-      <div class="grid dashboard">
+    <section class="view" id="chartView">
+      <div class="detail-grid">
         <div class="panel">
           <div class="panel-head">
             <div>
-              <div class="panel-title" id="detailTitle">個股詳情</div>
-              <div class="panel-sub">K 線、進場層級、壓力位與風險控管。</div>
+              <div class="panel-title" id="chartTitle">K 線</div>
+              <div class="panel-sub" id="chartSub">使用原 bot /kbar 快取繪製，Yahoo 只保留為外部備援。</div>
             </div>
-            <span class="badge green" id="detailType">A 層</span>
+            <a class="badge blue" id="yahooLink" target="_blank" rel="noopener">Yahoo</a>
           </div>
           <div class="panel-body">
-            <div class="chart-wrap"><canvas id="chart" width="760" height="360"></canvas></div>
-            <div class="facts" id="detailFacts"></div>
-            <div id="actionCard"></div>
-            <div class="layer-grid" id="layerGrid"></div>
-            <ul class="reason-list" id="reasonList"></ul>
+            <div class="chart-wrap"><canvas id="chart" width="720" height="360"></canvas></div>
           </div>
         </div>
         <div class="panel">
           <div class="panel-head">
             <div>
-              <div class="panel-title">LINE 小卡核心</div>
-              <div class="panel-sub">格式鎖定參考 notify.py：進場 / 風報 / RS pill、結構欄位與原始文字摘要。</div>
+              <div class="panel-title">策略資訊</div>
+              <div class="panel-sub">這裡只展示掃描結果，不重新計算策略。</div>
             </div>
           </div>
-          <div class="panel-body">
-            <div class="line-phone">
-              <div class="line-head"><span>LINE Preview</span><span>Stock Scanner</span></div>
-              <div class="chat"><div class="bubble" id="lineBubble"></div></div>
-            </div>
-          </div>
+          <div class="panel-body" id="detailBody"></div>
         </div>
       </div>
     </section>
 
-    <section id="warrants" class="section">
-      <div class="grid dashboard">
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">權證中心</div>
-              <div class="panel-sub">手機版顯示完整候選；LINE 仍只適合推 Top 3。</div>
-            </div>
-            <span class="badge green" id="warrantTarget">標的 2330</span>
+    <section class="view" id="warrantView">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" id="warrantTitle">權證</div>
+            <div class="panel-sub">讀取原 bot Top 3 權證快取，不從 Web 端重算。</div>
           </div>
-          <div class="panel-body" id="warrantList"></div>
         </div>
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">篩選框架</div>
-              <div class="panel-sub">參考完整 bot 權證模組，但不改推薦邏輯。</div>
-            </div>
-          </div>
-          <div class="panel-body">
-            <div class="facts">
-              <div class="fact"><small>Delta</small><strong>0.35 - 0.65</strong></div>
-              <div class="fact"><small>剩餘天數</small><strong>45 - 180 天</strong></div>
-              <div class="fact"><small>實質槓桿</small><strong>3.0 - 8.0 倍</strong></div>
-              <div class="fact"><small>造市品質</small><strong>價差穩定、成交連續</strong></div>
-            </div>
-          </div>
+        <div class="panel-body">
+          <div class="warrant-list" id="warrantList"></div>
         </div>
       </div>
     </section>
 
-    <section id="ops" class="section">
-      <div class="grid dashboard">
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">漏斗與市場強度</div>
-              <div class="panel-sub">對應完整 bot 的 funnel stats 與 RS 排名觀察。</div>
-            </div>
-          </div>
-          <div class="panel-body" id="funnelList"></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">系統狀態</div>
-              <div class="panel-sub">把 cache、Sheets、quota、排程集中成手機管理視圖。</div>
-            </div>
-            <span class="badge green">Healthy</span>
-          </div>
-          <div class="panel-body" id="statusList"></div>
-        </div>
-      </div>
+    <section class="view" id="statusView">
+      <div class="status-grid" id="statusList"></div>
     </section>
-
-    <section id="line" class="section">
-      <div class="grid dashboard">
-        <div class="line-phone">
-          <div class="line-head"><span>LINE 分工預覽</span><span>Rich Menu</span></div>
-          <div class="chat"><div class="bubble" id="lineFullBubble"></div></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">LINE / Mobile Web 分工</div>
-              <div class="panel-sub">原始小卡由 notify.py 產生；Web 不再另畫一套假格式。</div>
-            </div>
-          </div>
-          <div class="panel-body">
-            <div class="facts">
-              <div class="fact"><small>LINE 做</small><strong>推播摘要、查詢入口、Top 3、警示</strong></div>
-              <div class="fact"><small>Web 做</small><strong>K 線、完整清單、篩選、狀態</strong></div>
-              <div class="fact"><small>LIFF 下一步</small><strong>從小卡打開個股詳情</strong></div>
-              <div class="fact"><small>不可變更</small><strong>策略、小卡文案、指令語意</strong></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+  </main>
 
   <nav class="bottom-nav" aria-label="主選單">
-    <button class="active" data-section="today"><strong>01</strong>今日</button>
-    <button data-section="detail"><strong>02</strong>詳情</button>
-    <button data-section="warrants"><strong>03</strong>權證</button>
-    <button data-section="ops"><strong>04</strong>狀態</button>
-    <button data-section="line"><strong>05</strong>LINE</button>
+    <button class="active" data-view="scanView"><strong>01</strong>小卡</button>
+    <button data-view="chartView"><strong>02</strong>K線</button>
+    <button data-view="warrantView"><strong>03</strong>權證</button>
+    <button data-view="statusView"><strong>04</strong>狀態</button>
   </nav>
 
-  <script src="data/market-snapshot.js"></script>
-  <script src="data/kbar-snapshot.js"></script>
   <script>
     const API_BASE = "https://stock-scanner-bot-f3kt.onrender.com/api/web";
-
-    let stocks = [
-      {
-        id: "2330", name: "台積電", market: "twse", type: "START", signal: "A 強勢回踩",
-        score: 10, rs: 92, close: 2250, change: -25, k: 42.8, d: 48.6, gap: 5.8,
-        ma10: 2210, ma20: 2145, pattern: "TREND_PULLBACK", kd: "真收斂",
-        entryA: "2228 - 2268", entryB: "2160 - 2210", entryC: "突破 2270",
-        stop: 2136, p1: 2310, p2: 2420, rr: "1:2.1 ~ 2.9", days: 2,
-        tags: ["KD 真收斂", "MA20 守住", "RS 前 10%", "連續 2 天"],
-        reasons: [
-          "創高後回檔未跌破 MA20，結構尚未破壞。",
-          "K 值跌幅小於 D 值，gap 開始縮小，對齊原始 bot 的真收斂定義。",
-          "RS 從分數中獨立，作為排序與標籤顯示，符合 v7.4 的方向。"
-        ]
-      },
-      {
-        id: "3491", name: "昇達科", market: "tpex", type: "CONT", signal: "BOX 突破回踩",
-        score: 9, rs: 89, close: 1750, change: 30, k: 0, d: 0, gap: 0,
-        ma10: 1698, ma20: 1588, pattern: "BOX_BREAKOUT_PULLBACK", kd: "CONT 不看 KD",
-        entryA: "箱頂 1680 附近低接", entryB: "1680 - 1720 回穩", entryC: "突破 Day1 高點",
-        stop: 1630, p1: 1840, p2: 1960, rr: "1:2.4 ~ 3.6", days: 1,
-        tags: ["CONT", "箱頂回踩", "承接量足", "RS 89"],
-        reasons: [
-          "箱型突破後回踩未跌破箱頂，符合 CONT 續強結構。",
-          "手機版只展開箱頂、停損、壓力位，不改原本 calc_cont_score。",
-          "權證與 K 線細節適合放 Web，LINE 保持 Top 3 摘要。"
-        ]
-      },
-      {
-        id: "2327", name: "國巨", market: "twse", type: "START", signal: "B 回穩",
-        score: 8, rs: 84, close: 348.5, change: 6, k: 38.4, d: 45.9, gap: 7.5,
-        ma10: 356, ma20: 339, pattern: "BOX_AFTER_PULLBACK", kd: "假收斂",
-        entryA: "350 - 358", entryB: "336 - 348", entryC: "突破 360",
-        stop: 325, p1: 374, p2: 398, rr: "1:1.8 ~ 2.6", days: 3,
-        tags: ["BOX", "B 層", "KD 假收斂", "連續 3 天"],
-        reasons: [
-          "寬幅箱型仍成立，但 K 值偏弱，手機 UI 標示為觀察優先。",
-          "A/B 重疊時仍依原始 bot 邏輯決定顯示，不在 Web 端重新判斷。",
-          "風報比略低，適合等待 KD 轉強或只做小部位觀察。"
-        ]
-      },
-      {
-        id: "6442", name: "光聖", market: "tpex", type: "START", signal: "早期反轉",
-        score: 8, rs: 81, close: 1490, change: -60, k: 46.1, d: 49.7, gap: 3.6,
-        ma10: 1512, ma20: 1456, pattern: "EARLY_REVERSAL", kd: "真收斂",
-        entryA: "1480 - 1530", entryB: "1430 - 1470", entryC: "突破 1560",
-        stop: 1398, p1: 1640, p2: 1780, rr: "1:2.0 ~ 3.2", days: 1,
-        tags: ["早期反轉", "KD 真收斂", "MA10 附近", "RS 81"],
-        reasons: [
-          "回檔幅度不深且重新靠近短均，符合早期反轉分支。",
-          "KD gap 已縮小，但仍需隔日止跌 K 或黃金交叉確認。",
-          "Web 端呈現樣本不足提示，不擅自升級策略訊號。"
-        ]
-      },
-      {
-        id: "3036", name: "文曄", market: "twse", type: "START", signal: "A 強勢回踩",
-        score: 8, rs: 78, close: 209, change: -1.5, k: 44.7, d: 47.4, gap: 2.7,
-        ma10: 207, ma20: 198, pattern: "TREND_PULLBACK", kd: "收斂中",
-        entryA: "205 - 212", entryB: "196 - 204", entryC: "突破 214",
-        stop: 194, p1: 226, p2: 238, rr: "1:2.2 ~ 3.1", days: 1,
-        tags: ["MA10 回踩", "RS 78", "風報達標", "資料新鮮"],
-        reasons: [
-          "短均附近回踩守住，尚未跌破 MA20。",
-          "KD gap 持續縮小但尚未交叉，屬觀察優先。",
-          "成交金額通過預篩，流動性足以列入推播候選。"
-        ]
-      }
-    ];
-
-    let warrants = [
-      { code: "073321", name: "台積電凱基67購01", price: 2.15, delta: .52, leverage: 5.8, expiry: 92, tag: "推薦", strike: 900, moneyness: "-2.8%", iv: "34%", hv: "29%", maker: "價差穩定", reason: "delta、天期、流動性都落在可交易區間。" },
-      { code: "072884", name: "台積電元大66購05", price: 1.42, delta: .46, leverage: 6.6, expiry: 74, tag: "可觀察", strike: 920, moneyness: "-4.9%", iv: "37%", hv: "29%", maker: "偶有跳價", reason: "槓桿較高，但履約價稍遠，適合突破確認後再看。" },
-      { code: "075102", name: "台積電群益69購02", price: 3.05, delta: .61, leverage: 4.3, expiry: 151, tag: "穩健", strike: 880, moneyness: "-0.6%", iv: "31%", hv: "29%", maker: "報價連續", reason: "較接近價平且天期較長，波動承受度較好。" },
-      { code: "071998", name: "台積電國泰65購03", price: .82, delta: .31, leverage: 8.7, expiry: 38, tag: "高風險", strike: 960, moneyness: "-8.9%", iv: "45%", hv: "29%", maker: "流動性弱", reason: "價外、短天期、IV 偏高，只保留作為風險對照。" }
-    ];
-
-    let statusRows = [
-      ["K 棒 Cache", "continuous_refresh 先更新 disk K，再進 scanner"],
-      ["Scanner", "掃描邏輯沿用 patterns.py；Web 不重算策略"],
-      ["Google Sheets", "scan results、watchlist、績效紀錄仍由原始 bot 管理"],
-      ["權證 Cache", "Top3 與深度預熱由完整 bot 產生"],
-      ["LINE Quota", "推播前看用量，避免 broadcast 失控"],
-      ["LIFF", "下一階段只加入口，不改既有指令語意"]
-    ];
-
-    const funnelRows = [
-      ["全市場", 1746, 100],
-      ["K 棒有效", 1612, 92],
-      ["硬條件通過", 72, 42],
-      ["分數門檻", 21, 22],
-      ["最終推播", 15, 14]
-    ];
-
-    const titles = {
-      today: ["今日訊號", "保留原本 LINE 小卡與策略邏輯，手機 Web 只負責深度查看與篩選。"],
-      detail: ["個股詳情", "展開 K 線、A/B/C 層、壓力位與原始策略理由。"],
-      warrants: ["權證中心", "用手機看完整候選與風險欄位，LINE 仍只推重點。"],
-      ops: ["系統狀態", "集中查看 cache、漏斗、Sheets、quota 與排程健康度。"],
-      line: ["LINE 分工", "LINE 是推播與指令入口，Mobile Web 是深度查看層。"]
-    };
-
-    let selected = stocks[0];
-    let marketFilter = "all";
-    let strategyFilter = "all";
-    let chipFilter = "all";
-    let marketSnapshot = null;
-    let marketById = new Map();
+    let stocks = [];
+    let selected = null;
+    let filter = "all";
     let kbarById = new Map();
-    let apiStatus = { live: false, message: "prototype" };
+    let statusPayload = null;
 
-    function toNum(value, fallback = 0) {
-      const num = Number(value);
-      return Number.isFinite(num) ? num : fallback;
+    const $ = id => document.getElementById(id);
+
+    function num(value, fallback = 0) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
     }
 
-    function strategyLabel(row) {
-      return row.strategy_type || (String(row.pattern_type || "").includes("BOX_BREAKOUT") ? "CONT" : "START");
-    }
-
-    function mapScanRow(row) {
-      const type = strategyLabel(row);
-      const close = toNum(row.close);
-      const p1 = toNum(row.p1, toNum(row.high_close, close * 1.06));
-      const p2 = toNum(row.p2, p1 ? p1 * 1.06 : close * 1.12);
-      const stop = toNum(row.stop_loss, toNum(row.box_low, close * .94));
-      const score = toNum(row.score);
-      const rs = toNum(row.rs_rank);
-      const pattern = row.pattern_type || row.struct_label || row.detail || (type === "CONT" ? "BOX_BREAKOUT_PULLBACK" : "TREND_PULLBACK");
-      const entryA = row.entry_a || (type === "CONT"
-        ? `箱頂 ${row.box_high || "-"} 附近`
-        : `${(close * .97).toFixed(1)} - ${(close * 1.01).toFixed(1)}`);
-      const entryB = row.entry_b || (type === "CONT"
-        ? `${row.box_high || "-"} 回穩`
-        : `${(close * .94).toFixed(1)} - ${(close * .99).toFixed(1)}`);
-      const entryC = row.entry_c || `突破 ${row.high_close || row.box_high || p1 || "-"}`;
-      const tags = [
-        type,
-        pattern.includes("BOX") ? "BOX" : row.cross_status || "KD",
-        rs ? `RS ${rs}` : "",
-        row.consecutive_days >= 2 ? `連續 ${row.consecutive_days} 天` : ""
-      ].filter(Boolean);
-
-      return {
-        raw: row,
-        id: String(row.stock_id || ""),
-        name: row.stock_name || String(row.stock_id || ""),
-        market: String(row.stock_id || "").startsWith("6") || String(row.stock_id || "").startsWith("8") ? "tpex" : "twse",
-        type,
-        signal: row.cross_status || (type === "CONT" ? "BOX 突破回踩" : "策略候選"),
-        score,
-        rs,
-        close,
-        change: toNum(row.change),
-        k: toNum(row.K),
-        d: toNum(row.D),
-        gap: toNum(row.gap),
-        ma10: row.ma10 || "-",
-        ma20: row.ma20 || "-",
-        pattern,
-        kd: row.cross_status || (type === "CONT" ? "CONT 不看 KD" : "KD"),
-        entryA,
-        entryB,
-        entryC,
-        stop,
-        p1,
-        p2,
-        rr: row.rr_display || row.rr_ratio || "依原始卡計算",
-        days: toNum(row.consecutive_days, 1),
-        tags,
-        reasons: [
-          row.detail || "來自原 LINE bot 掃描結果。",
-          `策略：${type}；型態：${pattern}`,
-          row.data_label ? `資料標籤：${row.data_label}` : "Web 端只讀取原始結果，不重新計算策略。"
-        ],
-        flexMessages: null,
-        textSummary: null,
-        warrants: null,
-      };
-    }
-
-    async function fetchJson(url) {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      return res.json();
-    }
-
-    async function loadLiveApi() {
-      try {
-        const health = await fetchJson(`${API_BASE}/health`);
-        const payload = await fetchJson(`${API_BASE}/scan-results`);
-        const rows = payload.data || [];
-        if (!rows.length) throw new Error("scan-results empty");
-        stocks = rows.map(mapScanRow);
-        selected = stocks[0];
-        apiStatus = { live: true, message: `${payload.generated_at || health.generated_at} / ${rows.length} 檔原 bot 掃描結果` };
-        await loadStockExtras(selected);
-        document.getElementById("syncTitle").textContent = "已連線原 LINE bot";
-        document.getElementById("syncMeta").textContent = apiStatus.message;
-      } catch (error) {
-        apiStatus = { live: false, message: `API 未載入，使用 prototype：${error.message}` };
-        document.getElementById("syncTitle").textContent = "使用 prototype";
-        document.getElementById("syncMeta").textContent = apiStatus.message;
-      }
-    }
-
-    async function loadStockExtras(stock) {
-      if (!apiStatus.live || !stock?.id) return;
-      try {
-        const [card, kbar, warrant] = await Promise.allSettled([
-          fetchJson(`${API_BASE}/stock/${stock.id}/card`),
-          fetchJson(`${API_BASE}/stock/${stock.id}/kbar?limit=180`),
-          fetchJson(`${API_BASE}/stock/${stock.id}/warrants`)
-        ]);
-        if (card.status === "fulfilled" && card.value?.data) {
-          stock.flexMessages = card.value.data.flex_messages || null;
-          stock.textSummary = card.value.data.text_summary || null;
-        }
-        if (kbar.status === "fulfilled" && kbar.value?.data?.records) {
-          kbarById.set(stock.id, { rows: kbar.value.data.records });
-        }
-        if (warrant.status === "fulfilled" && warrant.value?.data) {
-          stock.warrants = (warrant.value.data.candidates || []).map((item, index) => ({
-            code: item.code || item.warrant_id || item.stock_id || `Top ${index + 1}`,
-            name: item.name || item.warrant_name || item.code || "權證候選",
-            price: item.price || item.close || "-",
-            delta: item.delta ?? item.Delta ?? "-",
-            leverage: item.leverage || item.effective_leverage || "-",
-            expiry: item.days_to_expiry || item.expiry_days || "-",
-            tag: index === 0 ? "推薦" : "可觀察",
-            strike: item.strike_price || item.strike || "-",
-            moneyness: item.moneyness || "-",
-            iv: item.iv || item.IV || "-",
-            hv: item.hv || item.HV || "-",
-            maker: item.issuer || item.maker || "",
-            reason: item.reason || item.note || `來自原 bot 權證 Top 3 快取，狀態：${warrant.value.data.status || "cached"}`
-          }));
-        }
-      } catch (error) {
-        console.warn("stock extras unavailable", error);
-      }
-    }
-
-    function realOf(stock) {
-      return marketById.get(stock.id);
-    }
-
-    function kbarOf(stock) {
-      return kbarById.get(stock.id)?.rows || null;
-    }
-
-    function closeOf(stock) {
-      return realOf(stock)?.close ?? stock.close;
-    }
-
-    function changeOf(stock) {
-      return realOf(stock)?.change ?? stock.change;
-    }
-
-    function marketDateText() {
-      const date = marketSnapshot?.marketDate;
-      if (!date) return "prototype";
-      const d = String(date);
-      return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
-    }
-
-    function compactMoney(value) {
-      if (!value) return "prototype";
-      if (value >= 100000000) return `${(value / 100000000).toFixed(1)} 億`;
-      if (value >= 10000) return `${(value / 10000).toFixed(0)} 萬`;
-      return String(value);
-    }
-
-    function compactVolume(value) {
-      if (!value) return "prototype";
-      const lots = value / 1000;
-      if (lots >= 10000) return `${(lots / 10000).toFixed(1)} 萬張`;
-      return `${lots.toFixed(0)} 張`;
-    }
-
-    function badgeClass(text) {
-      if (text.includes("高風險")) return "red";
-      if (text.includes("BOX") || text.includes("CONT") || text.includes("RS")) return "blue";
-      if (text.includes("B") || text.includes("觀察")) return "amber";
-      if (text.includes("A") || text.includes("推薦") || text.includes("穩健")) return "green";
-      return "gray";
-    }
-
-    function filteredStocks() {
-      const q = document.getElementById("searchInput").value.trim();
-      return stocks.filter(stock => {
-        const marketOk = marketFilter === "all" || stock.market === marketFilter;
-        const strategyOk = strategyFilter === "all" || stock.type === strategyFilter;
-        const queryOk = !q || stock.id.includes(q) || stock.name.includes(q);
-        const chipOk =
-          chipFilter === "all" ||
-          (chipFilter === "rs90" && stock.rs >= 90) ||
-          (chipFilter === "score10" && stock.score >= 10) ||
-          (chipFilter === "box" && stock.pattern.includes("BOX")) ||
-          (chipFilter === "repeat" && stock.days >= 2);
-        return marketOk && strategyOk && queryOk && chipOk;
-      });
-    }
-
-    function renderMetrics() {
-      const visible = filteredStocks();
-      const cont = visible.filter(s => s.type === "CONT").length;
-      const rs90 = visible.filter(s => s.rs >= 90).length;
-      const repeat = visible.filter(s => s.days >= 2).length;
-      document.getElementById("metrics").innerHTML = [
-        ["入選", visible.length, "目前篩選結果"],
-        ["CONT", cont, "箱型突破回踩"],
-        ["RS 90+", rs90, "排序優先觀察"],
-        ["連續", repeat, "績效追蹤候選"]
-      ].map(([k, v, h]) => `<div class="metric"><small>${k}</small><strong>${v}</strong><span>${h}</span></div>`).join("");
-    }
-
-    function renderSignals() {
-      const rows = filteredStocks();
-      document.getElementById("signalList").innerHTML = rows.map(stock => `
-        <article class="signal-card ${stock.id === selected.id ? "selected" : ""}" data-id="${stock.id}">
-          <div class="card-top">
-            <div class="symbol"><strong>${stock.id}</strong><span>${realOf(stock)?.name ?? stock.name}</span></div>
-            <div class="badges">
-              <span class="badge ${badgeClass(stock.type)}">${stock.type}</span>
-              <span class="badge ${badgeClass(stock.signal)}">${stock.signal}</span>
-              <span class="badge blue">RS ${stock.rs}</span>
-            </div>
-          </div>
-          <div class="card-mid">
-            <div><span class="price">${closeOf(stock)}</span> <span class="${changeOf(stock) >= 0 ? "up" : "down"}">${changeOf(stock) >= 0 ? "▲" : "▼"} ${Math.abs(changeOf(stock))}</span></div>
-            <div class="badges"><span class="badge amber">${stock.score} 分</span><span class="badge gray">${stock.kd}</span></div>
-          </div>
-          <div class="facts">
-            <div class="fact"><small>A 層</small><strong>${stock.entryA}</strong></div>
-            <div class="fact"><small>B 層</small><strong>${stock.entryB}</strong></div>
-            <div class="fact"><small>停損</small><strong>${stock.stop}</strong></div>
-            <div class="fact"><small>風報</small><strong>${stock.rr}</strong></div>
-          </div>
-          <div class="badges">${stock.tags.map(tag => `<span class="badge gray">${tag}</span>`).join("")}</div>
-        </article>
-      `).join("") || `<div class="panel"><div class="panel-body">目前篩選條件沒有符合的股票。</div></div>`;
-
-      document.querySelectorAll(".signal-card").forEach(card => {
-        card.addEventListener("click", async event => {
-          if (event.target.closest(".flex-button")) return;
-          selected = stocks.find(stock => stock.id === card.dataset.id) || selected;
-          await loadStockExtras(selected);
-          renderAll();
-        });
-      });
-    }
-
-    function renderSummary() {
-      document.getElementById("selectedBadge").textContent = selected.type;
-      document.getElementById("summaryPanel").innerHTML = `
-        <div class="symbol"><strong>${selected.id}</strong><span>${selected.name} / ${selected.pattern}</span></div>
-        <div class="facts">
-          <div class="fact"><small>分數</small><strong>${selected.score}</strong></div>
-          <div class="fact"><small>RS</small><strong>${selected.rs}</strong></div>
-          <div class="fact"><small>K/D/gap</small><strong>${selected.k}/${selected.d}/${selected.gap}</strong></div>
-          <div class="fact"><small>資料</small><strong>${marketDateText()}</strong></div>
-        </div>
-        <ul class="reason-list">${selected.reasons.map(reason => `<li>${reason}</li>`).join("")}</ul>
-      `;
-    }
-
-    function renderDetail() {
-      document.getElementById("detailTitle").textContent = `${selected.id} ${selected.name}`;
-      document.getElementById("detailType").textContent = selected.signal;
-      document.getElementById("detailType").className = `badge ${badgeClass(selected.signal)}`;
-      document.getElementById("detailFacts").innerHTML = `
-        <div class="fact"><small>官方收盤</small><strong>${closeOf(selected)}</strong></div>
-        <div class="fact"><small>官方漲跌</small><strong class="${changeOf(selected) >= 0 ? "up" : "down"}">${changeOf(selected)}</strong></div>
-        <div class="fact"><small>MA10 / MA20</small><strong>${selected.ma10} / ${selected.ma20}</strong></div>
-        <div class="fact"><small>壓力位</small><strong>${selected.p1} / ${selected.p2}</strong></div>
-      `;
-      document.getElementById("layerGrid").innerHTML = [
-        ["A 低接", selected.entryA, `停損 ${selected.stop}`],
-        ["B 回穩", selected.entryB, `風報 ${selected.rr}`],
-        ["C 突破", selected.entryC, `壓力 ${selected.p1}/${selected.p2}`]
-      ].map(([k, v, h]) => `<div class="layer"><strong>${k}</strong><span>${v}</span><span>${h}</span></div>`).join("");
-      document.getElementById("reasonList").innerHTML = selected.reasons.map(reason => `<li>${reason}</li>`).join("");
-      document.getElementById("actionCard").innerHTML = "";
-      drawChart();
-      renderLineBubble("lineBubble");
-      document.getElementById("warrantTarget").textContent = `標的 ${selected.id}`;
-    }
-
-    function drawChart() {
-      const canvas = document.getElementById("chart");
-      const ctx = canvas.getContext("2d");
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, w, h);
-
-      const realRows = kbarOf(selected);
-      let candles = realRows?.length ? realRows.slice(-60).map(row => ({
-        date: row.date,
-        open: Number(row.open),
-        high: Number(row.high),
-        low: Number(row.low),
-        close: Number(row.close)
-      })) : null;
-
-      if (!candles) {
-        const base = closeOf(selected) * .9;
-        candles = Array.from({ length: 44 }, (_, i) => {
-          const close = base + i * closeOf(selected) * .003 + Math.sin(i / 2.4) * closeOf(selected) * .018;
-          const open = close + Math.sin(i) * closeOf(selected) * .012;
-          return { open, close, high: Math.max(open, close) * 1.012, low: Math.min(open, close) * .988 };
-        });
-      }
-
-      const max = Math.max(...candles.map(c => c.high), selected.p1, selected.p2);
-      const min = Math.min(...candles.map(c => c.low), selected.stop);
-      const yOf = value => h - 30 - ((value - min) / Math.max(1, max - min)) * (h - 64);
-      const xStep = (w - 72) / candles.length;
-      const bodyW = Math.max(3, Math.min(8, xStep * .45));
-
-      ctx.strokeStyle = "#e5e7eb";
-      for (let i = 0; i < 5; i++) {
-        const y = 34 + i * ((h - 74) / 4);
-        ctx.beginPath();
-        ctx.moveTo(32, y);
-        ctx.lineTo(w - 24, y);
-        ctx.stroke();
-      }
-
-      ctx.setLineDash([6, 5]);
-      [[selected.stop, "#b42318"], [selected.p1, "#1d4ed8"], [selected.p2, "#1d4ed8"]].forEach(([value, color]) => {
-        const y = yOf(value);
-        ctx.strokeStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(34, y);
-        ctx.lineTo(w - 28, y);
-        ctx.stroke();
-      });
-      ctx.setLineDash([]);
-
-      candles.forEach((c, i) => {
-        const x = 38 + i * xStep;
-        const up = c.close >= c.open;
-        ctx.strokeStyle = up ? "#b42318" : "#047857";
-        ctx.fillStyle = up ? "#fdecec" : "#e8f7ef";
-        ctx.beginPath();
-        ctx.moveTo(x, yOf(c.high));
-        ctx.lineTo(x, yOf(c.low));
-        ctx.stroke();
-        const top = yOf(Math.max(c.open, c.close));
-        const bottom = yOf(Math.min(c.open, c.close));
-        ctx.fillRect(x - bodyW / 2, top, bodyW, Math.max(3, bottom - top));
-        ctx.strokeRect(x - bodyW / 2, top, bodyW, Math.max(3, bottom - top));
-      });
-
-      ctx.fillStyle = "#475467";
-      ctx.font = "18px Microsoft JhengHei, Arial";
-      ctx.fillText(`${selected.id} ${selected.name}`, 34, 24);
-      ctx.font = "12px Microsoft JhengHei, Arial";
-      ctx.fillText(realRows?.length ? "真實日 K 快照" : "prototype K 線", 34, h - 10);
-    }
-
-    function renderWarrants() {
-      const rows = selected.warrants?.length ? selected.warrants : warrants;
-      document.getElementById("warrantList").innerHTML = rows.map(w => `
-        <div class="warrant-row">
-          <div>
-            <strong>${w.code} ${w.name}</strong>
-            <div class="warrant-meta">
-              <span>價格 ${w.price}</span><span>Delta ${w.delta}</span><span>槓桿 ${w.leverage}x</span>
-              <span>到期 ${w.expiry} 天</span><span>履約 ${w.strike}</span><span>價內外 ${w.moneyness}</span>
-              <span>IV/HV ${w.iv}/${w.hv}</span><span>${w.maker}</span>
-            </div>
-            <div class="panel-sub">${w.reason}</div>
-          </div>
-          <span class="badge ${badgeClass(w.tag)}">${w.tag}</span>
-        </div>
-      `).join("");
-    }
-
-    function renderOps() {
-      document.getElementById("funnelList").innerHTML = funnelRows.map(([label, count, pct]) => `
-        <div class="funnel-row"><span>${label}</span><div class="bar"><span style="width:${pct}%"></span></div><strong>${count}</strong></div>
-      `).join("");
-
-      document.getElementById("statusList").innerHTML = statusRows.map(([label, meta]) => `
-        <div class="status-row"><div><strong>${label}</strong><div class="status-meta"><span>${meta}</span></div></div><span class="badge green">OK</span></div>
-      `).join("") + `
-        <div class="status-row"><div><strong>Web API</strong><div class="status-meta"><span>${apiStatus.message}</span></div></div><span class="badge ${apiStatus.live ? "green" : "amber"}">${apiStatus.live ? "LIVE" : "FALLBACK"}</span></div>
-      `;
-    }
-
-    function escapeHtml(value) {
+    function html(value) {
       return String(value ?? "").replace(/[&<>"']/g, ch => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       }[ch]));
     }
 
-    function actionAttr(value) {
-      return escapeHtml(encodeURIComponent(value || ""));
+    async function getJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
     }
 
-    function styleAttr(node = {}) {
-      const css = [];
-      if (node.backgroundColor) css.push(`background:${node.backgroundColor}`);
-      if (node.color) css.push(`color:${node.color}`);
-      if (node.paddingAll) css.push(`padding:${node.paddingAll}`);
-      if (node.margin) css.push(`margin-top:${node.margin === "none" ? "0" : "6px"}`);
-      if (node.cornerRadius) css.push(`border-radius:${node.cornerRadius}`);
-      if (node.borderColor) css.push(`border-color:${node.borderColor}`);
-      if (node.borderWidth) css.push(`border-style:solid;border-width:${node.borderWidth}`);
-      if (node.flex) css.push(`flex:${node.flex}`);
-      return css.length ? ` style="${css.join(";")}"` : "";
+    function mapStock(row) {
+      const close = num(row.close);
+      const p1 = num(row.p1, num(row.high_close, close * 1.06));
+      const p2 = row.p2 == null ? null : num(row.p2);
+      const boxLow = num(row.box_low, close * .94);
+      const type = row.strategy_type || "START";
+      return {
+        raw: row,
+        id: String(row.stock_id || ""),
+        name: row.stock_name || String(row.stock_id || ""),
+        type,
+        signal: row.cross_status || row.detail || type,
+        dataLabel: row.data_label || row.date || "",
+        close,
+        k: num(row.K),
+        d: num(row.D),
+        gap: num(row.gap),
+        score: num(row.score),
+        rs: row.rs_rank == null ? null : num(row.rs_rank),
+        days: num(row.consecutive_days, 1),
+        pattern: row.pattern_type || row.detail || type,
+        detail: row.detail || "",
+        entry: type === "CONT"
+          ? `箱頂 ${row.box_high || "-"} 附近`
+          : `${(close * .97).toFixed(1)}-${(close * .99).toFixed(1)}`,
+        rr: row.rr_display || row.rr_ratio || "依原卡",
+        stop: row.stop_loss || boxLow,
+        p1,
+        p2,
+        flex: null,
+        text: "",
+        warrants: null
+      };
     }
 
-    function renderFlexNode(node) {
-      if (!node) return "";
-      if (node.type === "text") {
-        const weight = node.weight === "bold" ? "bold" : "";
-        return `<div class="flex-text ${node.size || ""} ${weight}"${styleAttr(node)}>${escapeHtml(node.text)}</div>`;
-      }
-      if (node.type === "separator") return `<div class="flex-separator"></div>`;
-      if (node.type === "button") {
-        const action = node.action || {};
-        const label = node.action?.label || node.action?.text || node.action?.uri || "Action";
-        return `<button type="button" class="flex-button"${styleAttr(node)}
-          data-action-label="${actionAttr(label)}"
-          data-action-type="${actionAttr(action.type)}"
-          data-action-text="${actionAttr(action.text)}"
-          data-action-uri="${actionAttr(action.uri)}">${escapeHtml(label)}</button>`;
-      }
-      if (node.type === "box") {
-        return `<div class="flex-box ${node.layout || "vertical"}"${styleAttr(node)}>${(node.contents || []).map(renderFlexNode).join("")}</div>`;
-      }
-      if (node.type === "bubble") {
-        return `<div class="flex-bubble">
-          ${node.header ? renderFlexNode(node.header) : ""}
-          ${node.body ? renderFlexNode(node.body) : ""}
-          ${node.footer ? renderFlexNode(node.footer) : ""}
-        </div>`;
-      }
-      if (node.type === "carousel") {
-        return `<div class="flex-preview">${(node.contents || []).map(renderFlexNode).join("")}</div>`;
-      }
-      return "";
-    }
-
-    function renderLineBubble(targetId) {
-      if (selected.flexMessages?.length) {
-        const flexHtml = selected.flexMessages.map(message => renderFlexNode(message.contents)).join("");
-        document.getElementById(targetId).innerHTML = `
-          <div class="flex-preview">${flexHtml}</div>
-          ${selected.textSummary ? `<div class="line-text-preview">${escapeHtml(selected.textSummary)}</div>` : ""}
-        `;
-        return;
-      }
-      const entryText = selected.type === "CONT" ? selected.entryB : selected.entryA;
-      const kdLine = selected.type === "CONT"
-        ? `收${closeOf(selected)} 箱頂${selected.entryB} 箱低${selected.stop}`
-        : `收${closeOf(selected)} K${Number(selected.k).toFixed(1)} D${Number(selected.d).toFixed(1)}`;
-      const lineText = [
-        `📊 台股選股 ${marketDateText()}`,
-        "──────────────────",
-        `📈 ${selected.id} ${selected.name}`,
-        `   ${kdLine}`,
-        `   ${selected.signal}`,
-        `   停損${selected.stop}（結構停損）`,
-        `   進場${entryText} 風報${selected.rr.replace("1:", "1:")}`,
-        "",
-        "共1檔",
-        "──────────────────",
-        "⚠️ 僅供參考"
-      ].join("\n");
-      document.getElementById(targetId).innerHTML = `
-        <div class="canonical-card">
-          <div class="canonical-head">
-            <strong>📈 ${selected.id} ${selected.name}</strong>
-            <span>${selected.signal} · ${selected.pattern}</span>
-          </div>
-          <div class="canonical-body">
-            <div class="canonical-pills">
-              <div class="canonical-pill entry">進場<br>${entryText}</div>
-              <div class="canonical-pill rr">風報<br>${selected.rr}</div>
-              <div class="canonical-pill rs">RS<br>${selected.rs}</div>
-            </div>
-            <div class="canonical-row"><small>收盤/KD</small><span>${kdLine}</span></div>
-            <div class="canonical-row"><small>訊號</small><span>${selected.signal}</span></div>
-            <div class="canonical-row"><small>停損</small><span>${selected.stop}（結構停損）</span></div>
-            <div class="canonical-row"><small>壓力</small><span>${selected.p1} / ${selected.p2}</span></div>
-            <div class="canonical-row"><small>說明</small><span>${selected.reasons[0]}</span></div>
-          </div>
-        </div>
-        <div class="line-text-preview">${lineText}</div>
-      `;
-    }
-
-    function renderLineSection() {
-      renderLineBubble("lineFullBubble");
-    }
-
-    function activateSection(id) {
-      document.querySelectorAll(".bottom-nav button").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.section === id);
+    function filteredStocks() {
+      const q = $("searchInput").value.trim().toLowerCase();
+      return stocks.filter(s => {
+        const queryOk = !q || s.id.includes(q) || s.name.toLowerCase().includes(q);
+        const filterOk =
+          filter === "all" ||
+          s.type === filter ||
+          (filter === "rs90" && (s.rs || 0) >= 90) ||
+          (filter === "repeat" && s.days >= 2);
+        return queryOk && filterOk;
       });
-      document.querySelectorAll(".section").forEach(section => {
-        section.classList.toggle("active", section.id === id);
-      });
-      document.getElementById("pageTitle").textContent = titles[id][0];
-      document.getElementById("pageSub").textContent = titles[id][1];
-      if (id === "detail") drawChart();
     }
 
-    function setActionCard(title, body, href) {
-      document.getElementById("actionCard").innerHTML = `
-        <div class="status-row" style="margin:10px 0;">
-          <div>
-            <strong>${escapeHtml(title)}</strong>
-            <div class="status-meta"><span>${escapeHtml(body)}</span></div>
-          </div>
-          ${href ? `<a class="badge blue" href="${escapeHtml(href)}" target="_blank" rel="noopener">開啟</a>` : `<span class="badge green">已切換</span>`}
+    function cardActions(stock) {
+      return `
+        <div class="card-actions">
+          <button class="card-button primary" data-action="chart" data-id="${stock.id}">K線</button>
+          <button class="card-button primary" data-action="warrant" data-id="${stock.id}">權證</button>
+          <button class="card-button primary" data-action="financial" data-id="${stock.id}">財報</button>
+          <button class="card-button" data-action="realtime" data-id="${stock.id}">即時</button>
+          <button class="card-button" data-action="backtest" data-id="${stock.id}">回測</button>
+          <button class="card-button" data-action="watch" data-id="${stock.id}">+自選</button>
         </div>
       `;
     }
 
-    async function handleFlexAction(button) {
-      const label = decodeURIComponent(button.dataset.actionLabel || "");
-      const text = decodeURIComponent(button.dataset.actionText || "");
-      const uri = decodeURIComponent(button.dataset.actionUri || "");
-      const command = `${label} ${text}`.trim();
-
-      if (label.includes("K") || uri.includes("technical-analysis")) {
-        await loadStockExtras(selected);
-        activateSection("detail");
-        setActionCard("K 線", `已用原 bot /kbar 快取繪製 ${selected.id} 日 K；Yahoo 只保留為外部備援。`, uri);
-        return;
-      }
-      if (label.includes("權證") || text.startsWith("權證")) {
-        await loadStockExtras(selected);
-        activateSection("warrants");
-        return;
-      }
-      if (label.includes("財報") && uri) {
-        window.open(uri, "_blank", "noopener");
-        return;
-      }
-      if (label.includes("即時") || text.startsWith("即時")) {
-        await loadStockExtras(selected);
-        activateSection("detail");
-        setActionCard("即時資訊", `目前 Web 只讀取原 bot 快取與掃描結果；盤中即時仍保留 LINE 指令 ${command} 作為正式入口。`);
-        return;
-      }
-      if (label.includes("回測") || text.startsWith("回測")) {
-        activateSection("ops");
-        return;
-      }
-      if (label.includes("自選") || text.startsWith("+")) {
-        activateSection("detail");
-        setActionCard("加入自選", "這是寫入動作，read-only Web 版先不直接執行；之後接 LIFF 登入後再開放。");
-        return;
-      }
-      if (uri) window.open(uri, "_blank", "noopener");
-    }
-
-    function renderScanSignalList() {
-      const rows = filteredStocks();
-      document.getElementById("signalList").innerHTML = rows.map(stock => `
-        <article class="signal-card ${stock.id === selected.id ? "selected" : ""}" data-id="${stock.id}">
-          <div class="canonical-card">
-            <div class="canonical-head">
-              <strong>${stock.id} ${realOf(stock)?.name ?? stock.name}</strong>
-              <span>${stock.signal} · ${stock.raw?.data_label || marketDateText()}</span>
+    function scanCard(stock) {
+      return `
+        <article class="line-card ${selected?.id === stock.id ? "selected" : ""}" data-id="${stock.id}">
+          <div class="card-head">
+            <div class="card-title">
+              <strong>${html(stock.id)} ${html(stock.name)}</strong>
+              <span class="score">${stock.score} 分</span>
             </div>
-            <div class="canonical-body">
-              <div class="canonical-pills">
-                <div class="canonical-pill entry">進場<br>${stock.type === "CONT" ? stock.entryB : stock.entryA}</div>
-                <div class="canonical-pill rr">風報<br>${stock.rr}</div>
-                <div class="canonical-pill rs">RS<br>${stock.rs || "-"}</div>
-              </div>
-              <div class="canonical-row"><small>收盤/KD</small><span>${closeOf(stock)} / K${Number(stock.k).toFixed(1)} D${Number(stock.d).toFixed(1)}</span></div>
-              <div class="canonical-row"><small>分數/型態</small><span>${stock.score} 分 · ${stock.pattern}</span></div>
-              <div class="canonical-row"><small>停損/壓力</small><span>${stock.stop || "-"} · ${stock.p1 || "-"} / ${stock.p2 || "-"}</span></div>
-              <div class="flex-box horizontal" style="margin-top:8px;">
-                <button type="button" class="flex-button" data-action-label="${actionAttr("K線")}" data-action-uri="${actionAttr(`https://tw.stock.yahoo.com/quote/${stock.id}/technical-analysis`)}">K線</button>
-                <button type="button" class="flex-button" data-action-label="${actionAttr("權證")}" data-action-text="${actionAttr(`權證 ${stock.id}`)}">權證</button>
-                <button type="button" class="flex-button" data-action-label="${actionAttr("財報")}" data-action-uri="${actionAttr(`https://statementdog.com/analysis/${stock.id}`)}">財報</button>
-              </div>
+            <div class="signal-line">
+              <span>${html(stock.signal)}</span>
+              <span>${html(stock.dataLabel)}</span>
             </div>
+          </div>
+          <div class="card-body">
+            <div class="quote-row">
+              <div class="cell"><small>收盤</small><strong>${stock.close}</strong></div>
+              <div class="cell"><small>K值</small><strong>${stock.k.toFixed(1)}</strong></div>
+              <div class="cell"><small>D值</small><strong>${stock.d.toFixed(1)}</strong></div>
+              <div class="cell"><small>差值</small><strong>${stock.gap.toFixed(1)}</strong></div>
+            </div>
+            <div class="pills">
+              <div class="pill entry"><small>進場</small><strong>${html(stock.entry)}</strong></div>
+              <div class="pill rr"><small>風報</small><strong>${html(stock.rr)}</strong></div>
+              <div class="pill rs"><small>RS</small><strong>${stock.rs ?? "-"}</strong></div>
+            </div>
+            <div class="info-row"><small>型態</small><strong>${html(stock.pattern)}</strong></div>
+            <div class="info-row"><small>停損/壓力</small><strong>${html(stock.stop)} / ${html(stock.p1)}${stock.p2 ? ` / ${html(stock.p2)}` : ""}</strong></div>
+            ${cardActions(stock)}
           </div>
         </article>
-      `).join("") || `<div class="panel"><div class="panel-body">目前篩選條件沒有符合的股票。</div></div>`;
-
-      document.querySelectorAll(".signal-card").forEach(card => {
-        card.addEventListener("click", async () => {
-          selected = stocks.find(stock => stock.id === card.dataset.id) || selected;
-          await loadStockExtras(selected);
-          renderAll();
-        });
-      });
+      `;
     }
 
-    function renderAll() {
-      renderMetrics();
-      renderScanSignalList();
-      renderSummary();
-      renderDetail();
-      renderWarrants();
-      renderOps();
-      renderLineSection();
+    function renderFeed() {
+      const rows = filteredStocks();
+      $("cardFeed").innerHTML = rows.length
+        ? rows.map(scanCard).join("")
+        : `<div class="message">沒有符合條件的小卡。若這裡是空的，請看狀態頁的 API 錯誤。</div>`;
     }
 
-    async function loadSnapshots() {
-      try {
-        marketSnapshot = window.MARKET_SNAPSHOT || null;
-        if (!marketSnapshot) {
-          const res = await fetch(`data/market-snapshot.json?v=${Date.now()}`, { cache: "no-store" });
-          if (res.ok) marketSnapshot = await res.json();
-        }
-        marketById = new Map((marketSnapshot?.watchlist || []).map(row => [String(row.id), row]));
+    function activate(viewId) {
+      document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === viewId));
+      document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.view === viewId));
+      const titleMap = {
+        scanView: ["掃描小卡", "直接使用原 LINE bot 掃描結果與小卡欄位。"],
+        chartView: ["K 線", "使用原 bot /kbar 快取繪製，Yahoo 只保留為外部備援。"],
+        warrantView: ["權證", "讀取原 bot Top 3 權證快取。"],
+        statusView: ["狀態", "部署、API、cache 與 read-only 狀態。"]
+      };
+      $("pageTitle").textContent = titleMap[viewId][0];
+      $("pageSub").textContent = titleMap[viewId][1];
+      if (viewId === "chartView") drawChart();
+    }
 
-        const kbarSnapshot = window.KBAR_SNAPSHOT || null;
-        if (kbarSnapshot) {
-          kbarById = new Map(Object.entries(kbarSnapshot.series || {}));
-        }
-
-        document.getElementById("syncTitle").textContent = "已載入快照";
-        document.getElementById("syncMeta").textContent = `${marketDateText()} / ${marketSnapshot?.counts?.all || 0} 筆行情 / K 線 ${kbarById.size} 檔`;
-        renderAll();
-      } catch (error) {
-        document.getElementById("syncTitle").textContent = "使用 prototype";
-        document.getElementById("syncMeta").textContent = "快照未載入";
+    async function loadExtras(stock) {
+      if (!stock) return;
+      const [card, kbar, warrants] = await Promise.allSettled([
+        getJson(`${API_BASE}/stock/${stock.id}/card`),
+        getJson(`${API_BASE}/stock/${stock.id}/kbar?limit=180`),
+        getJson(`${API_BASE}/stock/${stock.id}/warrants`)
+      ]);
+      if (card.status === "fulfilled" && card.value?.data) {
+        stock.flex = card.value.data.flex_messages || null;
+        stock.text = card.value.data.text_summary || "";
+      }
+      if (kbar.status === "fulfilled" && kbar.value?.data?.records) {
+        kbarById.set(stock.id, kbar.value.data.records);
+      }
+      if (warrants.status === "fulfilled" && warrants.value?.data) {
+        stock.warrants = warrants.value.data.candidates || [];
       }
     }
 
-    document.querySelectorAll(".bottom-nav button").forEach(button => {
-      button.addEventListener("click", () => {
-        activateSection(button.dataset.section);
+    function renderDetail() {
+      if (!selected) return;
+      $("chartTitle").textContent = `${selected.id} ${selected.name}`;
+      $("yahooLink").href = `https://tw.stock.yahoo.com/quote/${selected.id}/technical-analysis`;
+      $("detailBody").innerHTML = `
+        <div class="status-row"><strong>${html(selected.signal)}</strong><div class="meta"><span>${html(selected.detail)}</span></div></div>
+        <div class="status-row"><strong>進場 / 風報</strong><div class="meta"><span>${html(selected.entry)}</span><span>${html(selected.rr)}</span></div></div>
+        <div class="status-row"><strong>停損 / 壓力</strong><div class="meta"><span>${html(selected.stop)}</span><span>${html(selected.p1)}</span><span>${selected.p2 ? html(selected.p2) : ""}</span></div></div>
+        ${selected.text ? `<div class="text-summary">${html(selected.text)}</div>` : ""}
+      `;
+      drawChart();
+    }
+
+    function drawChart() {
+      const canvas = $("chart");
+      if (!canvas || !selected) return;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, w, h);
+
+      const rows = (kbarById.get(selected.id) || []).slice(-80).map(r => ({
+        open: num(r.open), high: num(r.high), low: num(r.low), close: num(r.close)
+      })).filter(r => r.high && r.low);
+
+      if (!rows.length) {
+        ctx.fillStyle = "#667085";
+        ctx.font = "18px Microsoft JhengHei, Arial";
+        ctx.fillText("尚未取得 K 線快取", 32, 52);
+        return;
+      }
+
+      const max = Math.max(...rows.map(r => r.high), selected.p1 || 0, selected.p2 || 0);
+      const min = Math.min(...rows.map(r => r.low), selected.stop || rows[0].low);
+      const yOf = value => h - 28 - ((value - min) / Math.max(1, max - min)) * (h - 62);
+      const step = (w - 60) / rows.length;
+      const bodyW = Math.max(3, Math.min(8, step * .48));
+
+      ctx.strokeStyle = "#e5e7eb";
+      for (let i = 0; i < 5; i++) {
+        const y = 28 + i * ((h - 60) / 4);
+        ctx.beginPath();
+        ctx.moveTo(28, y);
+        ctx.lineTo(w - 22, y);
+        ctx.stroke();
+      }
+
+      [[selected.stop, "#b42318"], [selected.p1, "#1d4ed8"], [selected.p2, "#6d28d9"]].forEach(([value, color]) => {
+        if (!value) return;
+        const y = yOf(value);
+        ctx.setLineDash([6, 5]);
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(w - 24, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
       });
-    });
 
-    document.addEventListener("click", event => {
-      const button = event.target.closest(".flex-button");
-      if (!button) return;
-      event.preventDefault();
-      handleFlexAction(button);
-    });
-
-    document.querySelectorAll("[data-market]").forEach(button => {
-      button.addEventListener("click", () => {
-        marketFilter = button.dataset.market;
-        document.querySelectorAll("[data-market]").forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        renderAll();
+      rows.forEach((r, i) => {
+        const x = 32 + i * step;
+        const up = r.close >= r.open;
+        ctx.strokeStyle = up ? "#b42318" : "#047857";
+        ctx.fillStyle = up ? "#fee2e2" : "#dcfce7";
+        ctx.beginPath();
+        ctx.moveTo(x, yOf(r.high));
+        ctx.lineTo(x, yOf(r.low));
+        ctx.stroke();
+        const top = yOf(Math.max(r.open, r.close));
+        const bottom = yOf(Math.min(r.open, r.close));
+        ctx.fillRect(x - bodyW / 2, top, bodyW, Math.max(3, bottom - top));
+        ctx.strokeRect(x - bodyW / 2, top, bodyW, Math.max(3, bottom - top));
       });
+
+      ctx.fillStyle = "#475467";
+      ctx.font = "14px Microsoft JhengHei, Arial";
+      ctx.fillText(`${selected.id} ${selected.name} / bot Kbar cache`, 30, 20);
+    }
+
+    function renderWarrants() {
+      if (!selected) return;
+      $("warrantTitle").textContent = `${selected.id} ${selected.name} 權證`;
+      const rows = selected.warrants || [];
+      $("warrantList").innerHTML = rows.length ? rows.map((w, index) => `
+        <div class="warrant-row">
+          <strong>${html(w.code || w.warrant_id || w.stock_id || `Top ${index + 1}`)} ${html(w.name || w.warrant_name || "")}</strong>
+          <div class="meta">
+            <span>價格 ${html(w.price || w.close || "-")}</span>
+            <span>Delta ${html(w.delta ?? w.Delta ?? "-")}</span>
+            <span>槓桿 ${html(w.leverage || w.effective_leverage || "-")}</span>
+            <span>履約 ${html(w.strike_price || w.strike || "-")}</span>
+          </div>
+        </div>
+      `).join("") : `<div class="message">目前沒有 Top 3 權證快取，或原 bot 判定無合適候選。</div>`;
+    }
+
+    function renderStatus(error = null) {
+      const rows = [
+        ["API", error ? `失敗：${error.message}` : "已連線 Render read-only API", error ? "red" : "green"],
+        ["掃描資料", `${stocks.length} 檔`, stocks.length ? "green" : "amber"],
+        ["K 線", selected ? `${selected.id} ${kbarById.has(selected.id) ? "已載入" : "未載入"}` : "尚未選股", kbarById.has(selected?.id) ? "green" : "amber"],
+        ["寫入功能", "自選與管理動作等待 LIFF/auth；目前只讀", "amber"]
+      ];
+      if (statusPayload) {
+        rows.push(["Backend", `Kbar cache ${statusPayload.kbar_cache_count || 0} / warrant cache ${statusPayload.warrant_top3_cache_count || 0}`, "blue"]);
+      }
+      $("statusList").innerHTML = rows.map(([title, body, tone]) => `
+        <div class="status-row">
+          <strong>${html(title)}</strong>
+          <div class="meta"><span>${html(body)}</span><span class="badge ${tone}">${tone.toUpperCase()}</span></div>
+        </div>
+      `).join("");
+    }
+
+    async function selectStock(id, nextView = null) {
+      selected = stocks.find(s => s.id === id) || selected;
+      renderFeed();
+      await loadExtras(selected);
+      renderDetail();
+      renderWarrants();
+      renderStatus();
+      if (nextView) activate(nextView);
+    }
+
+    async function loadApp() {
+      try {
+        const [health, scans, status] = await Promise.allSettled([
+          getJson(`${API_BASE}/health`),
+          getJson(`${API_BASE}/scan-results`),
+          getJson(`${API_BASE}/status`)
+        ]);
+        if (health.status !== "fulfilled") throw health.reason;
+        if (scans.status !== "fulfilled") throw scans.reason;
+        stocks = (scans.value.data || []).map(mapStock);
+        if (!stocks.length) throw new Error("scan-results empty");
+        selected = stocks[0];
+        statusPayload = status.status === "fulfilled" ? status.value.data : null;
+        $("syncTitle").textContent = "已連線";
+        $("syncMeta").textContent = `${stocks.length} 檔 / ${scans.value.generated_at || ""}`;
+        renderFeed();
+        await selectStock(selected.id);
+      } catch (error) {
+        stocks = [];
+        selected = null;
+        $("syncTitle").textContent = "API 失敗";
+        $("syncMeta").textContent = error.message;
+        $("cardFeed").innerHTML = `<div class="message">無法讀取原 bot API：${html(error.message)}。不顯示假資料，避免與 LINE 結果混淆。</div>`;
+        renderStatus(error);
+      }
+    }
+
+    document.querySelector(".filters").addEventListener("click", event => {
+      const btn = event.target.closest("button[data-filter]");
+      if (!btn) return;
+      filter = btn.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach(b => b.classList.toggle("active", b === btn));
+      renderFeed();
     });
 
-    document.querySelectorAll("[data-strategy]").forEach(button => {
-      button.addEventListener("click", () => {
-        strategyFilter = button.dataset.strategy;
-        document.querySelectorAll("[data-strategy]").forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        renderAll();
-      });
+    $("searchInput").addEventListener("input", renderFeed);
+
+    document.addEventListener("click", async event => {
+      const nav = event.target.closest("[data-view]");
+      if (nav) {
+        activate(nav.dataset.view);
+        return;
+      }
+
+      const action = event.target.closest("[data-action]");
+      if (action) {
+        event.preventDefault();
+        const id = action.dataset.id;
+        if (id && selected?.id !== id) await selectStock(id);
+        const type = action.dataset.action;
+        if (type === "chart") { activate("chartView"); return; }
+        if (type === "warrant") { activate("warrantView"); return; }
+        if (type === "financial") { window.open(`https://statementdog.com/analysis/${id}`, "_blank", "noopener"); return; }
+        if (type === "realtime") { activate("chartView"); return; }
+        if (type === "backtest") { activate("statusView"); return; }
+        if (type === "watch") { activate("statusView"); return; }
+      }
+
+      const card = event.target.closest(".line-card");
+      if (card) await selectStock(card.dataset.id, "chartView");
     });
 
-    document.querySelectorAll("[data-chip]").forEach(button => {
-      button.addEventListener("click", () => {
-        chipFilter = button.dataset.chip;
-        document.querySelectorAll("[data-chip]").forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        renderAll();
-      });
-    });
-
-    document.getElementById("searchInput").addEventListener("input", renderAll);
-
-    renderAll();
-    loadLiveApi().then(() => {
-      renderAll();
-      loadSnapshots();
-    });
+    loadApp();
   </script>
 </body>
 </html>
