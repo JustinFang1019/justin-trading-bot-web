@@ -74,6 +74,11 @@ In `justin-trading-bot-web`:
   - Selecting a stock loads `/stock/<id>/card`, `/stock/<id>/kbar`, and `/stock/<id>/warrants`.
   - LINE preview now prefers canonical Flex JSON returned by the bot API, with the bot text summary below it.
   - Prototype data remains as fallback if the API is unavailable.
+- Adjusted the web UI direction toward scan-card-first behavior.
+  - The Today list now renders scan-style cards instead of a generic dashboard row.
+  - Flex/card buttons are clickable in the web UI.
+  - `K線` switches to the internal K-bar card drawn from the bot `/kbar` cache, with Yahoo retained only as an external backup link.
+  - `權證` switches to the warrant card, `財報` opens the financial page, `即時` and `回測` route to web-side read-only views, and `+自選` is held until authenticated write/LIFF is added.
 
 In `justin-trading-bot`:
 
@@ -112,6 +117,7 @@ Important implementation notes:
 - Confirmed live `scan-results` returns 30 records from the original bot.
 - Confirmed live `/api/web/stock/6933/card` returns canonical Flex JSON and text summary.
 - JavaScript syntax check with local `node` was attempted but blocked by Windows access denied in this environment.
+- JavaScript syntax check was not rerun after the scan-card/button-routing update because local `node.exe` remains blocked in this environment.
 
 ## Recommended Next Implementation Step
 

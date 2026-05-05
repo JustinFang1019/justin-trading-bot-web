@@ -595,13 +595,18 @@
     }
 
     .flex-button {
+      background: #fff;
       border: 1px solid var(--line);
       border-radius: 6px;
       color: var(--blue);
+      cursor: pointer;
+      display: block;
       font-size: 12px;
       font-weight: 800;
+      font: inherit;
       padding: 7px;
       text-align: center;
+      width: 100%;
     }
 
     .bottom-nav {
@@ -770,6 +775,7 @@
           <div class="panel-body">
             <div class="chart-wrap"><canvas id="chart" width="760" height="360"></canvas></div>
             <div class="facts" id="detailFacts"></div>
+            <div id="actionCard"></div>
             <div class="layer-grid" id="layerGrid"></div>
             <ul class="reason-list" id="reasonList"></ul>
           </div>
@@ -1227,7 +1233,8 @@
       `).join("") || `<div class="panel"><div class="panel-body">目前篩選條件沒有符合的股票。</div></div>`;
 
       document.querySelectorAll(".signal-card").forEach(card => {
-        card.addEventListener("click", async () => {
+        card.addEventListener("click", async event => {
+          if (event.target.closest(".flex-button")) return;
           selected = stocks.find(stock => stock.id === card.dataset.id) || selected;
           await loadStockExtras(selected);
           renderAll();
@@ -1265,6 +1272,7 @@
         ["C 突破", selected.entryC, `壓力 ${selected.p1}/${selected.p2}`]
       ].map(([k, v, h]) => `<div class="layer"><strong>${k}</strong><span>${v}</span><span>${h}</span></div>`).join("");
       document.getElementById("reasonList").innerHTML = selected.reasons.map(reason => `<li>${reason}</li>`).join("");
+      document.getElementById("actionCard").innerHTML = "";
       drawChart();
       renderLineBubble("lineBubble");
       document.getElementById("warrantTarget").textContent = `標的 ${selected.id}`;
@@ -1381,6 +1389,10 @@
       }[ch]));
     }
 
+    function actionAttr(value) {
+      return escapeHtml(encodeURIComponent(value || ""));
+    }
+
     function styleAttr(node = {}) {
       const css = [];
       if (node.backgroundColor) css.push(`background:${node.backgroundColor}`);
@@ -1402,8 +1414,13 @@
       }
       if (node.type === "separator") return `<div class="flex-separator"></div>`;
       if (node.type === "button") {
+        const action = node.action || {};
         const label = node.action?.label || node.action?.text || node.action?.uri || "Action";
-        return `<div class="flex-button"${styleAttr(node)}>${escapeHtml(label)}</div>`;
+        return `<button type="button" class="flex-button"${styleAttr(node)}
+          data-action-label="${actionAttr(label)}"
+          data-action-type="${actionAttr(action.type)}"
+          data-action-text="${actionAttr(action.text)}"
+          data-action-uri="${actionAttr(action.uri)}">${escapeHtml(label)}</button>`;
       }
       if (node.type === "box") {
         return `<div class="flex-box ${node.layout || "vertical"}"${styleAttr(node)}>${(node.contents || []).map(renderFlexNode).join("")}</div>`;
@@ -1474,9 +1491,109 @@
       renderLineBubble("lineFullBubble");
     }
 
+    function activateSection(id) {
+      document.querySelectorAll(".bottom-nav button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.section === id);
+      });
+      document.querySelectorAll(".section").forEach(section => {
+        section.classList.toggle("active", section.id === id);
+      });
+      document.getElementById("pageTitle").textContent = titles[id][0];
+      document.getElementById("pageSub").textContent = titles[id][1];
+      if (id === "detail") drawChart();
+    }
+
+    function setActionCard(title, body, href) {
+      document.getElementById("actionCard").innerHTML = `
+        <div class="status-row" style="margin:10px 0;">
+          <div>
+            <strong>${escapeHtml(title)}</strong>
+            <div class="status-meta"><span>${escapeHtml(body)}</span></div>
+          </div>
+          ${href ? `<a class="badge blue" href="${escapeHtml(href)}" target="_blank" rel="noopener">開啟</a>` : `<span class="badge green">已切換</span>`}
+        </div>
+      `;
+    }
+
+    async function handleFlexAction(button) {
+      const label = decodeURIComponent(button.dataset.actionLabel || "");
+      const text = decodeURIComponent(button.dataset.actionText || "");
+      const uri = decodeURIComponent(button.dataset.actionUri || "");
+      const command = `${label} ${text}`.trim();
+
+      if (label.includes("K") || uri.includes("technical-analysis")) {
+        await loadStockExtras(selected);
+        activateSection("detail");
+        setActionCard("K 線", `已用原 bot /kbar 快取繪製 ${selected.id} 日 K；Yahoo 只保留為外部備援。`, uri);
+        return;
+      }
+      if (label.includes("權證") || text.startsWith("權證")) {
+        await loadStockExtras(selected);
+        activateSection("warrants");
+        return;
+      }
+      if (label.includes("財報") && uri) {
+        window.open(uri, "_blank", "noopener");
+        return;
+      }
+      if (label.includes("即時") || text.startsWith("即時")) {
+        await loadStockExtras(selected);
+        activateSection("detail");
+        setActionCard("即時資訊", `目前 Web 只讀取原 bot 快取與掃描結果；盤中即時仍保留 LINE 指令 ${command} 作為正式入口。`);
+        return;
+      }
+      if (label.includes("回測") || text.startsWith("回測")) {
+        activateSection("ops");
+        return;
+      }
+      if (label.includes("自選") || text.startsWith("+")) {
+        activateSection("detail");
+        setActionCard("加入自選", "這是寫入動作，read-only Web 版先不直接執行；之後接 LIFF 登入後再開放。");
+        return;
+      }
+      if (uri) window.open(uri, "_blank", "noopener");
+    }
+
+    function renderScanSignalList() {
+      const rows = filteredStocks();
+      document.getElementById("signalList").innerHTML = rows.map(stock => `
+        <article class="signal-card ${stock.id === selected.id ? "selected" : ""}" data-id="${stock.id}">
+          <div class="canonical-card">
+            <div class="canonical-head">
+              <strong>${stock.id} ${realOf(stock)?.name ?? stock.name}</strong>
+              <span>${stock.signal} · ${stock.raw?.data_label || marketDateText()}</span>
+            </div>
+            <div class="canonical-body">
+              <div class="canonical-pills">
+                <div class="canonical-pill entry">進場<br>${stock.type === "CONT" ? stock.entryB : stock.entryA}</div>
+                <div class="canonical-pill rr">風報<br>${stock.rr}</div>
+                <div class="canonical-pill rs">RS<br>${stock.rs || "-"}</div>
+              </div>
+              <div class="canonical-row"><small>收盤/KD</small><span>${closeOf(stock)} / K${Number(stock.k).toFixed(1)} D${Number(stock.d).toFixed(1)}</span></div>
+              <div class="canonical-row"><small>分數/型態</small><span>${stock.score} 分 · ${stock.pattern}</span></div>
+              <div class="canonical-row"><small>停損/壓力</small><span>${stock.stop || "-"} · ${stock.p1 || "-"} / ${stock.p2 || "-"}</span></div>
+              <div class="flex-box horizontal" style="margin-top:8px;">
+                <button type="button" class="flex-button" data-action-label="${actionAttr("K線")}" data-action-uri="${actionAttr(`https://tw.stock.yahoo.com/quote/${stock.id}/technical-analysis`)}">K線</button>
+                <button type="button" class="flex-button" data-action-label="${actionAttr("權證")}" data-action-text="${actionAttr(`權證 ${stock.id}`)}">權證</button>
+                <button type="button" class="flex-button" data-action-label="${actionAttr("財報")}" data-action-uri="${actionAttr(`https://statementdog.com/analysis/${stock.id}`)}">財報</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      `).join("") || `<div class="panel"><div class="panel-body">目前篩選條件沒有符合的股票。</div></div>`;
+
+      document.querySelectorAll(".signal-card").forEach(card => {
+        card.addEventListener("click", async () => {
+          selected = stocks.find(stock => stock.id === card.dataset.id) || selected;
+          await loadStockExtras(selected);
+          renderAll();
+        });
+      });
+    }
+
     function renderAll() {
       renderMetrics();
-      renderSignals();
+      renderScanSignalList();
       renderSummary();
       renderDetail();
       renderWarrants();
@@ -1509,14 +1626,15 @@
 
     document.querySelectorAll(".bottom-nav button").forEach(button => {
       button.addEventListener("click", () => {
-        const id = button.dataset.section;
-        document.querySelectorAll(".bottom-nav button").forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        document.querySelectorAll(".section").forEach(section => section.classList.toggle("active", section.id === id));
-        document.getElementById("pageTitle").textContent = titles[id][0];
-        document.getElementById("pageSub").textContent = titles[id][1];
-        if (id === "detail") drawChart();
+        activateSection(button.dataset.section);
       });
+    });
+
+    document.addEventListener("click", event => {
+      const button = event.target.closest(".flex-button");
+      if (!button) return;
+      event.preventDefault();
+      handleFlexAction(button);
     });
 
     document.querySelectorAll("[data-market]").forEach(button => {
