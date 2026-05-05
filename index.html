@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trading Bot Web Prototype</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --panel-soft: #f9fafb;
+      --text: #1f2933;
+      --muted: #667085;
+      --line: #e5e7eb;
+      --line-strong: #d0d5dd;
+      --blue: #1d4ed8;
+      --blue-soft: #eaf2ff;
+      --green: #047857;
+      --green-soft: #e8f7ef;
+      --red: #b42318;
+      --red-soft: #fdecec;
+      --amber: #b7791f;
+      --amber-soft: #fff7df;
+      --shadow: 0 12px 30px rgba(16, 24, 40, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: #101828;
+      color: #fff;
+      padding: 18px 14px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      padding: 8px 8px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 14px;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .brand-sub {
+      color: #98a2b3;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: #cbd5e1;
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background: rgba(255,255,255,.1);
+      color: #fff;
+    }
+
+    .nav .count {
+      color: #98a2b3;
+      font-size: 11px;
+    }
+
+    .side-panel {
+      margin-top: 18px;
+      padding: 12px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+    }
+
+    .side-panel strong {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .quota {
+      height: 7px;
+      background: rgba(255,255,255,.16);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .quota span {
+      display: block;
+      height: 100%;
+      width: 42%;
+      background: #22c55e;
+    }
+
+    .side-note {
+      margin-top: 8px;
+      color: #cbd5e1;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    main {
+      min-width: 0;
+      padding: 22px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .title h1 {
+      font-size: 24px;
+      margin: 0 0 4px;
+      line-height: 1.2;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .segmented,
+    .search {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    }
+
+    .segmented button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 11px;
+      cursor: pointer;
+      min-width: 54px;
+    }
+
+    .segmented button.active {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .search {
+      padding: 0 10px;
+      min-width: 230px;
+    }
+
+    .search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      padding: 9px 0;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .dashboard-grid {
+      grid-template-columns: minmax(0, 1.45fr) minmax(340px, .9fr);
+      align-items: start;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .panel,
+    .metric,
+    .stock-card,
+    .warrant-row,
+    .alert-row,
+    .line-preview {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    }
+
+    .metric {
+      padding: 13px;
+      min-height: 86px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .metric .value {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .metric .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .panel-header {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-title {
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .panel-sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    .scan-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .stock-card {
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+
+    .stock-card:hover,
+    .stock-card.selected {
+      border-color: #93c5fd;
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .stock-top,
+    .stock-mid,
+    .stock-bottom,
+    .kv-row,
+    .tag-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .stock-top {
+      justify-content: space-between;
+      margin-bottom: 9px;
+    }
+
+    .symbol {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .symbol strong {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .symbol span {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .badge.green { background: var(--green-soft); color: var(--green); border-color: #bfe8d1; }
+    .badge.blue { background: var(--blue-soft); color: var(--blue); border-color: #c7dbff; }
+    .badge.red { background: var(--red-soft); color: var(--red); border-color: #fac7c3; }
+    .badge.amber { background: var(--amber-soft); color: var(--amber); border-color: #f3d58a; }
+    .badge.gray { background: #f2f4f7; color: #475467; border-color: #e4e7ec; }
+
+    .price {
+      font-size: 22px;
+      font-weight: 800;
+      margin-right: 4px;
+    }
+
+    .up { color: var(--red); }
+    .down { color: var(--green); }
+
+    .stock-mid {
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .stock-bottom {
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .mini-bars {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mini-box {
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 8px;
+      min-width: 0;
+    }
+
+    .mini-box .k {
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    .mini-box .v {
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chart-wrap {
+      height: 260px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(#fff, #fbfcfd);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .detail-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .strategy-box {
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .strategy-box h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .strategy-box p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .btn {
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 11px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .btn.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    .table th {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      background: #fbfcfd;
+    }
+
+    .table td:last-child,
+    .table th:last-child {
+      text-align: right;
+    }
+
+    .warrant-row,
+    .alert-row {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .warrant-title,
+    .alert-title {
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .warrant-meta,
+    .alert-meta {
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .line-preview {
+      overflow: hidden;
+    }
+
+    .line-head {
+      background: #06c755;
+      color: #fff;
+      padding: 10px 12px;
+      font-weight: 800;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .chat {
+      padding: 14px;
+      background: #edf5fb;
+      min-height: 470px;
+    }
+
+    .bubble {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 1px 3px rgba(16,24,40,.12);
+      max-width: 330px;
+      margin-bottom: 12px;
+    }
+
+    .bubble-title {
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .bubble-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin: 10px 0;
+    }
+
+    .bubble-cell {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px;
+      background: #fbfcfd;
+    }
+
+    .bubble-cell small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 3px;
+      font-size: 10px;
+    }
+
+    .bubble-cell strong {
+      font-size: 13px;
+    }
+
+    .rich-menu {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid rgba(16,24,40,.1);
+      background: #fff;
+    }
+
+    .rich-menu div {
+      padding: 11px 6px;
+      text-align: center;
+      font-size: 12px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .funnel {
+      display: grid;
+      gap: 9px;
+    }
+
+    .funnel-row {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr) 54px;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .bar {
+      height: 10px;
+      background: #eef2f6;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar span {
+      height: 100%;
+      display: block;
+      background: var(--blue);
+      border-radius: inherit;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .status-tile {
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      border-radius: 8px;
+      padding: 11px;
+    }
+
+    .status-tile strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .status-tile span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1080px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+      .nav {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .dashboard-grid,
+      .detail-layout {
+        grid-template-columns: 1fr;
+      }
+      .metric-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      main { padding: 14px; }
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .toolbar {
+        justify-content: stretch;
+      }
+      .search {
+        min-width: 0;
+        width: 100%;
+      }
+      .segmented {
+        width: 100%;
+      }
+      .segmented button {
+        flex: 1;
+      }
+      .nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .metric-row,
+      .mini-bars,
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+      .stock-mid {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Stock Scanner Pro</div>
+        <div class="brand-sub">LINE 推播摘要 + Web 深度分析的融合版原型</div>
+      </div>
+      <nav class="nav" aria-label="主選單">
+        <button class="active" data-section="dashboard"><span>▦</span><span>總覽</span><span class="count">15</span></button>
+        <button data-section="stocks"><span>⌁</span><span>掃描清單</span><span class="count">A/B</span></button>
+        <button data-section="warrants"><span>◇</span><span>權證</span><span class="count">Top</span></button>
+        <button data-section="alerts"><span>!</span><span>即時警示</span><span class="count">4</span></button>
+        <button data-section="admin"><span>●</span><span>系統狀態</span><span class="count">OK</span></button>
+        <button data-section="line"><span>□</span><span>LINE 預覽</span><span class="count">Flex</span></button>
+      </nav>
+      <div class="side-panel">
+        <strong>本月 LINE 用量</strong>
+        <div class="quota"><span></span></div>
+        <div class="side-note">842 / 2,000 則。即時警示已開啟去重與冷卻，避免訊息量失控。</div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="title">
+          <h1 id="pageTitle">盤後掃描總覽</h1>
+          <p id="pageSub">2026-05-05 17:30 更新，資料源：TWSE / TPEX / FinMind / Google Sheets</p>
+        </div>
+        <div class="toolbar">
+          <div class="search">
+            <input id="stockSearch" placeholder="搜尋代號或名稱，例如 2330、台積電">
+          </div>
+          <div class="segmented" aria-label="市場">
+            <button class="active" data-market="all">全部</button>
+            <button data-market="twse">上市</button>
+            <button data-market="tpex">上櫃</button>
+          </div>
+        </div>
+      </div>
+
+      <section id="dashboard" class="section active">
+        <div class="metric-row">
+          <div class="metric">
+            <div class="label">今日入選</div>
+            <div class="value">15</div>
+            <div class="hint">門檻 8 分，RS 優先排序</div>
+          </div>
+          <div class="metric">
+            <div class="label">A 強勢回踩</div>
+            <div class="value">6</div>
+            <div class="hint">風報比中位數 1:2.1</div>
+          </div>
+          <div class="metric">
+            <div class="label">BOX 結構</div>
+            <div class="value">5</div>
+            <div class="hint">箱型突破後回踩確認</div>
+          </div>
+          <div class="metric">
+            <div class="label">權證可選</div>
+            <div class="value">28</div>
+            <div class="hint">流動性與到期天數已過濾</div>
+          </div>
+        </div>
+
+        <div class="grid dashboard-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">主觀察標的</div>
+                <div class="panel-sub">點選股票會更新右側策略與 K 線</div>
+              </div>
+              <span class="badge blue">RS 排序</span>
+            </div>
+            <div class="panel-body">
+              <div id="scanList" class="scan-list"></div>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">策略詳情</div>
+                  <div id="detailSub" class="panel-sub">2330 台積電</div>
+                </div>
+                <span id="detailBadge" class="badge green">A 強勢回踩</span>
+              </div>
+              <div class="panel-body">
+                <div class="chart-wrap"><canvas id="chart" width="720" height="330"></canvas></div>
+                <div class="mini-bars" id="detailMini"></div>
+                <div class="detail-layout">
+                  <div class="strategy-box">
+                    <h3>進場條件</h3>
+                    <p id="entryText"></p>
+                  </div>
+                  <div class="strategy-box">
+                    <h3>風險控管</h3>
+                    <p id="riskText"></p>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn primary" data-jump="warrants">看權證</button>
+                  <button class="btn" data-jump="alerts">建立警示</button>
+                  <button class="btn" data-jump="line">LINE 卡片預覽</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">掃描漏斗</div>
+                  <div class="panel-sub">管理員每日檢查用</div>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="funnel" id="funnel"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="stocks" class="section">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">掃描清單</div>
+              <div class="panel-sub">融合 LINE 小卡與 Web 篩選，保留原案分數、RS、KD、BOX、風報比</div>
+            </div>
+            <span class="badge amber">可接 Google Sheets</span>
+          </div>
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table class="table" id="stockTable"></table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="warrants" class="section">
+        <div class="grid dashboard-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">權證推薦清單</div>
+                <div class="panel-sub">LINE 只推 Top 3，Web 顯示完整排序與風險標籤</div>
+              </div>
+              <span class="badge green">2330 標的</span>
+            </div>
+            <div class="panel-body">
+              <div class="scan-list" id="warrantList"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">篩選條件</div>
+                <div class="panel-sub">這些是比 LINE 更適合放在 Web 的控制項</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="status-grid">
+                <div class="status-tile"><strong>Delta</strong><span>0.35 - 0.65</span></div>
+                <div class="status-tile"><strong>剩餘天數</strong><span>45 - 180 天</span></div>
+                <div class="status-tile"><strong>實質槓桿</strong><span>3.0 - 8.0 倍</span></div>
+                <div class="status-tile"><strong>流動性</strong><span>近 5 日成交穩定</span></div>
+              </div>
+              <div class="actions">
+                <button class="btn primary">套用篩選</button>
+                <button class="btn">匯出候選</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="alerts" class="section">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">即時警示</div>
+              <div class="panel-sub">適合放在 LINE 推播，但需要冷卻、去重、盤中時段限制</div>
+            </div>
+            <span class="badge blue">冷卻 20 分鐘</span>
+          </div>
+          <div class="panel-body">
+            <div class="scan-list" id="alertList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin" class="section">
+        <div class="grid dashboard-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">系統狀態</div>
+                <div class="panel-sub">把原案分散在 log / 指令裡的營運資訊集中</div>
+              </div>
+              <span class="badge green">Healthy</span>
+            </div>
+            <div class="panel-body">
+              <div class="status-grid" id="statusGrid"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">排程紀錄</div>
+                <div class="panel-sub">可對應 main.py / continuous_refresh.py</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <table class="table" id="jobTable"></table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="line" class="section">
+        <div class="grid dashboard-grid">
+          <div class="line-preview">
+            <div class="line-head"><span>LINE 預覽</span><span>Stock Scanner</span></div>
+            <div class="chat">
+              <div class="bubble" id="lineBubble"></div>
+            </div>
+            <div class="rich-menu">
+              <div>大盤</div><div>掃描</div><div>RS排名</div>
+              <div>自選</div><div>進階</div><div>說明</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">LINE / Web 分工</div>
+                <div class="panel-sub">避免硬把 App 功能塞進 Flex Message</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="status-grid">
+                <div class="status-tile"><strong>LINE 做</strong><span>推播摘要、Top 3 權證、即時警示、快捷按鈕</span></div>
+                <div class="status-tile"><strong>Web 做</strong><span>K 線互動、完整權證表、複雜篩選、管理狀態</span></div>
+                <div class="status-tile"><strong>LIFF 可做</strong><span>從 LINE 按鈕直接打開這個 Web 頁面</span></div>
+                <div class="status-tile"><strong>下一步</strong><span>接真資料 API，再把 Flex JSON 產生器共用</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const stocks = [
+      { id: "2330", name: "台積電", market: "twse", signal: "A 強勢回踩", score: 10, rs: 92, price: 875, chg: 1.6, kd: "真收斂", pattern: "TREND_PULLBACK", entry: "860-875", stop: 832, target: 930, rr: "1:2.1", days: 2 },
+      { id: "3491", name: "昇達科", market: "tpex", signal: "BOX 結構", score: 9, rs: 89, price: 378.5, chg: 3.2, kd: "即將交叉", pattern: "BOX_AFTER_PULLBACK", entry: "365-380", stop: 348, target: 418, rr: "1:2.4", days: 1 },
+      { id: "2327", name: "國巨", market: "twse", signal: "B 回穩", score: 8, rs: 84, price: 642, chg: -0.8, kd: "假收斂", pattern: "BOX_AFTER_PULLBACK", entry: "630-645", stop: 606, target: 690, rr: "1:1.8", days: 3 },
+      { id: "6442", name: "光聖", market: "tpex", signal: "早期反轉", score: 8, rs: 81, price: 456, chg: 2.1, kd: "真收斂", pattern: "EARLY_REVERSAL", entry: "448-460", stop: 428, target: 505, rr: "1:2.0", days: 1 },
+      { id: "3036", name: "文曄", market: "twse", signal: "A 強勢回踩", score: 8, rs: 78, price: 128.5, chg: 1.1, kd: "收斂中", pattern: "TREND_PULLBACK", entry: "125-129", stop: 120, target: 140, rr: "1:2.2", days: 1 }
+    ];
+
+    const warrants = [
+      { code: "073321", name: "台積電凱基67購01", price: 2.15, delta: .52, leverage: 5.8, expiry: 92, liquidity: "佳", tag: "推薦" },
+      { code: "072884", name: "台積電元大66購05", price: 1.42, delta: .46, leverage: 6.6, expiry: 74, liquidity: "中", tag: "可觀察" },
+      { code: "075102", name: "台積電群益69購02", price: 3.05, delta: .61, leverage: 4.3, expiry: 151, liquidity: "佳", tag: "穩健" },
+      { code: "071998", name: "台積電國泰65購03", price: .82, delta: .31, leverage: 8.7, expiry: 38, liquidity: "弱", tag: "高風險" }
+    ];
+
+    const alerts = [
+      { title: "2330 觸及進場區", meta: "現價 872，落在 860-875；20 分鐘內不重複推播", type: "green" },
+      { title: "3491 突破箱頂", meta: "突破 380 並放量，符合 BOX 續強觀察", type: "blue" },
+      { title: "2327 KD 轉弱", meta: "K 值下彎且 gap 擴大，暫停新增權證候選", type: "amber" },
+      { title: "LINE quota 提醒", meta: "本月已用 42%，廣播前請確認白名單人數", type: "gray" }
+    ];
+
+    const statuses = [
+      ["K 棒 Cache", "今日 1,724 / 1,746 檔已更新"],
+      ["FinMind Quota", "正常，429 次數 0"],
+      ["Google Sheets", "掃描結果已寫入 17:31"],
+      ["權證 Master", "17:20 更新，14,208 檔"],
+      ["LINE Webhook", "最近事件 18 秒前"],
+      ["背景刷新", "continuous_refresh running"]
+    ];
+
+    const jobs = [
+      ["15:35", "scan", "完成", "15 檔入選"],
+      ["17:25", "sanity check", "完成", "資料新鮮"],
+      ["17:30", "notify", "完成", "推播 2 則 Flex"],
+      ["17:45", "warrant warmup", "完成", "Top3 cache"]
+    ];
+
+    const titles = {
+      dashboard: ["盤後掃描總覽", "2026-05-05 17:30 更新，資料源：TWSE / TPEX / FinMind / Google Sheets"],
+      stocks: ["掃描清單", "Web 版可排序、篩選、查看細節；LINE 只推重點摘要"],
+      warrants: ["權證中心", "完整權證清單與篩選條件適合放 Web，不硬塞 LINE"],
+      alerts: ["即時警示", "盤中監控可以推 LINE，但需要冷卻、去重、頻率限制"],
+      admin: ["管理狀態", "把 quota、cache、排程、Sheets 狀態集中給管理員看"],
+      line: ["LINE 卡片預覽", "LINE 做推播與決策摘要，深入互動交給 Web / LIFF"]
+    };
+
+    let selected = stocks[0];
+    let marketFilter = "all";
+
+    function badgeClass(value) {
+      if (value.includes("A") || value.includes("推薦") || value.includes("穩健")) return "green";
+      if (value.includes("BOX") || value.includes("RS")) return "blue";
+      if (value.includes("風險") || value.includes("轉弱")) return "red";
+      if (value.includes("B") || value.includes("觀察")) return "amber";
+      return "gray";
+    }
+
+    function filteredStocks() {
+      const q = document.getElementById("stockSearch").value.trim();
+      return stocks.filter(s => {
+        const marketOk = marketFilter === "all" || s.market === marketFilter;
+        const queryOk = !q || s.id.includes(q) || s.name.includes(q);
+        return marketOk && queryOk;
+      });
+    }
+
+    function renderScanList() {
+      const list = document.getElementById("scanList");
+      list.innerHTML = filteredStocks().map(s => `
+        <article class="stock-card ${s.id === selected.id ? "selected" : ""}" data-id="${s.id}">
+          <div class="stock-top">
+            <div class="symbol"><strong>${s.id}</strong><span>${s.name}</span></div>
+            <div class="tag-row">
+              <span class="badge ${badgeClass(s.signal)}">${s.signal}</span>
+              <span class="badge blue">RS ${s.rs}</span>
+            </div>
+          </div>
+          <div class="stock-mid">
+            <div><span class="price">${s.price}</span><span class="${s.chg >= 0 ? "up" : "down"}">${s.chg >= 0 ? "▲" : "▼"} ${Math.abs(s.chg)}%</span></div>
+            <div class="tag-row"><span class="badge amber">${s.score} 分</span><span class="badge gray">${s.kd}</span></div>
+          </div>
+          <div class="stock-bottom">
+            <span>進場 ${s.entry}</span>
+            <span>停損 ${s.stop}</span>
+            <span>目標 ${s.target}</span>
+            <span>風報 ${s.rr}</span>
+          </div>
+        </article>
+      `).join("");
+      list.querySelectorAll(".stock-card").forEach(card => {
+        card.addEventListener("click", () => {
+          selected = stocks.find(s => s.id === card.dataset.id);
+          renderAll();
+        });
+      });
+    }
+
+    function renderDetail() {
+      document.getElementById("detailSub").textContent = `${selected.id} ${selected.name}`;
+      const badge = document.getElementById("detailBadge");
+      badge.textContent = selected.signal;
+      badge.className = `badge ${badgeClass(selected.signal)}`;
+      document.getElementById("detailMini").innerHTML = `
+        <div class="mini-box"><div class="k">進場區</div><div class="v">${selected.entry}</div></div>
+        <div class="mini-box"><div class="k">停損</div><div class="v">${selected.stop}</div></div>
+        <div class="mini-box"><div class="k">風報比</div><div class="v">${selected.rr}</div></div>
+      `;
+      document.getElementById("entryText").textContent = `${selected.pattern}，KD ${selected.kd}。隔日若守住進場區上緣並量能未失控，可列為優先觀察。`;
+      document.getElementById("riskText").textContent = `跌破 ${selected.stop} 視為結構破壞。第一壓力 ${selected.target}，若盤中急拉不追價，等待回踩確認。`;
+      drawChart();
+      renderLineBubble();
+    }
+
+    function drawChart() {
+      const canvas = document.getElementById("chart");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "#edf0f3";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 6; i++) {
+        const y = 30 + i * 52;
+        ctx.beginPath(); ctx.moveTo(28, y); ctx.lineTo(w - 20, y); ctx.stroke();
+      }
+      let base = selected.price * .92;
+      const candles = Array.from({ length: 36 }, (_, i) => {
+        const trend = i * (selected.price * .003);
+        const wave = Math.sin(i / 2.6) * 12;
+        const close = base + trend + wave + (i > 25 ? i * 1.2 : 0);
+        const open = close + Math.sin(i) * 7;
+        return { open, close, high: Math.max(open, close) + 7 + Math.random() * 4, low: Math.min(open, close) - 7 - Math.random() * 4 };
+      });
+      candles[candles.length - 1].close = selected.price;
+      const max = Math.max(...candles.map(c => c.high));
+      const min = Math.min(...candles.map(c => c.low));
+      const xStep = (w - 70) / candles.length;
+      const yOf = v => h - 28 - ((v - min) / (max - min)) * (h - 58);
+
+      ctx.strokeStyle = "#93c5fd";
+      ctx.setLineDash([6, 5]);
+      [selected.stop, selected.target].forEach(v => {
+        const y = yOf(v);
+        ctx.beginPath(); ctx.moveTo(34, y); ctx.lineTo(w - 28, y); ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      candles.forEach((c, i) => {
+        const x = 38 + i * xStep;
+        const up = c.close >= c.open;
+        ctx.strokeStyle = up ? "#b42318" : "#047857";
+        ctx.fillStyle = up ? "#fdecec" : "#e8f7ef";
+        ctx.beginPath(); ctx.moveTo(x, yOf(c.high)); ctx.lineTo(x, yOf(c.low)); ctx.stroke();
+        const y1 = yOf(Math.max(c.open, c.close));
+        const y2 = yOf(Math.min(c.open, c.close));
+        ctx.fillRect(x - 4, y1, 8, Math.max(4, y2 - y1));
+        ctx.strokeRect(x - 4, y1, 8, Math.max(4, y2 - y1));
+      });
+
+      ctx.fillStyle = "#667085";
+      ctx.font = "20px Microsoft JhengHei, Arial";
+      ctx.fillText(`${selected.id} ${selected.name}`, 36, 26);
+      ctx.font = "14px Microsoft JhengHei, Arial";
+      ctx.fillText(`停損 ${selected.stop}`, w - 118, yOf(selected.stop) - 6);
+      ctx.fillText(`壓力 ${selected.target}`, w - 118, yOf(selected.target) - 6);
+    }
+
+    function renderFunnel() {
+      const rows = [
+        ["全市場", 1746, 100],
+        ["成交金額", 612, 35],
+        ["K 棒有效", 584, 33],
+        ["硬條件", 72, 18],
+        ["分數門檻", 21, 12],
+        ["最終推播", 15, 9]
+      ];
+      document.getElementById("funnel").innerHTML = rows.map(r => `
+        <div class="funnel-row">
+          <span>${r[0]}</span>
+          <div class="bar"><span style="width:${r[2]}%"></span></div>
+          <strong>${r[1]}</strong>
+        </div>
+      `).join("");
+    }
+
+    function renderStockTable() {
+      document.getElementById("stockTable").innerHTML = `
+        <thead><tr><th>股票</th><th>訊號</th><th>分數</th><th>RS</th><th>現價</th><th>KD</th><th>進場</th><th>停損</th><th>風報</th></tr></thead>
+        <tbody>
+          ${filteredStocks().map(s => `
+            <tr>
+              <td><strong>${s.id}</strong> ${s.name}</td>
+              <td><span class="badge ${badgeClass(s.signal)}">${s.signal}</span></td>
+              <td>${s.score}</td>
+              <td>${s.rs}</td>
+              <td class="${s.chg >= 0 ? "up" : "down"}">${s.price}</td>
+              <td>${s.kd}</td>
+              <td>${s.entry}</td>
+              <td>${s.stop}</td>
+              <td>${s.rr}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      `;
+    }
+
+    function renderWarrants() {
+      document.getElementById("warrantList").innerHTML = warrants.map(w => `
+        <div class="warrant-row">
+          <div>
+            <div class="warrant-title">${w.code} ${w.name}</div>
+            <div class="warrant-meta">
+              <span>價格 ${w.price}</span>
+              <span>Delta ${w.delta}</span>
+              <span>槓桿 ${w.leverage}x</span>
+              <span>到期 ${w.expiry} 天</span>
+              <span>流動性 ${w.liquidity}</span>
+            </div>
+          </div>
+          <span class="badge ${badgeClass(w.tag)}">${w.tag}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderAlerts() {
+      document.getElementById("alertList").innerHTML = alerts.map(a => `
+        <div class="alert-row">
+          <div>
+            <div class="alert-title">${a.title}</div>
+            <div class="alert-meta">${a.meta}</div>
+          </div>
+          <span class="badge ${a.type}">LINE</span>
+        </div>
+      `).join("");
+    }
+
+    function renderAdmin() {
+      document.getElementById("statusGrid").innerHTML = statuses.map(s => `
+        <div class="status-tile"><strong>${s[0]}</strong><span>${s[1]}</span></div>
+      `).join("");
+      document.getElementById("jobTable").innerHTML = `
+        <thead><tr><th>時間</th><th>任務</th><th>狀態</th><th>結果</th></tr></thead>
+        <tbody>${jobs.map(j => `<tr><td>${j[0]}</td><td>${j[1]}</td><td><span class="badge green">${j[2]}</span></td><td>${j[3]}</td></tr>`).join("")}</tbody>
+      `;
+    }
+
+    function renderLineBubble() {
+      document.getElementById("lineBubble").innerHTML = `
+        <div class="bubble-title">${selected.id} ${selected.name}</div>
+        <div class="tag-row">
+          <span class="badge ${badgeClass(selected.signal)}">${selected.signal}</span>
+          <span class="badge blue">RS ${selected.rs}</span>
+          <span class="badge amber">${selected.score} 分</span>
+        </div>
+        <div class="bubble-grid">
+          <div class="bubble-cell"><small>現價</small><strong>${selected.price} <span class="${selected.chg >= 0 ? "up" : "down"}">${selected.chg >= 0 ? "▲" : "▼"} ${Math.abs(selected.chg)}%</span></strong></div>
+          <div class="bubble-cell"><small>KD</small><strong>${selected.kd}</strong></div>
+          <div class="bubble-cell"><small>進場</small><strong>${selected.entry}</strong></div>
+          <div class="bubble-cell"><small>風報</small><strong>${selected.rr}</strong></div>
+        </div>
+        <div class="bubble-cell"><small>風險</small><strong>停損 ${selected.stop}，壓力 ${selected.target}</strong></div>
+        <div class="actions">
+          <button class="btn primary">策略</button>
+          <button class="btn">權證</button>
+          <button class="btn">回測</button>
+        </div>
+      `;
+    }
+
+    function renderAll() {
+      renderScanList();
+      renderDetail();
+      renderFunnel();
+      renderStockTable();
+      renderWarrants();
+      renderAlerts();
+      renderAdmin();
+    }
+
+    document.querySelectorAll(".nav button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.section;
+        document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === id));
+        document.getElementById("pageTitle").textContent = titles[id][0];
+        document.getElementById("pageSub").textContent = titles[id][1];
+      });
+    });
+
+    document.querySelectorAll("[data-market]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        marketFilter = btn.dataset.market;
+        document.querySelectorAll("[data-market]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderScanList();
+        renderStockTable();
+      });
+    });
+
+    document.querySelectorAll("[data-jump]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelector(`.nav button[data-section="${btn.dataset.jump}"]`).click();
+      });
+    });
+
+    document.getElementById("stockSearch").addEventListener("input", () => {
+      renderScanList();
+      renderStockTable();
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
