@@ -221,7 +221,7 @@
 
     .metric-row {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 12px;
       margin-bottom: 14px;
     }
@@ -782,6 +782,7 @@
         <button class="active" data-section="dashboard"><span>▦</span><span>總覽</span><span class="count">15</span></button>
         <button data-section="stocks"><span>⌁</span><span>掃描清單</span><span class="count">A/B</span></button>
         <button data-section="warrants"><span>◇</span><span>權證</span><span class="count">Top</span></button>
+        <button data-section="etf"><span>↕</span><span>ETF 換股</span><span class="count">12</span></button>
         <button data-section="alerts"><span>!</span><span>即時警示</span><span class="count">4</span></button>
         <button data-section="admin"><span>●</span><span>系統狀態</span><span class="count">OK</span></button>
         <button data-section="line"><span>□</span><span>LINE 預覽</span><span class="count">Flex</span></button>
@@ -832,6 +833,11 @@
             <div class="label">權證可選</div>
             <div class="value">28</div>
             <div class="hint">流動性與到期天數已過濾</div>
+          </div>
+          <div class="metric">
+            <div class="label">ETF 換股觀察</div>
+            <div class="value">12</div>
+            <div class="hint">3 檔與今日掃描重疊</div>
           </div>
         </div>
 
@@ -942,6 +948,57 @@
               <div class="actions">
                 <button class="btn primary">套用篩選</button>
                 <button class="btn">匯出候選</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="etf" class="section">
+        <div class="grid dashboard-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">主動式 ETF 換股清單</div>
+                <div class="panel-sub">追蹤 ETF 可能新增 / 剔除成分股，並和掃描訊號、RS、成交量交叉比對</div>
+              </div>
+              <span class="badge blue">模擬資料</span>
+            </div>
+            <div class="panel-body">
+              <div class="scan-list" id="etfList"></div>
+            </div>
+          </div>
+          <div class="grid">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">換股影響摘要</div>
+                  <div class="panel-sub">適合做成 LINE 主動提醒</div>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="status-grid">
+                  <div class="status-tile"><strong>新增候選</strong><span>7 檔，偏向 AI / 半導體 / 高股息低波</span></div>
+                  <div class="status-tile"><strong>剔除風險</strong><span>5 檔，主要因量能轉弱或權重下修</span></div>
+                  <div class="status-tile"><strong>掃描重疊</strong><span>2330、3491、3036 同時出現在技術觀察名單</span></div>
+                  <div class="status-tile"><strong>警示策略</strong><span>公告日前 3 天、成交量異常、權重變動超過 0.5% 推 LINE</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">追蹤規則</div>
+                  <div class="panel-sub">未來可接公開持股或手動 watchlist</div>
+                </div>
+              </div>
+              <div class="panel-body">
+                <ul class="reason-list">
+                  <li>ETF 新增候選若同時符合 RS 前 20% 與今日掃描，可升級成「換股 + 技術共振」警示。</li>
+                  <li>剔除候選若跌破 MA20 或成交量放大下跌，可標記為減碼風險。</li>
+                  <li>權重變動越大、ETF 規模越大，預估被動買賣壓越值得追蹤。</li>
+                  <li>LINE 只推重點事件，完整名單與歷史紀錄放 Web。</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1107,6 +1164,15 @@
       { title: "LINE quota 提醒", meta: "本月已用 42%，廣播前請確認白名單人數", type: "gray" }
     ];
 
+    const etfChanges = [
+      { etf: "00980A 主動台股成長", action: "新增候選", stock: "2330 台積電", weight: "+1.20%", date: "2026-05-10", effective: "2026-05-15", reason: "AI 半導體權重上修，RS 92 且今日 A 強勢回踩。", overlap: "掃描重疊", impact: "高" },
+      { etf: "00981A 主動台股科技", action: "新增候選", stock: "3491 昇達科", weight: "+0.65%", date: "2026-05-10", effective: "2026-05-15", reason: "BOX 結構轉強，成交金額放大，符合成長型持股調整。", overlap: "掃描重疊", impact: "中" },
+      { etf: "00982A 主動高息動能", action: "權重上調", stock: "3036 文曄", weight: "+0.48%", date: "2026-05-12", effective: "2026-05-17", reason: "MA10 回踩守住，風報達標，流動性足夠。", overlap: "掃描重疊", impact: "中" },
+      { etf: "00980A 主動台股成長", action: "觀察新增", stock: "6442 光聖", weight: "+0.35%", date: "2026-05-12", effective: "2026-05-17", reason: "早期反轉訊號，但樣本回測不足，先列觀察。", overlap: "策略觀察", impact: "中" },
+      { etf: "00981A 主動台股科技", action: "剔除風險", stock: "2327 國巨", weight: "-0.40%", date: "2026-05-10", effective: "2026-05-15", reason: "KD 假收斂且短線回穩力道不足，可能遭權重下修。", overlap: "掃描但偏弱", impact: "中" },
+      { etf: "00983A 主動低波收益", action: "剔除候選", stock: "2603 長榮", weight: "-0.55%", date: "2026-05-14", effective: "2026-05-20", reason: "波動擴大且跌破 MA20，與低波策略不符。", overlap: "未入選", impact: "低" }
+    ];
+
     const statuses = [
       ["K 棒 Cache", "今日 1,724 / 1,746 檔已更新"],
       ["FinMind Quota", "正常，429 次數 0"],
@@ -1127,6 +1193,7 @@
       dashboard: ["盤後掃描總覽", "2026-05-05 17:30 更新，資料源：TWSE / TPEX / FinMind / Google Sheets"],
       stocks: ["掃描清單", "Web 版可排序、篩選、查看細節；LINE 只推重點摘要"],
       warrants: ["權證中心", "完整權證清單與篩選條件適合放 Web，不硬塞 LINE"],
+      etf: ["主動式 ETF 換股", "追蹤可能新增、剔除與權重調整名單，找出 ETF 資金流與技術訊號共振"],
       alerts: ["即時警示", "盤中監控可以推 LINE，但需要冷卻、去重、頻率限制"],
       admin: ["管理狀態", "把 quota、cache、排程、Sheets 狀態集中給管理員看"],
       line: ["LINE 卡片預覽", "LINE 做推播與決策摘要，深入互動交給 Web / LIFF"]
@@ -1354,6 +1421,24 @@
       `).join("");
     }
 
+    function renderEtfChanges() {
+      document.getElementById("etfList").innerHTML = etfChanges.map(item => `
+        <article class="stock-card">
+          <div class="stock-top">
+            <div class="symbol"><strong>${item.stock.split(" ")[0]}</strong><span>${item.stock.split(" ").slice(1).join(" ")}</span></div>
+            <div class="tag-row">
+              <span class="badge ${item.action.includes("剔除") ? "red" : item.action.includes("觀察") ? "amber" : "green"}">${item.action}</span>
+              <span class="badge ${item.impact === "高" ? "red" : item.impact === "中" ? "amber" : "gray"}">影響 ${item.impact}</span>
+            </div>
+          </div>
+          <div class="signal-line"><strong>ETF</strong><span>${item.etf}</span></div>
+          <div class="signal-line"><strong>權重</strong><span>${item.weight}，公告 ${item.date}，生效 ${item.effective}</span></div>
+          <div class="signal-line"><strong>交集</strong><span>${item.overlap}</span></div>
+          <div class="signal-line"><strong>理由</strong><span>${item.reason}</span></div>
+        </article>
+      `).join("");
+    }
+
     function renderAdmin() {
       document.getElementById("statusGrid").innerHTML = statuses.map(s => `
         <div class="status-tile"><strong>${s[0]}</strong><span>${s[1]}</span></div>
@@ -1399,6 +1484,7 @@
       renderStockTable();
       renderWarrants();
       renderAlerts();
+      renderEtfChanges();
       renderAdmin();
     }
 
