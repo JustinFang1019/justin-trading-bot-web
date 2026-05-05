@@ -104,5 +104,8 @@ $outPath = Join-Path $dataDir "market-snapshot.json"
 $json = $snapshot | ConvertTo-Json -Depth 8
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($outPath, $json, $utf8NoBom)
+$jsPath = Join-Path $dataDir "market-snapshot.js"
+[System.IO.File]::WriteAllText($jsPath, "window.MARKET_SNAPSHOT = $json;", $utf8NoBom)
 Write-Host "Wrote $outPath"
+Write-Host "Wrote $jsPath"
 Write-Host "Rows: $($rows.Count), Watchlist: $(@($watchlist).Count), Active ETFs: $(@($activeEtfs).Count)"

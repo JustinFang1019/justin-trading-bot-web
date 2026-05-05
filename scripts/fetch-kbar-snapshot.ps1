@@ -78,4 +78,7 @@ $outPath = Join-Path $dataDir "kbar-snapshot.json"
 $json = $snapshot | ConvertTo-Json -Depth 12
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($outPath, $json, $utf8NoBom)
+$jsPath = Join-Path $dataDir "kbar-snapshot.js"
+[System.IO.File]::WriteAllText($jsPath, "window.KBAR_SNAPSHOT = $json;", $utf8NoBom)
 Write-Host "Wrote $outPath"
+Write-Host "Wrote $jsPath"

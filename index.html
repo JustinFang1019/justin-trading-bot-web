@@ -1270,6 +1270,8 @@
     </main>
   </div>
 
+  <script src="data/market-snapshot.js"></script>
+  <script src="data/kbar-snapshot.js"></script>
   <script>
     const stocks = [
       {
@@ -1421,7 +1423,7 @@
     }
 
     function kbarOf(stock) {
-      return kbarById.get(stock.id)?.rows || null;
+      return kbarById.get(`${stock.id}`)?.rows || null;
     }
 
     function closeOf(stock) {
@@ -1593,7 +1595,9 @@
       if (realRows?.length) {
         const firstDate = candles[0]?.date || "";
         const lastDate = candles[candles.length - 1]?.date || "";
-        ctx.fillText(`真實日K ${firstDate} ~ ${lastDate}`, 36, h - 8);
+        ctx.fillText(`${selected.id} 真實日K ${firstDate} ~ ${lastDate}`, 36, h - 8);
+      } else {
+        ctx.fillText(`${selected.id} 模擬K線（快照未載入）`, 36, h - 8);
       }
       ctx.fillText(`停損 ${selected.stop}`, w - 118, yOf(selected.stop) - 6);
       ctx.fillText(`壓力 ${selected.target}`, w - 118, yOf(selected.target) - 6);
@@ -1798,15 +1802,25 @@
 
     async function loadRealMarketData() {
       try {
-        const [marketRes, kbarRes] = await Promise.all([
-          fetch(`data/market-snapshot.json?v=${Date.now()}`, { cache: "no-store" }),
-          fetch(`data/kbar-snapshot.json?v=${Date.now()}`, { cache: "no-store" })
-        ]);
-        if (!marketRes.ok) throw new Error(`market HTTP ${marketRes.status}`);
-        marketSnapshot = await marketRes.json();
+        if (window.MARKET_SNAPSHOT) {
+          marketSnapshot = window.MARKET_SNAPSHOT;
+        } else {
+          const marketRes = await fetch(`data/market-snapshot.json?v=${Date.now()}`, { cache: "no-store" });
+          if (!marketRes.ok) throw new Error(`market HTTP ${marketRes.status}`);
+          marketSnapshot = await marketRes.json();
+        }
         marketById = new Map((marketSnapshot.watchlist || []).map(row => [row.id, row]));
-        if (kbarRes.ok) {
-          kbarSnapshot = await kbarRes.json();
+        if (window.KBAR_SNAPSHOT) {
+          kbarSnapshot = window.KBAR_SNAPSHOT;
+          kbarById = new Map(Object.entries(kbarSnapshot.series || {}));
+        } else {
+          const kbarRes = await fetch(`data/kbar-snapshot.json?v=${Date.now()}`, { cache: "no-store" });
+          if (kbarRes.ok) {
+            kbarSnapshot = await kbarRes.json();
+            kbarById = new Map(Object.entries(kbarSnapshot.series || {}));
+          }
+        }
+        if (kbarSnapshot) {
           kbarById = new Map(Object.entries(kbarSnapshot.series || {}));
         }
         document.getElementById("pageSub").textContent = `真實行情快照 ${marketDateText()}，TWSE/TPEX 官方公開資料；K 線為 Yahoo Finance 日K快照`;

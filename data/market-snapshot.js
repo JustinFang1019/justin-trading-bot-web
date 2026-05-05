@@ -1,4 +1,4 @@
-{
+window.MARKET_SNAPSHOT = {
     "generatedAt":  "2026-05-05T19:01:25+08:00",
     "marketDate":  "20260505",
     "twseTitle":  "115年05月05日 當日日成交資訊 (股)",
@@ -628,4 +628,4 @@
                            "trades":  39295
                        }
                    ]
-}
+};

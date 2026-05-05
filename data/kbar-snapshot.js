@@ -1,4 +1,4 @@
-{
+window.KBAR_SNAPSHOT = {
     "generatedAt":  "2026-05-05T19:01:27+08:00",
     "source":  "Yahoo Finance chart public endpoint",
     "range":  "6mo",
@@ -4730,4 +4730,4 @@
                                          ]
                             }
                }
-}
+};
