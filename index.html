@@ -281,6 +281,33 @@
       color: #fff;
     }
 
+    .flex-card {
+      box-shadow: var(--shadow);
+      margin: 0;
+    }
+
+    .flex-box {
+      display: flex;
+      gap: 6px;
+    }
+
+    .flex-box.vertical { flex-direction: column; }
+    .flex-box.horizontal { align-items: stretch; flex-direction: row; }
+
+    .flex-text {
+      color: #344054;
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .flex-text.lg,
+    .flex-text.xl { font-size: 16px; }
+    .flex-text.md { font-size: 14px; }
+    .flex-text.xs,
+    .flex-text.xxs { font-size: 11px; }
+    .flex-text.bold { font-weight: 800; }
+
     .panel-head {
       align-items: center;
       border-bottom: 1px solid var(--line);
@@ -528,6 +555,7 @@
     let filter = "all";
     let kbarById = new Map();
     let statusPayload = null;
+    let scanBubbles = [];
 
     const $ = id => document.getElementById(id);
 
@@ -609,6 +637,68 @@
       `;
     }
 
+    function flexStyle(node = {}) {
+      const css = [];
+      if (node.backgroundColor) css.push(`background:${node.backgroundColor}`);
+      if (node.color) css.push(`color:${node.color}`);
+      if (node.paddingAll) css.push(`padding:${node.paddingAll}`);
+      if (node.margin && node.margin !== "none") css.push("margin-top:6px");
+      if (node.cornerRadius) css.push(`border-radius:${node.cornerRadius}`);
+      if (node.borderColor) css.push(`border-color:${node.borderColor}`);
+      if (node.borderWidth) css.push(`border-style:solid;border-width:${node.borderWidth}`);
+      if (node.flex != null) css.push(`flex:${node.flex}`);
+      if (node.align === "center") css.push("text-align:center");
+      if (node.align === "end") css.push("text-align:right");
+      return css.length ? ` style="${css.join(";")}"` : "";
+    }
+
+    function flexNode(node, sid = "") {
+      if (!node) return "";
+      if (node.type === "text") {
+        const cls = ["flex-text", node.size || "xs", node.weight === "bold" ? "bold" : ""].filter(Boolean).join(" ");
+        return `<div class="${cls}"${flexStyle(node)}>${html(node.text)}</div>`;
+      }
+      if (node.type === "separator") return `<div style="border-top:1px solid var(--line);"></div>`;
+      if (node.type === "button") {
+        const action = node.action || {};
+        const label = action.label || action.text || action.uri || "Action";
+        const actionType =
+          label.includes("K") ? "chart" :
+          label.includes("權證") ? "warrant" :
+          label.includes("財報") ? "financial" :
+          label.includes("即時") ? "realtime" :
+          label.includes("回測") ? "backtest" :
+          label.includes("自選") || label.includes("+") ? "watch" : "link";
+        return `<button class="card-button ${node.style === "primary" ? "primary" : ""}" data-action="${actionType}" data-id="${sid}" data-uri="${html(action.uri || "")}" data-text="${html(action.text || "")}"${flexStyle(node)}>${html(label)}</button>`;
+      }
+      if (node.type === "box") {
+        return `<div class="flex-box ${node.layout || "vertical"}"${flexStyle(node)}>${(node.contents || []).map(child => flexNode(child, sid)).join("")}</div>`;
+      }
+      if (node.type === "bubble") {
+        return `<div class="line-card flex-card">
+          ${node.header ? flexNode(node.header, sid) : ""}
+          ${node.body ? flexNode(node.body, sid) : ""}
+          ${node.footer ? flexNode(node.footer, sid) : ""}
+        </div>`;
+      }
+      return "";
+    }
+
+    function stockIdFromBubble(bubble) {
+      const texts = [];
+      const walk = node => {
+        if (!node) return;
+        if (node.type === "text" && node.text) texts.push(String(node.text));
+        (node.contents || []).forEach(walk);
+        if (node.header) walk(node.header);
+        if (node.body) walk(node.body);
+        if (node.footer) walk(node.footer);
+      };
+      walk(bubble);
+      const match = texts.join(" ").match(/\b\d{4}\b/);
+      return match ? match[0] : "";
+    }
+
     function scanCard(stock) {
       return `
         <article class="line-card ${selected?.id === stock.id ? "selected" : ""}" data-id="${stock.id}">
@@ -647,6 +737,17 @@
       $("cardFeed").innerHTML = rows.length
         ? rows.map(scanCard).join("")
         : `<div class="message">沒有符合條件的小卡。若這裡是空的，請看狀態頁的 API 錯誤。</div>`;
+    }
+
+    function renderOriginalFeed() {
+      const rows = filteredStocks();
+      const allowed = new Set(rows.map(stock => stock.id));
+      const bubbles = scanBubbles.filter(item => allowed.has(item.id));
+      $("cardFeed").innerHTML = bubbles.length
+        ? bubbles.map(item => `<article data-id="${item.id}" class="${selected?.id === item.id ? "selected" : ""}">${flexNode(item.bubble, item.id)}</article>`).join("")
+        : rows.length
+          ? rows.map(scanCard).join("")
+          : `<div class="message">沒有符合條件的小卡。若這裡是空的，請看狀態頁的 API 錯誤。</div>`;
     }
 
     function activate(viewId) {
@@ -800,7 +901,7 @@
 
     async function selectStock(id, nextView = null) {
       selected = stocks.find(s => s.id === id) || selected;
-      renderFeed();
+      renderOriginalFeed();
       await loadExtras(selected);
       renderDetail();
       renderWarrants();
@@ -810,20 +911,31 @@
 
     async function loadApp() {
       try {
-        const [health, scans, status] = await Promise.allSettled([
+        const [health, scans, cards, status] = await Promise.allSettled([
           getJson(`${API_BASE}/health`),
           getJson(`${API_BASE}/scan-results`),
+          getJson(`${API_BASE}/scan-cards`),
           getJson(`${API_BASE}/status`)
         ]);
         if (health.status !== "fulfilled") throw health.reason;
         if (scans.status !== "fulfilled") throw scans.reason;
         stocks = (scans.value.data || []).map(mapStock);
         if (!stocks.length) throw new Error("scan-results empty");
+        if (cards.status === "fulfilled" && cards.value?.data?.flex_messages) {
+          scanBubbles = [];
+          cards.value.data.flex_messages.forEach(message => {
+            const bubbles = message?.contents?.contents || [];
+            bubbles.forEach(bubble => {
+              const id = stockIdFromBubble(bubble);
+              if (id) scanBubbles.push({ id, bubble });
+            });
+          });
+        }
         selected = stocks[0];
         statusPayload = status.status === "fulfilled" ? status.value.data : null;
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = `${stocks.length} 檔 / ${scans.value.generated_at || ""}`;
-        renderFeed();
+        renderOriginalFeed();
         await selectStock(selected.id);
       } catch (error) {
         stocks = [];
@@ -840,10 +952,10 @@
       if (!btn) return;
       filter = btn.dataset.filter;
       document.querySelectorAll("[data-filter]").forEach(b => b.classList.toggle("active", b === btn));
-      renderFeed();
+      renderOriginalFeed();
     });
 
-    $("searchInput").addEventListener("input", renderFeed);
+    $("searchInput").addEventListener("input", renderOriginalFeed);
 
     document.addEventListener("click", async event => {
       const nav = event.target.closest("[data-view]");

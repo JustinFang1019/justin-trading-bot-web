@@ -85,6 +85,10 @@ In `justin-trading-bot-web`:
   - If API loading fails, the page shows an API error instead of showing fake 2330/3491/2327 data.
   - Bottom navigation is now 小卡 / K線 / 權證 / 狀態.
   - Backend status view remains because the user liked that feature.
+- Updated the design again after user clarified Today must match the original scan card.
+  - Added `GET /api/web/scan-cards` in `justin-trading-bot` so the backend returns the whole `notify.py build_flex_message()` carousel in one API call.
+  - `justin-trading-bot-web` Today view now renders those original Flex bubbles directly.
+  - `/api/web/scan-results` remains for search/filter metadata and extended detail pages, but it is no longer the source used to reconstruct the Today cards.
 
 In `justin-trading-bot`:
 
@@ -126,12 +130,13 @@ Important implementation notes:
 - JavaScript syntax check was not rerun after the scan-card/button-routing update because local `node.exe` remains blocked in this environment.
 - Confirmed live Render API still returns `Access-Control-Allow-Origin: *`, so GitHub Pages should be allowed to call it from the browser.
 - The full rebuild has not been browser-verified yet after this edit; refresh GitHub Pages and check that first card is from live API, currently expected to start with `2355 敬鵬` for the 2026-05-05 scan payload.
+- After the latest change, also verify `/api/web/scan-cards` is deployed on Render before expecting GitHub Pages to show original Flex cards.
 
 ## Recommended Next Implementation Step
 
 1. Open a PR from `codex/web-readonly-api` into the original bot repo main branch, test it on Render/staging, then merge only if the live bot remains stable.
 2. Open the GitHub Pages URL and verify the mobile page shows the same scan candidates as LINE. It should not show the old prototype names like `2330 台積電` unless those are actually in live scan-results.
-3. Improve visual fidelity of the scan cards if they still differ from LINE, but keep using the bot API fields and do not revive fake data.
+3. Improve the lightweight Flex renderer if spacing differs from LINE, but keep the data source as `/api/web/scan-cards`.
 4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 
