@@ -59,7 +59,7 @@ Mobile Web / LIFF viewer
 
 Phase 1 should be read-only.
 
-Suggested endpoints:
+Implemented first-pass endpoints are available in `JustinFang1019/justin-trading-bot` on branch `codex/web-readonly-api`:
 
 - `GET /api/web/scan-results`
   - Today's scan results from Google Sheets.
@@ -77,16 +77,27 @@ Suggested endpoints:
   - This is the key endpoint for preserving original card format.
 
 - `GET /api/web/stock/<sid>/warrants`
-  - Uses existing warrant cache and Top 3 logic.
+  - Uses existing warrant Top 3 disk cache.
+  - First pass intentionally does not trigger a new warrant calculation from the web endpoint.
 
-- `GET /api/web/rs`
+- `GET /api/web/performance`
+  - Uses existing active performance sheet reader.
+
+- `GET /api/web/watchlist`
+  - Uses existing watchlist sheet reader.
+
+- `GET /api/web/rs/top`
   - Uses existing RS baseline.
 
-- `GET /api/web/funnel`
-  - Uses existing funnel stats.
-
 - `GET /api/web/status`
-  - K-bar freshness, Sheets status, warrant cache, quota, scheduler status.
+  - K-bar cache count, warrant cache count, read-only API status.
+
+Still deferred:
+
+- `GET /api/web/funnel`
+- stale-data detail endpoint
+- LINE quota detail endpoint
+- authenticated write actions
 
 ## Rendering Original Cards
 
@@ -114,4 +125,3 @@ Do not manually recreate the LINE card in `index.html` long-term. That will drif
 ## Current Repo Role
 
 `justin-trading-bot-web` currently remains a static prototype and design target. It can be used to design the mobile experience, but the real full-function version needs backend APIs from the original bot.
-

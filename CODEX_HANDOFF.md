@@ -2,13 +2,13 @@
 
 Last updated: 2026-05-06 Asia/Taipei
 
-## Current user intent
+## Current User Intent
 
 The user wants to continue this project across computers. GitHub should carry both code and concise Codex handoff notes.
 
 The latest clarified product direction: this should become a mobile web version of the existing LINE bot, not a separate dashboard. The existing LINE Flex card UI and information density are important and must stay canonical. The mobile site should let users open a URL and see everything the LINE card provides, plus deeper K-bar, watchlist, warrant, performance, status, and related detail views.
 
-## Required handoff rule
+## Required Handoff Rule
 
 At the end of every meaningful Codex session, update this file before committing/pushing if there was any design discussion, implementation decision, code change, blocker, or next-step decision.
 
@@ -22,12 +22,12 @@ Each update should include:
 
 Then commit and push the handoff update to GitHub so another computer can continue by reading this file first.
 
-## Repositories discussed
+## Repositories Discussed
 
 - `JustinFang1019/justin-trading-bot-web`: current web prototype repo cloned on this computer at `C:\Users\Siriu\Documents\justin-trading-bot-web`.
 - `JustinFang1019/justin-trading-bot`: fuller private LINE trading bot repo. It contains the real LINE webhook, scanner, strategies, Flex card builders, cache, schedules, warrant modules, and Google Sheets persistence.
 
-## Current project state
+## Current Project State
 
 `justin-trading-bot-web` is a static/mobile web prototype. It already has:
 
@@ -38,7 +38,7 @@ Then commit and push the handoff update to GitHub so another computer can contin
 
 It is not yet a real backend or LINE/LIFF app.
 
-## Important constraint from user
+## Important Constraint From User
 
 The user's core LINE cards and strategy logic must not change. In particular, preserve behavior from the fuller LINE bot repo:
 
@@ -48,7 +48,7 @@ The user's core LINE cards and strategy logic must not change. In particular, pr
 
 The mobile/web redesign should wrap, preview, filter, and navigate around the existing outputs, not rewrite trading logic.
 
-## Proposal direction from this conversation
+## Product Direction
 
 Build a mobile-first companion interface for the existing LINE bot:
 
@@ -57,30 +57,62 @@ Build a mobile-first companion interface for the existing LINE bot:
 - Prefer a thin API/export layer that reuses existing scan results, K-bar cache, warrant cache, and Google Sheets data.
 - Treat the old static web prototype as visual direction, then connect it to real data from `justin-trading-bot`.
 
-## Recommended next implementation step
+## Implemented So Far
 
-Current implemented step:
+In `justin-trading-bot-web`:
 
 - Rewrote `index.html` as a mobile-first companion viewer.
 - Added bottom navigation: Today, Detail, Warrants, Status, LINE.
 - Added filters for market, START/CONT, RS 90+, score, BOX, and repeat selections.
 - Added a mobile detail view with chart, A/B/C entry layers, stop, pressure, and LINE preview.
 - Added `docs/mobile-redesign-proposal.md`.
-- Fixed LINE preview direction after user feedback: the web app must not invent a different LINE card format. The preview now follows the known `notify.py` structure more closely with entry/risk/RS pills and the original text summary shape. Future work should consume real Flex JSON from the bot instead of recreating cards by hand.
+- Added `docs/web-version-integration-plan.md`.
+- Fixed LINE preview direction after user feedback: the web app must not invent a different LINE card format. Future work should consume real Flex JSON from the bot instead of recreating cards by hand.
 
-Recommended next implementation step:
+In `justin-trading-bot`:
 
-1. Stop treating `justin-trading-bot-web` as only a static GitHub Pages prototype.
-2. Decide backend architecture for the web version:
-   - Preferred: add read-only web/API routes to the existing `justin-trading-bot` backend and keep all secrets/server logic there.
-   - Alternative: create a separate backend service that imports/copies the bot modules.
-3. Export real Flex JSON or canonical card payloads from `stock_scanner/notify.py`; the web app should render from that, not recreate card content manually.
-4. Expose read-only APIs for K-bars, Google Sheets scan results, watchlist, warrants, performance, funnel stats, and system status.
-5. Only after real data APIs exist, replace prototype arrays in `index.html`.
-6. Add `View details` URL action from LINE cards only if it can be added without changing card meaning.
+- Added a conservative read-only API layer on branch `codex/web-readonly-api` and pushed it to GitHub.
+- Branch URL: `https://github.com/JustinFang1019/justin-trading-bot/tree/codex/web-readonly-api`
+- Commit: `18bf59c Add read-only web API endpoints`
+- Files touched there: `app.py`, `stock_scanner/web_api.py`
+- Existing LINE webhook, schedulers, strategy logic, push/reply commands, and Google Sheets write flows were intentionally not changed.
 
-## Next prompt suggestion
+Read-only API endpoints now available on that branch:
+
+- `GET /api/web/health`
+- `GET /api/web/scan-results`
+- `GET /api/web/stock/<stock_id>`
+- `GET /api/web/stock/<stock_id>/kbar?limit=180`
+- `GET /api/web/stock/<stock_id>/card`
+- `GET /api/web/stock/<stock_id>/warrants`
+- `GET /api/web/performance`
+- `GET /api/web/watchlist`
+- `GET /api/web/rs/top?limit=20`
+- `GET /api/web/status`
+
+Important implementation notes:
+
+- `/api/web/stock/<stock_id>/card` calls the original `stock_scanner.notify.build_flex_message()` and `build_message()`, so the web version can consume canonical LINE card output instead of hand-recreating the small card.
+- `/api/web/stock/<stock_id>/kbar` reads existing `/data/kbar` disk cache through the bot's existing loader.
+- `/api/web/stock/<stock_id>/warrants` reads existing Top 3 warrant disk cache and does not trigger a fresh warrant calculation.
+- `WEB_API_ALLOWED_ORIGIN` can restrict CORS; if unset, the read-only API currently returns `Access-Control-Allow-Origin: *`.
+
+## Verification
+
+- Reviewed diffs and route wiring in the original bot repo.
+- Confirmed `app.py` only registers the new blueprint and does not change existing LINE bot behavior.
+- Python syntax execution was skipped because this computer has only `py.exe` launcher and no installed Python interpreter available in PATH.
+
+## Recommended Next Implementation Step
+
+1. Open a PR from `codex/web-readonly-api` into the original bot repo main branch, test it on Render/staging, then merge only if the live bot remains stable.
+2. After that API is deployed, update `justin-trading-bot-web/index.html` to replace prototype arrays with `fetch()` calls to `/api/web/*`.
+3. Render the original card from `/api/web/stock/<stock_id>/card` first, then add deeper web-only sections around it.
+4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
+5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
+
+## Next Prompt Suggestion
 
 Ask Codex:
 
-`請根據 CODEX_HANDOFF.md，幫我把手機版改版提案整理成 docs/mobile-redesign-proposal.md，並列出第一階段要改哪些檔案。`
+`請先閱讀 CODEX_HANDOFF.md，接著把 justin-trading-bot-web/index.html 的假資料改成呼叫已在 justin-trading-bot 的 codex/web-readonly-api branch 新增的 /api/web/* endpoints。核心小卡請優先使用 /api/web/stock/<stock_id>/card 回傳的原始 Flex JSON，不要再手刻一份。`
