@@ -43,11 +43,19 @@ Build a mobile-first companion interface for the existing LINE bot:
 
 ## Recommended next implementation step
 
-Create a concrete phase-1 implementation plan:
+Current implemented step:
+
+- Rewrote `index.html` as a mobile-first companion viewer.
+- Added bottom navigation: Today, Detail, Warrants, Status, LINE.
+- Added filters for market, START/CONT, RS 90+, score, BOX, and repeat selections.
+- Added a mobile detail view with chart, A/B/C entry layers, stop, pressure, and LINE preview.
+- Added `docs/mobile-redesign-proposal.md`.
+
+Recommended next implementation step:
 
 1. Define read-only JSON endpoints or snapshot files exported by `justin-trading-bot`.
 2. Map existing scan result fields to the mobile UI without changing strategy fields.
-3. Redesign `justin-trading-bot-web/index.html` into a cleaner mobile-first PWA-style viewer.
+3. Replace prototype stock/warrant arrays in `index.html` with those snapshots.
 4. Add a `View details` URL action from LINE cards only if it can be added without changing card meaning.
 
 ## Next prompt suggestion
