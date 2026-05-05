@@ -831,10 +831,42 @@
     }
 
     @media (max-width: 720px) {
+      body {
+        background: #fff;
+      }
+      .app {
+        display: block;
+      }
       main { padding: 14px; }
+      .sidebar {
+        position: static;
+        height: auto;
+        padding: 12px;
+        border-bottom: 1px solid rgba(255,255,255,.12);
+      }
+      .brand {
+        padding: 4px 4px 10px;
+        margin-bottom: 10px;
+      }
+      .brand-title {
+        font-size: 16px;
+      }
+      .brand-sub {
+        font-size: 11px;
+      }
+      .side-panel {
+        display: none;
+      }
       .topbar {
         align-items: stretch;
         flex-direction: column;
+        margin-bottom: 12px;
+      }
+      .title h1 {
+        font-size: 20px;
+      }
+      .title p {
+        font-size: 12px;
       }
       .toolbar {
         justify-content: stretch;
@@ -850,7 +882,21 @@
         flex: 1;
       }
       .nav {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: flex;
+        overflow-x: auto;
+        gap: 8px;
+        padding-bottom: 2px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .nav button {
+        width: auto;
+        min-width: 116px;
+        grid-template-columns: 18px minmax(0, 1fr);
+        padding: 9px 10px;
+        white-space: nowrap;
+      }
+      .nav .count {
+        display: none;
       }
       .metric-row,
       .mini-bars,
@@ -858,12 +904,57 @@
       .fact-grid {
         grid-template-columns: 1fr;
       }
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px;
+      }
+      .panel-body {
+        padding: 12px;
+      }
+      .chart-wrap {
+        height: 220px;
+      }
       .stock-mid {
         align-items: flex-start;
         flex-direction: column;
       }
+      .stock-top,
+      .etf-event-top,
+      .warrant-row,
+      .alert-row {
+        align-items: flex-start;
+        grid-template-columns: 1fr;
+      }
+      .tag-row {
+        flex-wrap: wrap;
+      }
+      .etf-mobile-summary {
+        grid-template-columns: 1fr;
+      }
+      .mobile-tabs {
+        margin-left: -2px;
+        margin-right: -2px;
+      }
+      .mobile-tabs button {
+        padding: 9px 12px;
+      }
+      .line-preview {
+        border-radius: 0;
+        margin-left: -14px;
+        margin-right: -14px;
+      }
+      .chat {
+        min-height: 420px;
+      }
+      .bubble {
+        max-width: none;
+      }
       .table-wrap {
         overflow-x: auto;
+      }
+      .table {
+        min-width: 980px;
       }
     }
   </style>
@@ -1302,6 +1393,8 @@
     let selectedEtf = "all";
     let marketSnapshot = null;
     let marketById = new Map();
+    let kbarSnapshot = null;
+    let kbarById = new Map();
 
     function compactMoney(value) {
       if (!value) return "—";
@@ -1325,6 +1418,10 @@
 
     function realOf(stock) {
       return marketById.get(stock.id);
+    }
+
+    function kbarOf(stock) {
+      return kbarById.get(stock.id)?.rows || null;
     }
 
     function closeOf(stock) {
@@ -1442,18 +1539,31 @@
         const y = 30 + i * 52;
         ctx.beginPath(); ctx.moveTo(28, y); ctx.lineTo(w - 20, y); ctx.stroke();
       }
-      let base = selected.price * .92;
-      const candles = Array.from({ length: 36 }, (_, i) => {
-        const trend = i * (selected.price * .003);
-        const wave = Math.sin(i / 2.6) * 12;
-        const close = base + trend + wave + (i > 25 ? i * 1.2 : 0);
-        const open = close + Math.sin(i) * 7;
-        return { open, close, high: Math.max(open, close) + 7 + Math.random() * 4, low: Math.min(open, close) - 7 - Math.random() * 4 };
-      });
-      candles[candles.length - 1].close = selected.price;
+      const realRows = kbarOf(selected);
+      let candles = realRows?.length
+        ? realRows.slice(-60).map(row => ({
+            date: row.date,
+            open: Number(row.open),
+            high: Number(row.high),
+            low: Number(row.low),
+            close: Number(row.close)
+          }))
+        : null;
+      if (!candles) {
+        let base = selected.price * .92;
+        candles = Array.from({ length: 36 }, (_, i) => {
+          const trend = i * (selected.price * .003);
+          const wave = Math.sin(i / 2.6) * 12;
+          const close = base + trend + wave + (i > 25 ? i * 1.2 : 0);
+          const open = close + Math.sin(i) * 7;
+          return { open, close, high: Math.max(open, close) + 7, low: Math.min(open, close) - 7 };
+        });
+        candles[candles.length - 1].close = selected.price;
+      }
       const max = Math.max(...candles.map(c => c.high));
       const min = Math.min(...candles.map(c => c.low));
       const xStep = (w - 70) / candles.length;
+      const candleWidth = Math.max(3, Math.min(8, xStep * .48));
       const yOf = v => h - 28 - ((v - min) / (max - min)) * (h - 58);
 
       ctx.strokeStyle = "#93c5fd";
@@ -1472,14 +1582,19 @@
         ctx.beginPath(); ctx.moveTo(x, yOf(c.high)); ctx.lineTo(x, yOf(c.low)); ctx.stroke();
         const y1 = yOf(Math.max(c.open, c.close));
         const y2 = yOf(Math.min(c.open, c.close));
-        ctx.fillRect(x - 4, y1, 8, Math.max(4, y2 - y1));
-        ctx.strokeRect(x - 4, y1, 8, Math.max(4, y2 - y1));
+        ctx.fillRect(x - candleWidth / 2, y1, candleWidth, Math.max(3, y2 - y1));
+        ctx.strokeRect(x - candleWidth / 2, y1, candleWidth, Math.max(3, y2 - y1));
       });
 
       ctx.fillStyle = "#667085";
       ctx.font = "20px Microsoft JhengHei, Arial";
       ctx.fillText(`${selected.id} ${selected.name}`, 36, 26);
       ctx.font = "14px Microsoft JhengHei, Arial";
+      if (realRows?.length) {
+        const firstDate = candles[0]?.date || "";
+        const lastDate = candles[candles.length - 1]?.date || "";
+        ctx.fillText(`真實日K ${firstDate} ~ ${lastDate}`, 36, h - 8);
+      }
       ctx.fillText(`停損 ${selected.stop}`, w - 118, yOf(selected.stop) - 6);
       ctx.fillText(`壓力 ${selected.target}`, w - 118, yOf(selected.target) - 6);
     }
@@ -1683,12 +1798,19 @@
 
     async function loadRealMarketData() {
       try {
-        const res = await fetch(`data/market-snapshot.json?v=${Date.now()}`, { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        marketSnapshot = await res.json();
+        const [marketRes, kbarRes] = await Promise.all([
+          fetch(`data/market-snapshot.json?v=${Date.now()}`, { cache: "no-store" }),
+          fetch(`data/kbar-snapshot.json?v=${Date.now()}`, { cache: "no-store" })
+        ]);
+        if (!marketRes.ok) throw new Error(`market HTTP ${marketRes.status}`);
+        marketSnapshot = await marketRes.json();
         marketById = new Map((marketSnapshot.watchlist || []).map(row => [row.id, row]));
-        document.getElementById("pageSub").textContent = `真實行情快照 ${marketDateText()}，TWSE/TPEX 官方公開資料；策略與 ETF 換股事件仍為原型模型`;
-        document.querySelector(".side-note").textContent = `已載入官方快照：${marketSnapshot.counts?.all || 0} 筆，主動 ETF ${marketSnapshot.counts?.activeEtfs || 0} 檔。LINE 用量為原型示意。`;
+        if (kbarRes.ok) {
+          kbarSnapshot = await kbarRes.json();
+          kbarById = new Map(Object.entries(kbarSnapshot.series || {}));
+        }
+        document.getElementById("pageSub").textContent = `真實行情快照 ${marketDateText()}，TWSE/TPEX 官方公開資料；K 線為 Yahoo Finance 日K快照`;
+        document.querySelector(".side-note").textContent = `已載入官方快照：${marketSnapshot.counts?.all || 0} 筆，主動 ETF ${marketSnapshot.counts?.activeEtfs || 0} 檔，K 線 ${kbarById.size} 檔。`;
         renderAll();
       } catch (error) {
         console.warn("Market snapshot unavailable, using prototype data.", error);

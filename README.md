@@ -16,7 +16,9 @@
 
 - `index.html`
 - `data/market-snapshot.json`：TWSE / TPEX 官方公開行情快照
+- `data/kbar-snapshot.json`：watchlist 真實日 K 快照
 - `scripts/fetch-real-market-data.ps1`：行情快照更新腳本
+- `scripts/fetch-kbar-snapshot.ps1`：K 線快照更新腳本
 
 ## 新對話快速接續方式
 
@@ -45,4 +47,4 @@
 - 先做輕量 MVP：每日掃描、策略核心、LINE 推播、結果儲存。
 - 權證、回測、教學卡、複雜權限可第二階段再加。
 - LINE 不硬塞完整 App 功能；深入互動用 Web / LIFF 承接。
-- GitHub Actions 會在平日台灣時間 17:45 更新官方行情快照。
+- GitHub Actions 會在平日台灣時間 17:45 更新官方行情與 K 線快照。

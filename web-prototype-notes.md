@@ -96,18 +96,33 @@ The prototype now includes an official public market-data snapshot.
 
 - Fetch script: `scripts/fetch-real-market-data.ps1`
 - Output: `data/market-snapshot.json`
+- K-line fetch script: `scripts/fetch-kbar-snapshot.ps1`
+- K-line output: `data/kbar-snapshot.json`
 - Sources:
   - TWSE daily trading information.
   - TPEX daily close quotes.
 
 The frontend tries to load `data/market-snapshot.json` and replace matching watchlist stocks with real official close, price change, volume, trade value, and market date.
+It also tries to load `data/kbar-snapshot.json` and draw the selected stock's real daily candlestick snapshot on the Canvas chart.
 
 Notes:
 
 - Strategy score, KD, MA, RS, and strategy explanation are still prototype model data.
 - ETF rebalance events are still an observation model, not official rebalance announcements.
 - Active ETF market quotes are derived from official market rows where the name includes active-management wording or the ticker ends with `A`.
+- Candlestick snapshots are from Yahoo Finance chart public endpoint, currently for the prototype watchlist.
 - When opening via local `file://`, the browser may block JSON loading. GitHub Pages can load it normally.
+
+## Mobile Layout
+
+The app now has a mobile web layout:
+
+- Sidebar becomes a compact top navigation.
+- Navigation buttons scroll horizontally.
+- Main grids collapse into a single column.
+- Cards, ETF groups, alerts, and warrant rows stack vertically.
+- Tables remain horizontally scrollable for dense research data.
+- The chart uses a lower mobile height.
 
 ## ETF Grouping
 
