@@ -89,6 +89,8 @@ In `justin-trading-bot-web`:
   - Added `GET /api/web/scan-cards` in `justin-trading-bot` so the backend returns the whole `notify.py build_flex_message()` carousel in one API call.
   - `justin-trading-bot-web` Today view now renders those original Flex bubbles directly.
   - `/api/web/scan-results` remains for search/filter metadata and extended detail pages, but it is no longer the source used to reconstruct the Today cards.
+  - PR #4 (`Expose scan flex cards API`) was opened and merged into `justin-trading-bot` main.
+  - Render was still returning 404 for `/api/web/scan-cards` shortly after merge, so Render likely needs `Manual Deploy -> Deploy latest commit` or more time for auto deploy.
 
 In `justin-trading-bot`:
 
@@ -130,7 +132,7 @@ Important implementation notes:
 - JavaScript syntax check was not rerun after the scan-card/button-routing update because local `node.exe` remains blocked in this environment.
 - Confirmed live Render API still returns `Access-Control-Allow-Origin: *`, so GitHub Pages should be allowed to call it from the browser.
 - The full rebuild has not been browser-verified yet after this edit; refresh GitHub Pages and check that first card is from live API, currently expected to start with `2355 敬鵬` for the 2026-05-05 scan payload.
-- After the latest change, also verify `/api/web/scan-cards` is deployed on Render before expecting GitHub Pages to show original Flex cards.
+- After the latest change, also verify `/api/web/scan-cards` is deployed on Render before expecting GitHub Pages to show original Flex cards. If 404 persists, manually deploy latest main on Render.
 
 ## Recommended Next Implementation Step
 
