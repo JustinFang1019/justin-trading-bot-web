@@ -108,3 +108,12 @@ Notes:
 - ETF rebalance events are still an observation model, not official rebalance announcements.
 - Active ETF market quotes are derived from official market rows where the name includes active-management wording or the ticker ends with `A`.
 - When opening via local `file://`, the browser may block JSON loading. GitHub Pages can load it normally.
+
+## ETF Grouping
+
+ETF rebalance events are now grouped by ETF.
+
+- The ETF page has filter tabs: all ETFs or one specific ETF.
+- Each ETF group shows event count, add/upweight count, removal-risk count, and high-impact count.
+- Each event card shows stock, action, estimated weight change, announcement/effective dates, strategy overlap, impact, and reason.
+- This grouping is separate from the future full mobile redesign.

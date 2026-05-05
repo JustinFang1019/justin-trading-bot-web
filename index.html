@@ -507,6 +507,103 @@
       color: var(--text);
     }
 
+    .mobile-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 0 12px;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-tabs button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 8px 11px;
+      white-space: nowrap;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mobile-tabs button.active {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .etf-group {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .etf-group + .etf-group {
+      margin-top: 12px;
+    }
+
+    .etf-group-header {
+      padding: 12px;
+      background: #fbfcfd;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .etf-group-title strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .etf-group-title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .etf-event {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .etf-event:last-child {
+      border-bottom: 0;
+    }
+
+    .etf-event-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .etf-stock {
+      min-width: 0;
+    }
+
+    .etf-stock strong {
+      font-size: 17px;
+    }
+
+    .etf-stock span {
+      color: var(--muted);
+      margin-left: 5px;
+      font-size: 13px;
+    }
+
+    .etf-mobile-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 8px;
+    }
+
     .actions {
       display: flex;
       gap: 8px;
@@ -965,6 +1062,7 @@
               <span class="badge blue">模擬資料</span>
             </div>
             <div class="panel-body">
+              <div class="mobile-tabs" id="etfTabs"></div>
               <div class="scan-list" id="etfList"></div>
             </div>
           </div>
@@ -1201,6 +1299,7 @@
 
     let selected = stocks[0];
     let marketFilter = "all";
+    let selectedEtf = "all";
     let marketSnapshot = null;
     let marketById = new Map();
 
@@ -1468,21 +1567,56 @@
 
     function renderEtfChanges() {
       const realEtfRows = marketSnapshot?.activeEtfs || [];
-      document.getElementById("etfList").innerHTML = etfChanges.map(item => `
-        <article class="stock-card">
-          <div class="stock-top">
-            <div class="symbol"><strong>${item.stock.split(" ")[0]}</strong><span>${item.stock.split(" ").slice(1).join(" ")}</span></div>
-            <div class="tag-row">
-              <span class="badge ${item.action.includes("剔除") ? "red" : item.action.includes("觀察") ? "amber" : "green"}">${item.action}</span>
-              <span class="badge ${item.impact === "高" ? "red" : item.impact === "中" ? "amber" : "gray"}">影響 ${item.impact}</span>
+      const etfNames = [...new Set(etfChanges.map(item => item.etf))];
+      const tabs = document.getElementById("etfTabs");
+      tabs.innerHTML = [
+        `<button class="${selectedEtf === "all" ? "active" : ""}" data-etf="all">全部 ETF</button>`,
+        ...etfNames.map(name => `<button class="${selectedEtf === name ? "active" : ""}" data-etf="${name}">${name}</button>`)
+      ].join("");
+      tabs.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedEtf = btn.dataset.etf;
+          renderEtfChanges();
+        });
+      });
+
+      const visibleEtfs = selectedEtf === "all" ? etfNames : [selectedEtf];
+      const groupedHtml = visibleEtfs.map(etfName => {
+        const items = etfChanges.filter(item => item.etf === etfName);
+        const addCount = items.filter(item => !item.action.includes("剔除")).length;
+        const removeCount = items.filter(item => item.action.includes("剔除")).length;
+        const highImpact = items.filter(item => item.impact === "高").length;
+        return `
+          <section class="etf-group">
+            <div class="etf-group-header">
+              <div class="etf-group-title">
+                <strong>${etfName}</strong>
+                <span>${items.length} 筆事件，新增/上調 ${addCount}，剔除風險 ${removeCount}</span>
+              </div>
+              <span class="badge ${highImpact ? "red" : "blue"}">${highImpact ? `高影響 ${highImpact}` : "觀察"}</span>
             </div>
-          </div>
-          <div class="signal-line"><strong>ETF</strong><span>${item.etf}</span></div>
-          <div class="signal-line"><strong>權重</strong><span>${item.weight}，公告 ${item.date}，生效 ${item.effective}</span></div>
-          <div class="signal-line"><strong>交集</strong><span>${item.overlap}</span></div>
-          <div class="signal-line"><strong>理由</strong><span>${item.reason}</span></div>
-        </article>
-      `).join("") + (realEtfRows.length ? `
+            ${items.map(item => `
+              <div class="etf-event">
+                <div class="etf-event-top">
+                  <div class="etf-stock"><strong>${item.stock.split(" ")[0]}</strong><span>${item.stock.split(" ").slice(1).join(" ")}</span></div>
+                  <div class="tag-row">
+                    <span class="badge ${item.action.includes("剔除") ? "red" : item.action.includes("觀察") ? "amber" : "green"}">${item.action}</span>
+                    <span class="badge ${item.impact === "高" ? "red" : item.impact === "中" ? "amber" : "gray"}">影響 ${item.impact}</span>
+                  </div>
+                </div>
+                <div class="etf-mobile-summary">
+                  <div class="fact"><small>權重變化</small><strong>${item.weight}</strong></div>
+                  <div class="fact"><small>公告 / 生效</small><strong>${item.date} / ${item.effective}</strong></div>
+                  <div class="fact"><small>策略交集</small><strong>${item.overlap}</strong></div>
+                </div>
+                <div class="signal-line"><strong>理由</strong><span>${item.reason}</span></div>
+              </div>
+            `).join("")}
+          </section>
+        `;
+      }).join("");
+
+      document.getElementById("etfList").innerHTML = groupedHtml + (realEtfRows.length ? `
         <article class="stock-card">
           <div class="stock-top">
             <div class="symbol"><strong>真實主動 ETF 行情</strong><span>${marketDateText()}</span></div>
