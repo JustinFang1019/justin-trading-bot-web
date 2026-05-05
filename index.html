@@ -555,6 +555,55 @@
       white-space: pre-wrap;
     }
 
+    .flex-preview {
+      display: grid;
+      gap: 8px;
+    }
+
+    .flex-bubble {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .flex-box {
+      display: flex;
+      gap: 6px;
+    }
+
+    .flex-box.vertical { flex-direction: column; }
+    .flex-box.horizontal { align-items: stretch; flex-direction: row; }
+
+    .flex-text {
+      color: #344054;
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .flex-text.lg,
+    .flex-text.xl { font-size: 16px; }
+    .flex-text.md { font-size: 14px; }
+    .flex-text.xs,
+    .flex-text.xxs { font-size: 11px; }
+    .flex-text.bold { font-weight: 800; }
+
+    .flex-separator {
+      border-top: 1px solid var(--line);
+      min-height: 1px;
+    }
+
+    .flex-button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 7px;
+      text-align: center;
+    }
+
     .bottom-nav {
       background: rgba(255,255,255,.96);
       border-top: 1px solid var(--line);
@@ -834,7 +883,9 @@
   <script src="data/market-snapshot.js"></script>
   <script src="data/kbar-snapshot.js"></script>
   <script>
-    const stocks = [
+    const API_BASE = "https://stock-scanner-bot-f3kt.onrender.com/api/web";
+
+    let stocks = [
       {
         id: "2330", name: "台積電", market: "twse", type: "START", signal: "A 強勢回踩",
         score: 10, rs: 92, close: 2250, change: -25, k: 42.8, d: 48.6, gap: 5.8,
@@ -902,14 +953,14 @@
       }
     ];
 
-    const warrants = [
+    let warrants = [
       { code: "073321", name: "台積電凱基67購01", price: 2.15, delta: .52, leverage: 5.8, expiry: 92, tag: "推薦", strike: 900, moneyness: "-2.8%", iv: "34%", hv: "29%", maker: "價差穩定", reason: "delta、天期、流動性都落在可交易區間。" },
       { code: "072884", name: "台積電元大66購05", price: 1.42, delta: .46, leverage: 6.6, expiry: 74, tag: "可觀察", strike: 920, moneyness: "-4.9%", iv: "37%", hv: "29%", maker: "偶有跳價", reason: "槓桿較高，但履約價稍遠，適合突破確認後再看。" },
       { code: "075102", name: "台積電群益69購02", price: 3.05, delta: .61, leverage: 4.3, expiry: 151, tag: "穩健", strike: 880, moneyness: "-0.6%", iv: "31%", hv: "29%", maker: "報價連續", reason: "較接近價平且天期較長，波動承受度較好。" },
       { code: "071998", name: "台積電國泰65購03", price: .82, delta: .31, leverage: 8.7, expiry: 38, tag: "高風險", strike: 960, moneyness: "-8.9%", iv: "45%", hv: "29%", maker: "流動性弱", reason: "價外、短天期、IV 偏高，只保留作為風險對照。" }
     ];
 
-    const statusRows = [
+    let statusRows = [
       ["K 棒 Cache", "continuous_refresh 先更新 disk K，再進 scanner"],
       ["Scanner", "掃描邏輯沿用 patterns.py；Web 不重算策略"],
       ["Google Sheets", "scan results、watchlist、績效紀錄仍由原始 bot 管理"],
@@ -941,6 +992,139 @@
     let marketSnapshot = null;
     let marketById = new Map();
     let kbarById = new Map();
+    let apiStatus = { live: false, message: "prototype" };
+
+    function toNum(value, fallback = 0) {
+      const num = Number(value);
+      return Number.isFinite(num) ? num : fallback;
+    }
+
+    function strategyLabel(row) {
+      return row.strategy_type || (String(row.pattern_type || "").includes("BOX_BREAKOUT") ? "CONT" : "START");
+    }
+
+    function mapScanRow(row) {
+      const type = strategyLabel(row);
+      const close = toNum(row.close);
+      const p1 = toNum(row.p1, toNum(row.high_close, close * 1.06));
+      const p2 = toNum(row.p2, p1 ? p1 * 1.06 : close * 1.12);
+      const stop = toNum(row.stop_loss, toNum(row.box_low, close * .94));
+      const score = toNum(row.score);
+      const rs = toNum(row.rs_rank);
+      const pattern = row.pattern_type || row.struct_label || row.detail || (type === "CONT" ? "BOX_BREAKOUT_PULLBACK" : "TREND_PULLBACK");
+      const entryA = row.entry_a || (type === "CONT"
+        ? `箱頂 ${row.box_high || "-"} 附近`
+        : `${(close * .97).toFixed(1)} - ${(close * 1.01).toFixed(1)}`);
+      const entryB = row.entry_b || (type === "CONT"
+        ? `${row.box_high || "-"} 回穩`
+        : `${(close * .94).toFixed(1)} - ${(close * .99).toFixed(1)}`);
+      const entryC = row.entry_c || `突破 ${row.high_close || row.box_high || p1 || "-"}`;
+      const tags = [
+        type,
+        pattern.includes("BOX") ? "BOX" : row.cross_status || "KD",
+        rs ? `RS ${rs}` : "",
+        row.consecutive_days >= 2 ? `連續 ${row.consecutive_days} 天` : ""
+      ].filter(Boolean);
+
+      return {
+        raw: row,
+        id: String(row.stock_id || ""),
+        name: row.stock_name || String(row.stock_id || ""),
+        market: String(row.stock_id || "").startsWith("6") || String(row.stock_id || "").startsWith("8") ? "tpex" : "twse",
+        type,
+        signal: row.cross_status || (type === "CONT" ? "BOX 突破回踩" : "策略候選"),
+        score,
+        rs,
+        close,
+        change: toNum(row.change),
+        k: toNum(row.K),
+        d: toNum(row.D),
+        gap: toNum(row.gap),
+        ma10: row.ma10 || "-",
+        ma20: row.ma20 || "-",
+        pattern,
+        kd: row.cross_status || (type === "CONT" ? "CONT 不看 KD" : "KD"),
+        entryA,
+        entryB,
+        entryC,
+        stop,
+        p1,
+        p2,
+        rr: row.rr_display || row.rr_ratio || "依原始卡計算",
+        days: toNum(row.consecutive_days, 1),
+        tags,
+        reasons: [
+          row.detail || "來自原 LINE bot 掃描結果。",
+          `策略：${type}；型態：${pattern}`,
+          row.data_label ? `資料標籤：${row.data_label}` : "Web 端只讀取原始結果，不重新計算策略。"
+        ],
+        flexMessages: null,
+        textSummary: null,
+        warrants: null,
+      };
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    }
+
+    async function loadLiveApi() {
+      try {
+        const health = await fetchJson(`${API_BASE}/health`);
+        const payload = await fetchJson(`${API_BASE}/scan-results`);
+        const rows = payload.data || [];
+        if (!rows.length) throw new Error("scan-results empty");
+        stocks = rows.map(mapScanRow);
+        selected = stocks[0];
+        apiStatus = { live: true, message: `${payload.generated_at || health.generated_at} / ${rows.length} 檔原 bot 掃描結果` };
+        await loadStockExtras(selected);
+        document.getElementById("syncTitle").textContent = "已連線原 LINE bot";
+        document.getElementById("syncMeta").textContent = apiStatus.message;
+      } catch (error) {
+        apiStatus = { live: false, message: `API 未載入，使用 prototype：${error.message}` };
+        document.getElementById("syncTitle").textContent = "使用 prototype";
+        document.getElementById("syncMeta").textContent = apiStatus.message;
+      }
+    }
+
+    async function loadStockExtras(stock) {
+      if (!apiStatus.live || !stock?.id) return;
+      try {
+        const [card, kbar, warrant] = await Promise.allSettled([
+          fetchJson(`${API_BASE}/stock/${stock.id}/card`),
+          fetchJson(`${API_BASE}/stock/${stock.id}/kbar?limit=180`),
+          fetchJson(`${API_BASE}/stock/${stock.id}/warrants`)
+        ]);
+        if (card.status === "fulfilled" && card.value?.data) {
+          stock.flexMessages = card.value.data.flex_messages || null;
+          stock.textSummary = card.value.data.text_summary || null;
+        }
+        if (kbar.status === "fulfilled" && kbar.value?.data?.records) {
+          kbarById.set(stock.id, { rows: kbar.value.data.records });
+        }
+        if (warrant.status === "fulfilled" && warrant.value?.data) {
+          stock.warrants = (warrant.value.data.candidates || []).map((item, index) => ({
+            code: item.code || item.warrant_id || item.stock_id || `Top ${index + 1}`,
+            name: item.name || item.warrant_name || item.code || "權證候選",
+            price: item.price || item.close || "-",
+            delta: item.delta ?? item.Delta ?? "-",
+            leverage: item.leverage || item.effective_leverage || "-",
+            expiry: item.days_to_expiry || item.expiry_days || "-",
+            tag: index === 0 ? "推薦" : "可觀察",
+            strike: item.strike_price || item.strike || "-",
+            moneyness: item.moneyness || "-",
+            iv: item.iv || item.IV || "-",
+            hv: item.hv || item.HV || "-",
+            maker: item.issuer || item.maker || "",
+            reason: item.reason || item.note || `來自原 bot 權證 Top 3 快取，狀態：${warrant.value.data.status || "cached"}`
+          }));
+        }
+      } catch (error) {
+        console.warn("stock extras unavailable", error);
+      }
+    }
 
     function realOf(stock) {
       return marketById.get(stock.id);
@@ -1043,8 +1227,9 @@
       `).join("") || `<div class="panel"><div class="panel-body">目前篩選條件沒有符合的股票。</div></div>`;
 
       document.querySelectorAll(".signal-card").forEach(card => {
-        card.addEventListener("click", () => {
+        card.addEventListener("click", async () => {
           selected = stocks.find(stock => stock.id === card.dataset.id) || selected;
+          await loadStockExtras(selected);
           renderAll();
         });
       });
@@ -1161,7 +1346,8 @@
     }
 
     function renderWarrants() {
-      document.getElementById("warrantList").innerHTML = warrants.map(w => `
+      const rows = selected.warrants?.length ? selected.warrants : warrants;
+      document.getElementById("warrantList").innerHTML = rows.map(w => `
         <div class="warrant-row">
           <div>
             <strong>${w.code} ${w.name}</strong>
@@ -1184,10 +1370,66 @@
 
       document.getElementById("statusList").innerHTML = statusRows.map(([label, meta]) => `
         <div class="status-row"><div><strong>${label}</strong><div class="status-meta"><span>${meta}</span></div></div><span class="badge green">OK</span></div>
-      `).join("");
+      `).join("") + `
+        <div class="status-row"><div><strong>Web API</strong><div class="status-meta"><span>${apiStatus.message}</span></div></div><span class="badge ${apiStatus.live ? "green" : "amber"}">${apiStatus.live ? "LIVE" : "FALLBACK"}</span></div>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[ch]));
+    }
+
+    function styleAttr(node = {}) {
+      const css = [];
+      if (node.backgroundColor) css.push(`background:${node.backgroundColor}`);
+      if (node.color) css.push(`color:${node.color}`);
+      if (node.paddingAll) css.push(`padding:${node.paddingAll}`);
+      if (node.margin) css.push(`margin-top:${node.margin === "none" ? "0" : "6px"}`);
+      if (node.cornerRadius) css.push(`border-radius:${node.cornerRadius}`);
+      if (node.borderColor) css.push(`border-color:${node.borderColor}`);
+      if (node.borderWidth) css.push(`border-style:solid;border-width:${node.borderWidth}`);
+      if (node.flex) css.push(`flex:${node.flex}`);
+      return css.length ? ` style="${css.join(";")}"` : "";
+    }
+
+    function renderFlexNode(node) {
+      if (!node) return "";
+      if (node.type === "text") {
+        const weight = node.weight === "bold" ? "bold" : "";
+        return `<div class="flex-text ${node.size || ""} ${weight}"${styleAttr(node)}>${escapeHtml(node.text)}</div>`;
+      }
+      if (node.type === "separator") return `<div class="flex-separator"></div>`;
+      if (node.type === "button") {
+        const label = node.action?.label || node.action?.text || node.action?.uri || "Action";
+        return `<div class="flex-button"${styleAttr(node)}>${escapeHtml(label)}</div>`;
+      }
+      if (node.type === "box") {
+        return `<div class="flex-box ${node.layout || "vertical"}"${styleAttr(node)}>${(node.contents || []).map(renderFlexNode).join("")}</div>`;
+      }
+      if (node.type === "bubble") {
+        return `<div class="flex-bubble">
+          ${node.header ? renderFlexNode(node.header) : ""}
+          ${node.body ? renderFlexNode(node.body) : ""}
+          ${node.footer ? renderFlexNode(node.footer) : ""}
+        </div>`;
+      }
+      if (node.type === "carousel") {
+        return `<div class="flex-preview">${(node.contents || []).map(renderFlexNode).join("")}</div>`;
+      }
+      return "";
     }
 
     function renderLineBubble(targetId) {
+      if (selected.flexMessages?.length) {
+        const flexHtml = selected.flexMessages.map(message => renderFlexNode(message.contents)).join("");
+        document.getElementById(targetId).innerHTML = `
+          <div class="flex-preview">${flexHtml}</div>
+          ${selected.textSummary ? `<div class="line-text-preview">${escapeHtml(selected.textSummary)}</div>` : ""}
+        `;
+        return;
+      }
       const entryText = selected.type === "CONT" ? selected.entryB : selected.entryA;
       const kdLine = selected.type === "CONT"
         ? `收${closeOf(selected)} 箱頂${selected.entryB} 箱低${selected.stop}`
@@ -1307,7 +1549,10 @@
     document.getElementById("searchInput").addEventListener("input", renderAll);
 
     renderAll();
-    loadSnapshots();
+    loadLiveApi().then(() => {
+      renderAll();
+      loadSnapshots();
+    });
   </script>
 </body>
 </html>

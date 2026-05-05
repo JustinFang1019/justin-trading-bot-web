@@ -68,6 +68,12 @@ In `justin-trading-bot-web`:
 - Added `docs/mobile-redesign-proposal.md`.
 - Added `docs/web-version-integration-plan.md`.
 - Fixed LINE preview direction after user feedback: the web app must not invent a different LINE card format. Future work should consume real Flex JSON from the bot instead of recreating cards by hand.
+- Started replacing prototype data with live original bot data in `index.html`.
+  - `API_BASE` currently points to `https://stock-scanner-bot-f3kt.onrender.com/api/web`.
+  - `GET /api/web/scan-results` now populates the main stock list.
+  - Selecting a stock loads `/stock/<id>/card`, `/stock/<id>/kbar`, and `/stock/<id>/warrants`.
+  - LINE preview now prefers canonical Flex JSON returned by the bot API, with the bot text summary below it.
+  - Prototype data remains as fallback if the API is unavailable.
 
 In `justin-trading-bot`:
 
@@ -102,12 +108,16 @@ Important implementation notes:
 - Reviewed diffs and route wiring in the original bot repo.
 - Confirmed `app.py` only registers the new blueprint and does not change existing LINE bot behavior.
 - Python syntax execution was skipped because this computer has only `py.exe` launcher and no installed Python interpreter available in PATH.
+- Confirmed live Render API health returns OK.
+- Confirmed live `scan-results` returns 30 records from the original bot.
+- Confirmed live `/api/web/stock/6933/card` returns canonical Flex JSON and text summary.
+- JavaScript syntax check with local `node` was attempted but blocked by Windows access denied in this environment.
 
 ## Recommended Next Implementation Step
 
 1. Open a PR from `codex/web-readonly-api` into the original bot repo main branch, test it on Render/staging, then merge only if the live bot remains stable.
-2. After that API is deployed, update `justin-trading-bot-web/index.html` to replace prototype arrays with `fetch()` calls to `/api/web/*`.
-3. Render the original card from `/api/web/stock/<stock_id>/card` first, then add deeper web-only sections around it.
+2. Open the GitHub Pages URL and verify the mobile page shows the same scan candidates as LINE.
+3. Improve the Flex JSON renderer if any LINE card sections render too plain compared with LINE.
 4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 
@@ -115,4 +125,4 @@ Important implementation notes:
 
 Ask Codex:
 
-`請先閱讀 CODEX_HANDOFF.md，接著把 justin-trading-bot-web/index.html 的假資料改成呼叫已在 justin-trading-bot 的 codex/web-readonly-api branch 新增的 /api/web/* endpoints。核心小卡請優先使用 /api/web/stock/<stock_id>/card 回傳的原始 Flex JSON，不要再手刻一份。`
+`請先閱讀 CODEX_HANDOFF.md，打開 GitHub Pages 檢查 justin-trading-bot-web 是否已顯示原 LINE bot 的 scan-results；如果小卡渲染和 LINE 還有落差，請優先改善 Flex JSON renderer，不要改原 bot 策略。`
