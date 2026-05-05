@@ -437,11 +437,74 @@
       font-size: 14px;
     }
 
-    .strategy-box p {
+    .strategy-box p,
+    .strategy-box div {
       margin: 0;
       color: var(--muted);
       font-size: 12px;
       line-height: 1.6;
+    }
+
+    .fact-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .fact {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 7px;
+      padding: 8px;
+      min-width: 0;
+    }
+
+    .fact small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      margin-bottom: 3px;
+    }
+
+    .fact strong {
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+
+    .reason-list {
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 7px;
+    }
+
+    .reason-list li {
+      border-left: 3px solid var(--blue);
+      background: #f8fafc;
+      padding: 7px 9px;
+      border-radius: 0 7px 7px 0;
+      color: #344054;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .signal-line {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .signal-line strong {
+      color: var(--text);
     }
 
     .actions {
@@ -694,7 +757,8 @@
       }
       .metric-row,
       .mini-bars,
-      .status-grid {
+      .status-grid,
+      .fact-grid {
         grid-template-columns: 1fr;
       }
       .stock-mid {
@@ -800,11 +864,11 @@
                 <div class="detail-layout">
                   <div class="strategy-box">
                     <h3>進場條件</h3>
-                    <p id="entryText"></p>
+                    <div id="entryText"></div>
                   </div>
                   <div class="strategy-box">
                     <h3>風險控管</h3>
-                    <p id="riskText"></p>
+                    <div id="riskText"></div>
                   </div>
                 </div>
                 <div class="actions">
@@ -962,18 +1026,78 @@
 
   <script>
     const stocks = [
-      { id: "2330", name: "台積電", market: "twse", signal: "A 強勢回踩", score: 10, rs: 92, price: 875, chg: 1.6, kd: "真收斂", pattern: "TREND_PULLBACK", entry: "860-875", stop: 832, target: 930, rr: "1:2.1", days: 2 },
-      { id: "3491", name: "昇達科", market: "tpex", signal: "BOX 結構", score: 9, rs: 89, price: 378.5, chg: 3.2, kd: "即將交叉", pattern: "BOX_AFTER_PULLBACK", entry: "365-380", stop: 348, target: 418, rr: "1:2.4", days: 1 },
-      { id: "2327", name: "國巨", market: "twse", signal: "B 回穩", score: 8, rs: 84, price: 642, chg: -0.8, kd: "假收斂", pattern: "BOX_AFTER_PULLBACK", entry: "630-645", stop: 606, target: 690, rr: "1:1.8", days: 3 },
-      { id: "6442", name: "光聖", market: "tpex", signal: "早期反轉", score: 8, rs: 81, price: 456, chg: 2.1, kd: "真收斂", pattern: "EARLY_REVERSAL", entry: "448-460", stop: 428, target: 505, rr: "1:2.0", days: 1 },
-      { id: "3036", name: "文曄", market: "twse", signal: "A 強勢回踩", score: 8, rs: 78, price: 128.5, chg: 1.1, kd: "收斂中", pattern: "TREND_PULLBACK", entry: "125-129", stop: 120, target: 140, rr: "1:2.2", days: 1 }
+      {
+        id: "2330", name: "台積電", market: "twse", signal: "A 強勢回踩",
+        score: 10, rs: 92, price: 875, close: 868, rt: 875, chg: 1.6,
+        kd: "真收斂", k: 42.8, d: 48.6, gap: 5.8, ma10: 872, ma20: 846,
+        pattern: "TREND_PULLBACK", entry: "860-875", entryA: "860-875", entryB: "852-864",
+        stop: 832, target: 930, pressure2: 965, rr: "1:2.1", rrWide: "1:2.1~2.9",
+        days: 2, per: 22.4, eps: 38.7, volume: "4.8 萬張", value: "421 億",
+        dataDate: "2026-05-05", realtime: "盤中即時 875 ▲ 7（+0.81%）",
+        tags: ["KD 收斂", "站回 MA20", "RS 前 10%", "連續 2 天"],
+        reasons: ["創高後回檔未跌破 MA20，結構尚未破壞。", "K 值跌幅小於 D 值，gap 開始縮小，接近原案的真收斂定義。", "RS 92，排序優先於純分數，符合 v7.4 後的設計。"],
+        backtest: "近 40 日曾於 04/18 命中，5 日最大漲幅 +6.4%",
+        perf: "追蹤第 2 天，目前 +1.9%，最大回撤 -1.1%"
+      },
+      {
+        id: "3491", name: "昇達科", market: "tpex", signal: "BOX 結構",
+        score: 9, rs: 89, price: 378.5, close: 366, rt: 378.5, chg: 3.2,
+        kd: "即將交叉", k: 51.2, d: 53.1, gap: 1.9, ma10: 369, ma20: 351,
+        pattern: "BOX_AFTER_PULLBACK", entry: "365-380", entryA: "372-382", entryB: "360-370",
+        stop: 348, target: 418, pressure2: 446, rr: "1:2.4", rrWide: "1:2.4~3.6",
+        days: 1, per: 31.8, eps: 11.9, volume: "9,812 張", value: "37 億",
+        dataDate: "2026-05-05", realtime: "盤中即時 378.5 ▲ 12（+3.28%）",
+        tags: ["BOX", "箱頂回測", "量能回溫", "RS 89"],
+        reasons: ["10 日視角未跌破前低，符合寬幅箱型整理。", "今日重新靠近箱頂，若隔日突破高點可視為續強確認。", "停損設在箱底下緣，風報比優於 1:2。"],
+        backtest: "近 40 日最近命中 04/24，3 日最大漲幅 +8.1%",
+        perf: "新進追蹤，尚未結算"
+      },
+      {
+        id: "2327", name: "國巨", market: "twse", signal: "B 回穩",
+        score: 8, rs: 84, price: 642, close: 647, rt: 642, chg: -0.8,
+        kd: "假收斂", k: 38.4, d: 45.9, gap: 7.5, ma10: 656, ma20: 625,
+        pattern: "BOX_AFTER_PULLBACK", entry: "630-645", entryA: "646-660", entryB: "630-645",
+        stop: 606, target: 690, pressure2: 720, rr: "1:1.8", rrWide: "1:1.8~2.6",
+        days: 3, per: 18.6, eps: 34.5, volume: "2.1 萬張", value: "135 億",
+        dataDate: "2026-05-05", realtime: "盤中即時 642 ▼ 5（-0.77%）",
+        tags: ["BOX", "B 層", "KD 假收斂", "連續 3 天"],
+        reasons: ["寬幅箱型仍成立，但 K 值仍偏弱，暫不列為最積極標的。", "A/B 重疊時以 A 優先；此檔目前顯示 B 回穩區。", "風報比略低，適合小部位或等待 KD 轉強。"],
+        backtest: "近 40 日曾命中 04/15，但隔日未確認",
+        perf: "追蹤第 3 天，目前 -0.6%，最大回撤 -2.4%"
+      },
+      {
+        id: "6442", name: "光聖", market: "tpex", signal: "早期反轉",
+        score: 8, rs: 81, price: 456, close: 446.5, rt: 456, chg: 2.1,
+        kd: "真收斂", k: 46.1, d: 49.7, gap: 3.6, ma10: 452, ma20: 438,
+        pattern: "EARLY_REVERSAL", entry: "448-460", entryA: "448-460", entryB: "438-448",
+        stop: 428, target: 505, pressure2: 535, rr: "1:2.0", rrWide: "1:2.0~3.2",
+        days: 1, per: 27.2, eps: 16.8, volume: "7,442 張", value: "34 億",
+        dataDate: "2026-05-05", realtime: "盤中即時 456 ▲ 9.5（+2.13%）",
+        tags: ["早期反轉", "KD 真收斂", "站上 MA10", "RS 81"],
+        reasons: ["回檔幅度不深且重新站回短均，符合早期反轉分支。", "KD gap 已縮小，但仍需隔日止跌 K 或黃金交叉確認。", "壓力位距離足夠，風報比達標。"],
+        backtest: "近 40 日未出現完整同型態，樣本不足",
+        perf: "新進追蹤，尚未結算"
+      },
+      {
+        id: "3036", name: "文曄", market: "twse", signal: "A 強勢回踩",
+        score: 8, rs: 78, price: 128.5, close: 127.1, rt: 128.5, chg: 1.1,
+        kd: "收斂中", k: 44.7, d: 47.4, gap: 2.7, ma10: 126.8, ma20: 121.6,
+        pattern: "TREND_PULLBACK", entry: "125-129", entryA: "125-129", entryB: "121-124",
+        stop: 120, target: 140, pressure2: 148, rr: "1:2.2", rrWide: "1:2.2~3.1",
+        days: 1, per: 14.3, eps: 8.98, volume: "1.6 萬張", value: "20 億",
+        dataDate: "2026-05-05", realtime: "盤中即時 128.5 ▲ 1.4（+1.10%）",
+        tags: ["MA10 回踩", "RS 78", "風報達標", "資料新鮮"],
+        reasons: ["短均附近回踩守住，尚未跌破 MA20。", "KD gap 持續縮小但尚未交叉，屬觀察優先。", "成交金額通過預篩，流動性足以推播。"],
+        backtest: "近 40 日最近命中 04/22，7 日最大漲幅 +5.8%",
+        perf: "新進追蹤，尚未結算"
+      }
     ];
 
     const warrants = [
-      { code: "073321", name: "台積電凱基67購01", price: 2.15, delta: .52, leverage: 5.8, expiry: 92, liquidity: "佳", tag: "推薦" },
-      { code: "072884", name: "台積電元大66購05", price: 1.42, delta: .46, leverage: 6.6, expiry: 74, liquidity: "中", tag: "可觀察" },
-      { code: "075102", name: "台積電群益69購02", price: 3.05, delta: .61, leverage: 4.3, expiry: 151, liquidity: "佳", tag: "穩健" },
-      { code: "071998", name: "台積電國泰65購03", price: .82, delta: .31, leverage: 8.7, expiry: 38, liquidity: "弱", tag: "高風險" }
+      { code: "073321", name: "台積電凱基67購01", price: 2.15, delta: .52, leverage: 5.8, expiry: 92, liquidity: "佳", tag: "推薦", strike: 900, moneyness: "-2.8%", iv: "34%", hv: "29%", breakeven: 921.5, maker: "價差穩定", reason: "delta、天期、流動性都落在可交易區間。" },
+      { code: "072884", name: "台積電元大66購05", price: 1.42, delta: .46, leverage: 6.6, expiry: 74, liquidity: "中", tag: "可觀察", strike: 920, moneyness: "-4.9%", iv: "37%", hv: "29%", breakeven: 934.2, maker: "偶有跳價", reason: "槓桿較高，但履約價稍遠，適合突破確認後再看。" },
+      { code: "075102", name: "台積電群益69購02", price: 3.05, delta: .61, leverage: 4.3, expiry: 151, liquidity: "佳", tag: "穩健", strike: 880, moneyness: "-0.6%", iv: "31%", hv: "29%", breakeven: 910.5, maker: "報價連續", reason: "較接近價平且天期較長，波動承受度較好。" },
+      { code: "071998", name: "台積電國泰65購03", price: .82, delta: .31, leverage: 8.7, expiry: 38, liquidity: "弱", tag: "高風險", strike: 960, moneyness: "-8.9%", iv: "45%", hv: "29%", breakeven: 968.2, maker: "流動性弱", reason: "價外、短天期、IV 偏高，只保留作為風險對照。" }
     ];
 
     const alerts = [
@@ -1049,6 +1173,11 @@
             <span>目標 ${s.target}</span>
             <span>風報 ${s.rr}</span>
           </div>
+          <div class="signal-line"><strong>盤中</strong><span>${s.realtime}</span></div>
+          <div class="signal-line"><strong>技術</strong><span>K ${s.k} / D ${s.d} / gap ${s.gap}，MA10 ${s.ma10}，MA20 ${s.ma20}</span></div>
+          <div class="tag-row" style="margin-top:9px; flex-wrap:wrap;">
+            ${s.tags.map(t => `<span class="badge gray">${t}</span>`).join("")}
+          </div>
         </article>
       `).join("");
       list.querySelectorAll(".stock-card").forEach(card => {
@@ -1067,10 +1196,24 @@
       document.getElementById("detailMini").innerHTML = `
         <div class="mini-box"><div class="k">進場區</div><div class="v">${selected.entry}</div></div>
         <div class="mini-box"><div class="k">停損</div><div class="v">${selected.stop}</div></div>
-        <div class="mini-box"><div class="k">風報比</div><div class="v">${selected.rr}</div></div>
+        <div class="mini-box"><div class="k">風報比</div><div class="v">${selected.rrWide}</div></div>
       `;
-      document.getElementById("entryText").textContent = `${selected.pattern}，KD ${selected.kd}。隔日若守住進場區上緣並量能未失控，可列為優先觀察。`;
-      document.getElementById("riskText").textContent = `跌破 ${selected.stop} 視為結構破壞。第一壓力 ${selected.target}，若盤中急拉不追價，等待回踩確認。`;
+      document.getElementById("entryText").innerHTML = `${selected.pattern}，KD ${selected.kd}。A 層 ${selected.entryA}，B 層 ${selected.entryB}。隔日若守住進場區上緣並量能未失控，可列為優先觀察。<ul class="reason-list">${selected.reasons.map(r => `<li>${r}</li>`).join("")}</ul>`;
+      document.getElementById("riskText").innerHTML = `跌破 ${selected.stop} 視為結構破壞。第一壓力 ${selected.target}，第二壓力 ${selected.pressure2}。<br>回測：${selected.backtest}<br>績效：${selected.perf}`;
+      const oldFacts = document.getElementById("detailFacts");
+      if (oldFacts) oldFacts.remove();
+      document.querySelector(".detail-layout").insertAdjacentHTML("beforebegin", `
+        <div id="detailFacts" class="fact-grid">
+          <div class="fact"><small>盤中 / 收盤</small><strong>${selected.rt} / ${selected.close}</strong></div>
+          <div class="fact"><small>K / D / gap</small><strong>${selected.k} / ${selected.d} / ${selected.gap}</strong></div>
+          <div class="fact"><small>MA10 / MA20</small><strong>${selected.ma10} / ${selected.ma20}</strong></div>
+          <div class="fact"><small>PER / EPS</small><strong>${selected.per} / ${selected.eps}</strong></div>
+          <div class="fact"><small>成交量</small><strong>${selected.volume}</strong></div>
+          <div class="fact"><small>成交金額</small><strong>${selected.value}</strong></div>
+          <div class="fact"><small>資料日期</small><strong>${selected.dataDate}</strong></div>
+          <div class="fact"><small>型態</small><strong>${selected.pattern}</strong></div>
+        </div>
+      `);
       drawChart();
       renderLineBubble();
     }
@@ -1150,7 +1293,7 @@
 
     function renderStockTable() {
       document.getElementById("stockTable").innerHTML = `
-        <thead><tr><th>股票</th><th>訊號</th><th>分數</th><th>RS</th><th>現價</th><th>KD</th><th>進場</th><th>停損</th><th>風報</th></tr></thead>
+        <thead><tr><th>股票</th><th>訊號</th><th>分數</th><th>RS</th><th>盤中</th><th>收盤</th><th>K/D/gap</th><th>MA10/20</th><th>型態</th><th>進場 A/B</th><th>停損</th><th>壓力</th><th>風報</th><th>PER/EPS</th><th>績效</th></tr></thead>
         <tbody>
           ${filteredStocks().map(s => `
             <tr>
@@ -1158,11 +1301,17 @@
               <td><span class="badge ${badgeClass(s.signal)}">${s.signal}</span></td>
               <td>${s.score}</td>
               <td>${s.rs}</td>
-              <td class="${s.chg >= 0 ? "up" : "down"}">${s.price}</td>
-              <td>${s.kd}</td>
-              <td>${s.entry}</td>
+              <td class="${s.chg >= 0 ? "up" : "down"}">${s.rt}</td>
+              <td>${s.close}</td>
+              <td>${s.k}/${s.d}/${s.gap}</td>
+              <td>${s.ma10}/${s.ma20}</td>
+              <td>${s.pattern}</td>
+              <td>${s.entryA}<br><span style="color:#667085;">${s.entryB}</span></td>
               <td>${s.stop}</td>
-              <td>${s.rr}</td>
+              <td>${s.target}/${s.pressure2}</td>
+              <td>${s.rrWide}</td>
+              <td>${s.per}/${s.eps}</td>
+              <td>${s.perf}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -1179,8 +1328,14 @@
               <span>Delta ${w.delta}</span>
               <span>槓桿 ${w.leverage}x</span>
               <span>到期 ${w.expiry} 天</span>
+              <span>履約 ${w.strike}</span>
+              <span>價內外 ${w.moneyness}</span>
+              <span>IV/HV ${w.iv}/${w.hv}</span>
+              <span>損平 ${w.breakeven}</span>
               <span>流動性 ${w.liquidity}</span>
             </div>
+            <div class="signal-line"><strong>造市</strong><span>${w.maker}</span></div>
+            <div class="signal-line"><strong>理由</strong><span>${w.reason}</span></div>
           </div>
           <span class="badge ${badgeClass(w.tag)}">${w.tag}</span>
         </div>
@@ -1218,12 +1373,17 @@
           <span class="badge amber">${selected.score} 分</span>
         </div>
         <div class="bubble-grid">
-          <div class="bubble-cell"><small>現價</small><strong>${selected.price} <span class="${selected.chg >= 0 ? "up" : "down"}">${selected.chg >= 0 ? "▲" : "▼"} ${Math.abs(selected.chg)}%</span></strong></div>
-          <div class="bubble-cell"><small>KD</small><strong>${selected.kd}</strong></div>
-          <div class="bubble-cell"><small>進場</small><strong>${selected.entry}</strong></div>
-          <div class="bubble-cell"><small>風報</small><strong>${selected.rr}</strong></div>
+          <div class="bubble-cell"><small>盤中即時</small><strong>${selected.price} <span class="${selected.chg >= 0 ? "up" : "down"}">${selected.chg >= 0 ? "▲" : "▼"} ${Math.abs(selected.chg)}%</span></strong></div>
+          <div class="bubble-cell"><small>收盤資料</small><strong>${selected.close}・${selected.dataDate}</strong></div>
+          <div class="bubble-cell"><small>KD / gap</small><strong>${selected.k}/${selected.d}・${selected.gap}</strong></div>
+          <div class="bubble-cell"><small>MA10 / MA20</small><strong>${selected.ma10}/${selected.ma20}</strong></div>
+          <div class="bubble-cell"><small>A 進場</small><strong>${selected.entryA}</strong></div>
+          <div class="bubble-cell"><small>B 回穩</small><strong>${selected.entryB}</strong></div>
+          <div class="bubble-cell"><small>壓力</small><strong>${selected.target}/${selected.pressure2}</strong></div>
+          <div class="bubble-cell"><small>風報</small><strong>${selected.rrWide}</strong></div>
         </div>
-        <div class="bubble-cell"><small>風險</small><strong>停損 ${selected.stop}，壓力 ${selected.target}</strong></div>
+        <div class="bubble-cell"><small>策略理由</small><strong>${selected.reasons[0]}</strong></div>
+        <div class="bubble-cell" style="margin-top:7px;"><small>追蹤績效</small><strong>${selected.perf}</strong></div>
         <div class="actions">
           <button class="btn primary">策略</button>
           <button class="btn">權證</button>
