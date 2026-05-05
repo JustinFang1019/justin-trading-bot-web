@@ -64,6 +64,7 @@ Current implemented step:
 - Added filters for market, START/CONT, RS 90+, score, BOX, and repeat selections.
 - Added a mobile detail view with chart, A/B/C entry layers, stop, pressure, and LINE preview.
 - Added `docs/mobile-redesign-proposal.md`.
+- Fixed LINE preview direction after user feedback: the web app must not invent a different LINE card format. The preview now follows the known `notify.py` structure more closely with entry/risk/RS pills and the original text summary shape. Future work should consume real Flex JSON from the bot instead of recreating cards by hand.
 
 Recommended next implementation step:
 

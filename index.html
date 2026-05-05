@@ -478,6 +478,83 @@
       margin-top: 10px;
     }
 
+    .canonical-card {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .canonical-head {
+      background: #1a1a2e;
+      color: #ffffff;
+      padding: 12px;
+    }
+
+    .canonical-head strong {
+      display: block;
+      font-size: 16px;
+    }
+
+    .canonical-head span {
+      color: rgba(255,255,255,.72);
+      display: block;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .canonical-body {
+      display: grid;
+      gap: 9px;
+      padding: 12px;
+    }
+
+    .canonical-row {
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr);
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .canonical-row small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .canonical-pills {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .canonical-pill {
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.35;
+      min-height: 44px;
+    }
+
+    .canonical-pill.entry { background: #dce8ff; color: #1a3a8a; }
+    .canonical-pill.rr { background: #dcf5e8; color: #1b5e20; }
+    .canonical-pill.rs { background: #e1f5fe; color: #01579b; }
+
+    .line-text-preview {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: #344054;
+      font-family: Consolas, "Microsoft JhengHei", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      margin-top: 10px;
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+
     .bottom-nav {
       background: rgba(255,255,255,.96);
       border-top: 1px solid var(--line);
@@ -652,7 +729,7 @@
           <div class="panel-head">
             <div>
               <div class="panel-title">LINE 小卡核心</div>
-              <div class="panel-sub">此處只預覽與展開，不重寫原始 Flex builder。</div>
+              <div class="panel-sub">格式鎖定參考 notify.py：進場 / 風報 / RS pill、結構欄位與原始文字摘要。</div>
             </div>
           </div>
           <div class="panel-body">
@@ -730,7 +807,7 @@
           <div class="panel-head">
             <div>
               <div class="panel-title">LINE / Mobile Web 分工</div>
-              <div class="panel-sub">小卡與策略是原始 bot 的主體，Web 是延伸查看層。</div>
+              <div class="panel-sub">原始小卡由 notify.py 產生；Web 不再另畫一套假格式。</div>
             </div>
           </div>
           <div class="panel-body">
@@ -1111,22 +1188,43 @@
     }
 
     function renderLineBubble(targetId) {
+      const entryText = selected.type === "CONT" ? selected.entryB : selected.entryA;
+      const kdLine = selected.type === "CONT"
+        ? `收${closeOf(selected)} 箱頂${selected.entryB} 箱低${selected.stop}`
+        : `收${closeOf(selected)} K${Number(selected.k).toFixed(1)} D${Number(selected.d).toFixed(1)}`;
+      const lineText = [
+        `📊 台股選股 ${marketDateText()}`,
+        "──────────────────",
+        `📈 ${selected.id} ${selected.name}`,
+        `   ${kdLine}`,
+        `   ${selected.signal}`,
+        `   停損${selected.stop}（結構停損）`,
+        `   進場${entryText} 風報${selected.rr.replace("1:", "1:")}`,
+        "",
+        "共1檔",
+        "──────────────────",
+        "⚠️ 僅供參考"
+      ].join("\n");
       document.getElementById(targetId).innerHTML = `
-        <div class="bubble-title">${selected.id} ${selected.name}</div>
-        <div class="badges">
-          <span class="badge ${badgeClass(selected.signal)}">${selected.signal}</span>
-          <span class="badge blue">RS ${selected.rs}</span>
-          <span class="badge amber">${selected.score} 分</span>
+        <div class="canonical-card">
+          <div class="canonical-head">
+            <strong>📈 ${selected.id} ${selected.name}</strong>
+            <span>${selected.signal} · ${selected.pattern}</span>
+          </div>
+          <div class="canonical-body">
+            <div class="canonical-pills">
+              <div class="canonical-pill entry">進場<br>${entryText}</div>
+              <div class="canonical-pill rr">風報<br>${selected.rr}</div>
+              <div class="canonical-pill rs">RS<br>${selected.rs}</div>
+            </div>
+            <div class="canonical-row"><small>收盤/KD</small><span>${kdLine}</span></div>
+            <div class="canonical-row"><small>訊號</small><span>${selected.signal}</span></div>
+            <div class="canonical-row"><small>停損</small><span>${selected.stop}（結構停損）</span></div>
+            <div class="canonical-row"><small>壓力</small><span>${selected.p1} / ${selected.p2}</span></div>
+            <div class="canonical-row"><small>說明</small><span>${selected.reasons[0]}</span></div>
+          </div>
         </div>
-        <div class="bubble-grid">
-          <div class="fact"><small>收盤</small><strong>${closeOf(selected)}</strong></div>
-          <div class="fact"><small>KD/gap</small><strong>${selected.k}/${selected.d}/${selected.gap}</strong></div>
-          <div class="fact"><small>A 層</small><strong>${selected.entryA}</strong></div>
-          <div class="fact"><small>B 層</small><strong>${selected.entryB}</strong></div>
-          <div class="fact"><small>停損</small><strong>${selected.stop}</strong></div>
-          <div class="fact"><small>風報</small><strong>${selected.rr}</strong></div>
-        </div>
-        <div class="panel-sub" style="margin-top:10px;">${selected.reasons[0]}</div>
+        <div class="line-text-preview">${lineText}</div>
       `;
     }
 
