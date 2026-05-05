@@ -6,6 +6,8 @@ Last updated: 2026-05-06 Asia/Taipei
 
 The user wants to continue this project across computers. GitHub should carry both code and concise Codex handoff notes.
 
+The latest clarified product direction: this should become a mobile web version of the existing LINE bot, not a separate dashboard. The existing LINE Flex card UI and information density are important and must stay canonical. The mobile site should let users open a URL and see everything the LINE card provides, plus deeper K-bar, watchlist, warrant, performance, status, and related detail views.
+
 ## Required handoff rule
 
 At the end of every meaningful Codex session, update this file before committing/pushing if there was any design discussion, implementation decision, code change, blocker, or next-step decision.
@@ -68,10 +70,14 @@ Current implemented step:
 
 Recommended next implementation step:
 
-1. Define read-only JSON endpoints or snapshot files exported by `justin-trading-bot`.
-2. Map existing scan result fields to the mobile UI without changing strategy fields.
-3. Replace prototype stock/warrant arrays in `index.html` with those snapshots.
-4. Add a `View details` URL action from LINE cards only if it can be added without changing card meaning.
+1. Stop treating `justin-trading-bot-web` as only a static GitHub Pages prototype.
+2. Decide backend architecture for the web version:
+   - Preferred: add read-only web/API routes to the existing `justin-trading-bot` backend and keep all secrets/server logic there.
+   - Alternative: create a separate backend service that imports/copies the bot modules.
+3. Export real Flex JSON or canonical card payloads from `stock_scanner/notify.py`; the web app should render from that, not recreate card content manually.
+4. Expose read-only APIs for K-bars, Google Sheets scan results, watchlist, warrants, performance, funnel stats, and system status.
+5. Only after real data APIs exist, replace prototype arrays in `index.html`.
+6. Add `View details` URL action from LINE cards only if it can be added without changing card meaning.
 
 ## Next prompt suggestion
 
