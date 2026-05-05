@@ -1201,6 +1201,48 @@
 
     let selected = stocks[0];
     let marketFilter = "all";
+    let marketSnapshot = null;
+    let marketById = new Map();
+
+    function compactMoney(value) {
+      if (!value) return "—";
+      if (value >= 100000000) return `${(value / 100000000).toFixed(1)} 億`;
+      if (value >= 10000) return `${(value / 10000).toFixed(0)} 萬`;
+      return `${value}`;
+    }
+
+    function compactVolume(value) {
+      if (!value) return "—";
+      const lots = value / 1000;
+      if (lots >= 10000) return `${(lots / 10000).toFixed(1)} 萬張`;
+      return `${lots.toFixed(0)} 張`;
+    }
+
+    function marketDateText() {
+      if (!marketSnapshot?.marketDate) return "模擬資料";
+      const d = `${marketSnapshot.marketDate}`;
+      return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+    }
+
+    function realOf(stock) {
+      return marketById.get(stock.id);
+    }
+
+    function closeOf(stock) {
+      return realOf(stock)?.close ?? stock.price;
+    }
+
+    function changeOf(stock) {
+      return realOf(stock)?.change ?? stock.chg;
+    }
+
+    function valueOf(stock) {
+      return realOf(stock)?.tradeValue ? compactMoney(realOf(stock).tradeValue) : stock.value;
+    }
+
+    function volumeOf(stock) {
+      return realOf(stock)?.volumeShares ? compactVolume(realOf(stock).volumeShares) : stock.volume;
+    }
 
     function badgeClass(value) {
       if (value.includes("A") || value.includes("推薦") || value.includes("穩健")) return "green";
@@ -1224,14 +1266,15 @@
       list.innerHTML = filteredStocks().map(s => `
         <article class="stock-card ${s.id === selected.id ? "selected" : ""}" data-id="${s.id}">
           <div class="stock-top">
-            <div class="symbol"><strong>${s.id}</strong><span>${s.name}</span></div>
+            <div class="symbol"><strong>${s.id}</strong><span>${realOf(s)?.name ?? s.name}</span></div>
             <div class="tag-row">
               <span class="badge ${badgeClass(s.signal)}">${s.signal}</span>
               <span class="badge blue">RS ${s.rs}</span>
+              ${realOf(s) ? `<span class="badge green">真實行情</span>` : ""}
             </div>
           </div>
           <div class="stock-mid">
-            <div><span class="price">${s.price}</span><span class="${s.chg >= 0 ? "up" : "down"}">${s.chg >= 0 ? "▲" : "▼"} ${Math.abs(s.chg)}%</span></div>
+            <div><span class="price">${closeOf(s)}</span><span class="${changeOf(s) >= 0 ? "up" : "down"}">${changeOf(s) >= 0 ? "▲" : "▼"} ${Math.abs(changeOf(s))}</span></div>
             <div class="tag-row"><span class="badge amber">${s.score} 分</span><span class="badge gray">${s.kd}</span></div>
           </div>
           <div class="stock-bottom">
@@ -1240,7 +1283,8 @@
             <span>目標 ${s.target}</span>
             <span>風報 ${s.rr}</span>
           </div>
-          <div class="signal-line"><strong>盤中</strong><span>${s.realtime}</span></div>
+          <div class="signal-line"><strong>行情</strong><span>${realOf(s) ? `官方收盤 ${closeOf(s)}，漲跌 ${changeOf(s)}，資料 ${marketDateText()}` : s.realtime}</span></div>
+          <div class="signal-line"><strong>量價</strong><span>成交量 ${volumeOf(s)}，成交金額 ${valueOf(s)}</span></div>
           <div class="signal-line"><strong>技術</strong><span>K ${s.k} / D ${s.d} / gap ${s.gap}，MA10 ${s.ma10}，MA20 ${s.ma20}</span></div>
           <div class="tag-row" style="margin-top:9px; flex-wrap:wrap;">
             ${s.tags.map(t => `<span class="badge gray">${t}</span>`).join("")}
@@ -1271,13 +1315,14 @@
       if (oldFacts) oldFacts.remove();
       document.querySelector(".detail-layout").insertAdjacentHTML("beforebegin", `
         <div id="detailFacts" class="fact-grid">
-          <div class="fact"><small>盤中 / 收盤</small><strong>${selected.rt} / ${selected.close}</strong></div>
+          <div class="fact"><small>官方收盤</small><strong>${closeOf(selected)}</strong></div>
+          <div class="fact"><small>官方漲跌</small><strong class="${changeOf(selected) >= 0 ? "up" : "down"}">${changeOf(selected)}</strong></div>
           <div class="fact"><small>K / D / gap</small><strong>${selected.k} / ${selected.d} / ${selected.gap}</strong></div>
           <div class="fact"><small>MA10 / MA20</small><strong>${selected.ma10} / ${selected.ma20}</strong></div>
           <div class="fact"><small>PER / EPS</small><strong>${selected.per} / ${selected.eps}</strong></div>
-          <div class="fact"><small>成交量</small><strong>${selected.volume}</strong></div>
-          <div class="fact"><small>成交金額</small><strong>${selected.value}</strong></div>
-          <div class="fact"><small>資料日期</small><strong>${selected.dataDate}</strong></div>
+          <div class="fact"><small>成交量</small><strong>${volumeOf(selected)}</strong></div>
+          <div class="fact"><small>成交金額</small><strong>${valueOf(selected)}</strong></div>
+          <div class="fact"><small>資料日期</small><strong>${marketDateText()}</strong></div>
           <div class="fact"><small>型態</small><strong>${selected.pattern}</strong></div>
         </div>
       `);
@@ -1368,8 +1413,8 @@
               <td><span class="badge ${badgeClass(s.signal)}">${s.signal}</span></td>
               <td>${s.score}</td>
               <td>${s.rs}</td>
-              <td class="${s.chg >= 0 ? "up" : "down"}">${s.rt}</td>
-              <td>${s.close}</td>
+              <td class="${changeOf(s) >= 0 ? "up" : "down"}">${closeOf(s)}</td>
+              <td>${realOf(s) ? marketDateText() : s.close}</td>
               <td>${s.k}/${s.d}/${s.gap}</td>
               <td>${s.ma10}/${s.ma20}</td>
               <td>${s.pattern}</td>
@@ -1378,7 +1423,7 @@
               <td>${s.target}/${s.pressure2}</td>
               <td>${s.rrWide}</td>
               <td>${s.per}/${s.eps}</td>
-              <td>${s.perf}</td>
+              <td>${realOf(s) ? `量 ${volumeOf(s)} / 值 ${valueOf(s)}` : s.perf}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -1422,6 +1467,7 @@
     }
 
     function renderEtfChanges() {
+      const realEtfRows = marketSnapshot?.activeEtfs || [];
       document.getElementById("etfList").innerHTML = etfChanges.map(item => `
         <article class="stock-card">
           <div class="stock-top">
@@ -1436,7 +1482,20 @@
           <div class="signal-line"><strong>交集</strong><span>${item.overlap}</span></div>
           <div class="signal-line"><strong>理由</strong><span>${item.reason}</span></div>
         </article>
-      `).join("");
+      `).join("") + (realEtfRows.length ? `
+        <article class="stock-card">
+          <div class="stock-top">
+            <div class="symbol"><strong>真實主動 ETF 行情</strong><span>${marketDateText()}</span></div>
+            <span class="badge green">${realEtfRows.length} 檔</span>
+          </div>
+          ${realEtfRows.slice(0, 8).map(etf => `
+            <div class="signal-line">
+              <strong>${etf.id}</strong>
+              <span>${etf.name}，收 ${etf.close}，漲跌 ${etf.change}，值 ${compactMoney(etf.tradeValue)}</span>
+            </div>
+          `).join("")}
+        </article>
+      ` : "");
     }
 
     function renderAdmin() {
@@ -1458,8 +1517,8 @@
           <span class="badge amber">${selected.score} 分</span>
         </div>
         <div class="bubble-grid">
-          <div class="bubble-cell"><small>盤中即時</small><strong>${selected.price} <span class="${selected.chg >= 0 ? "up" : "down"}">${selected.chg >= 0 ? "▲" : "▼"} ${Math.abs(selected.chg)}%</span></strong></div>
-          <div class="bubble-cell"><small>收盤資料</small><strong>${selected.close}・${selected.dataDate}</strong></div>
+          <div class="bubble-cell"><small>官方收盤</small><strong>${closeOf(selected)} <span class="${changeOf(selected) >= 0 ? "up" : "down"}">${changeOf(selected) >= 0 ? "▲" : "▼"} ${Math.abs(changeOf(selected))}</span></strong></div>
+          <div class="bubble-cell"><small>資料日期</small><strong>${marketDateText()}</strong></div>
           <div class="bubble-cell"><small>KD / gap</small><strong>${selected.k}/${selected.d}・${selected.gap}</strong></div>
           <div class="bubble-cell"><small>MA10 / MA20</small><strong>${selected.ma10}/${selected.ma20}</strong></div>
           <div class="bubble-cell"><small>A 進場</small><strong>${selected.entryA}</strong></div>
@@ -1468,7 +1527,7 @@
           <div class="bubble-cell"><small>風報</small><strong>${selected.rrWide}</strong></div>
         </div>
         <div class="bubble-cell"><small>策略理由</small><strong>${selected.reasons[0]}</strong></div>
-        <div class="bubble-cell" style="margin-top:7px;"><small>追蹤績效</small><strong>${selected.perf}</strong></div>
+        <div class="bubble-cell" style="margin-top:7px;"><small>量價資料</small><strong>量 ${volumeOf(selected)}，值 ${valueOf(selected)}</strong></div>
         <div class="actions">
           <button class="btn primary">策略</button>
           <button class="btn">權證</button>
@@ -1486,6 +1545,20 @@
       renderAlerts();
       renderEtfChanges();
       renderAdmin();
+    }
+
+    async function loadRealMarketData() {
+      try {
+        const res = await fetch(`data/market-snapshot.json?v=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        marketSnapshot = await res.json();
+        marketById = new Map((marketSnapshot.watchlist || []).map(row => [row.id, row]));
+        document.getElementById("pageSub").textContent = `真實行情快照 ${marketDateText()}，TWSE/TPEX 官方公開資料；策略與 ETF 換股事件仍為原型模型`;
+        document.querySelector(".side-note").textContent = `已載入官方快照：${marketSnapshot.counts?.all || 0} 筆，主動 ETF ${marketSnapshot.counts?.activeEtfs || 0} 檔。LINE 用量為原型示意。`;
+        renderAll();
+      } catch (error) {
+        console.warn("Market snapshot unavailable, using prototype data.", error);
+      }
     }
 
     document.querySelectorAll(".nav button").forEach(btn => {
@@ -1521,6 +1594,7 @@
     });
 
     renderAll();
+    loadRealMarketData();
   </script>
 </body>
 </html>

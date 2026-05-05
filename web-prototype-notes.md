@@ -90,3 +90,21 @@ LINE 不適合承載所有互動，所以這版 Web 的定位是：
 ## 設計原則
 
 不要把 LINE 當完整 App。LINE 做通知與決策摘要；Web 做深入查看與操作。
+## Real Data Snapshot
+
+The prototype now includes an official public market-data snapshot.
+
+- Fetch script: `scripts/fetch-real-market-data.ps1`
+- Output: `data/market-snapshot.json`
+- Sources:
+  - TWSE daily trading information.
+  - TPEX daily close quotes.
+
+The frontend tries to load `data/market-snapshot.json` and replace matching watchlist stocks with real official close, price change, volume, trade value, and market date.
+
+Notes:
+
+- Strategy score, KD, MA, RS, and strategy explanation are still prototype model data.
+- ETF rebalance events are still an observation model, not official rebalance announcements.
+- Active ETF market quotes are derived from official market rows where the name includes active-management wording or the ticker ends with `A`.
+- When opening via local `file://`, the browser may block JSON loading. GitHub Pages can load it normally.
