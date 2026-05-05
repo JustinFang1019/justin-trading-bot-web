@@ -6,6 +6,20 @@ Last updated: 2026-05-06 Asia/Taipei
 
 The user wants to continue this project across computers. GitHub should carry both code and concise Codex handoff notes.
 
+## Required handoff rule
+
+At the end of every meaningful Codex session, update this file before committing/pushing if there was any design discussion, implementation decision, code change, blocker, or next-step decision.
+
+Each update should include:
+
+- What was changed or discussed.
+- Which files were touched.
+- What was intentionally not changed.
+- Verification performed or skipped.
+- The recommended next prompt for continuing on another computer.
+
+Then commit and push the handoff update to GitHub so another computer can continue by reading this file first.
+
 ## Repositories discussed
 
 - `JustinFang1019/justin-trading-bot-web`: current web prototype repo cloned on this computer at `C:\Users\Siriu\Documents\justin-trading-bot-web`.
