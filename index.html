@@ -92,6 +92,12 @@
       margin-bottom: 10px;
     }
 
+    .controls {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
     .search {
       background: var(--surface);
       border: 1px solid var(--line);
@@ -107,6 +113,22 @@
       outline: 0;
       padding: 11px 12px;
       width: 100%;
+    }
+
+    .back-btn {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--blue);
+      cursor: pointer;
+      font-weight: 900;
+      padding: 10px 12px;
+    }
+
+    .back-btn:disabled {
+      color: var(--muted);
+      cursor: default;
+      opacity: .45;
     }
 
     .filters {
@@ -518,6 +540,12 @@
       <label class="search" aria-label="搜尋股票">
         <input id="searchInput" placeholder="搜尋代號或名稱">
       </label>
+      <div class="controls">
+        <button class="back-btn" id="backButton" type="button" disabled>上一頁</button>
+        <label class="search" aria-label="Web 通行碼">
+          <input id="accessInput" type="password" placeholder="Web 通行碼（若有設定）" autocomplete="off">
+        </label>
+      </div>
       <div class="filters">
         <button class="active" data-filter="all">全部</button>
         <button data-filter="START">START</button>
@@ -595,6 +623,8 @@
     let statusPayload = null;
     let scanBubbles = [];
     let lookupTimer = null;
+    let webAccessToken = sessionStorage.getItem("webAccessToken") || "";
+    let commandHistory = [];
 
     const $ = id => document.getElementById(id);
 
@@ -609,10 +639,14 @@
       }[ch]));
     }
 
-    async function getJson(url) {
-      const res = await fetch(url, { cache: "no-store" });
+    async function getJson(url, options = {}) {
+      const res = await fetch(url, { cache: "no-store", ...options });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       return res.json();
+    }
+
+    function commandFetchOptions() {
+      return webAccessToken ? { headers: { "X-Web-Access-Token": webAccessToken } } : {};
     }
 
     function mapStock(row) {
@@ -846,14 +880,41 @@
       const text = String(command || "").trim();
       if (!text) return;
       try {
-        const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`);
+        const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`, commandFetchOptions());
+        rememberCommand(text);
         renderCommandPayload(text, payload.data || {});
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = payload.generated_at || "";
       } catch (error) {
-        $("cardFeed").innerHTML = `<div class="message">查不到或暫時無法產生「${html(text)}」的小卡：${html(error.message)}。</div>`;
+        const authHint = error.message.startsWith("401") ? "請輸入正確 Web 通行碼後再試一次。" : "";
+        $("cardFeed").innerHTML = `<div class="message">查不到或暫時無法產生「${html(text)}」的小卡：${html(error.message)}。${authHint}</div>`;
         $("actionNotice").innerHTML = "";
       }
+    }
+
+    function rememberCommand(text) {
+      const last = commandHistory[commandHistory.length - 1];
+      if (text && text !== last) commandHistory.push(text);
+      updateBackButton();
+    }
+
+    async function goBack() {
+      if (commandHistory.length <= 1) return;
+      commandHistory.pop();
+      const prev = commandHistory[commandHistory.length - 1];
+      $("searchInput").value = prev;
+      updateBackButton();
+      $("cardFeed").innerHTML = `<div class="message">正在回到 ${html(prev)}...</div>`;
+      try {
+        const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(prev)}`, commandFetchOptions());
+        renderCommandPayload(prev, payload.data || {});
+      } catch (error) {
+        $("cardFeed").innerHTML = `<div class="message">無法回到上一張小卡：${html(error.message)}</div>`;
+      }
+    }
+
+    function updateBackButton() {
+      $("backButton").disabled = commandHistory.length <= 1;
     }
 
     function queueLookup() {
@@ -1072,6 +1133,13 @@
     });
 
     $("searchInput").addEventListener("input", queueLookup);
+    $("accessInput").value = webAccessToken;
+    $("accessInput").addEventListener("change", event => {
+      webAccessToken = event.target.value.trim();
+      if (webAccessToken) sessionStorage.setItem("webAccessToken", webAccessToken);
+      else sessionStorage.removeItem("webAccessToken");
+    });
+    $("backButton").addEventListener("click", goBack);
 
     document.addEventListener("click", async event => {
       const pick = event.target.closest("[data-pick-id]");

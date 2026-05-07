@@ -113,6 +113,12 @@ In `justin-trading-bot-web`:
   - Flex message buttons with LINE `message` actions now call `/api/web/command` and render the returned web Flex card directly, instead of showing a copy-only command box.
   - Render initially returned 404 immediately after PR #6 merge, then later deployed successfully.
   - Confirmed `/api/web/command?text=2330` and `/api/web/command?text=即時%202330` both return 200 with Flex card payloads.
+- Added navigation and access-control follow-up after the user asked about a previous-page button and FinMind traffic risk.
+  - Web `index.html` now includes a `上一頁` button backed by command history.
+  - Web `index.html` now includes an optional Web 通行碼 field stored in `sessionStorage`.
+  - Original bot PR pending/merged in this session adds optional `WEB_COMMAND_ACCESS_TOKEN` enforcement to `/api/web/command`.
+  - When `WEB_COMMAND_ACCESS_TOKEN` is set in Render, requests must send `X-Web-Access-Token`; otherwise the endpoint returns 401 before calling LINE group command handlers or any FinMind-heavy logic.
+  - Important: GitHub Pages cannot securely enforce a whitelist by itself. Real protection must stay on Render/backend. LIFF + LINE user id verification would be the stronger long-term whitelist design.
 
 In `justin-trading-bot`:
 
@@ -161,9 +167,9 @@ Important implementation notes:
 
 ## Recommended Next Implementation Step
 
-1. Open the GitHub Pages URL with a cache-busting query string and enter `2330`; it should render the same stock lookup card as LINE group input `2330`.
-2. Click `即時` on a rendered card; it should call `/api/web/command?text=即時 <sid>` and replace the page with the web version of the LINE realtime card.
-3. Compare the rendered stock and realtime cards against LINE screenshots and refine only the Flex renderer if spacing differs.
+1. If protecting FinMind usage, set Render env `WEB_COMMAND_ACCESS_TOKEN` to a private passcode, redeploy, then enter the same passcode in the web page's `Web 通行碼` field.
+2. Open the GitHub Pages URL with a cache-busting query string and enter `2330`; it should render the same stock lookup card as LINE group input `2330`.
+3. Click `即時` on a rendered card; it should call `/api/web/command?text=即時 <sid>` and replace the page with the web version of the LINE realtime card. The `上一頁` button should return to the prior card.
 4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 
