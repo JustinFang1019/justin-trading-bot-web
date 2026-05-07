@@ -131,6 +131,40 @@
       opacity: .45;
     }
 
+    .auth-panel {
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      min-width: 0;
+      padding: 8px 10px;
+    }
+
+    .auth-panel span {
+      font-size: 12px;
+      line-height: 1.35;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .auth-panel button {
+      background: var(--blue);
+      border: 1px solid var(--blue);
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 7px 9px;
+      white-space: nowrap;
+    }
+
     .filters {
       display: none;
       gap: 8px;
@@ -542,9 +576,10 @@
       </label>
       <div class="controls">
         <button class="back-btn" id="backButton" type="button" disabled>上一頁</button>
-        <label class="search" aria-label="Web 通行碼">
-          <input id="accessInput" type="password" placeholder="Web 通行碼（若有設定）" autocomplete="off">
-        </label>
+        <div class="auth-panel">
+          <span id="authStatus">LINE 登入檢查中</span>
+          <button id="authButton" type="button">登入</button>
+        </div>
       </div>
       <div class="filters">
         <button class="active" data-filter="all">全部</button>
@@ -614,8 +649,12 @@
     <button data-view="statusView"><strong>04</strong>狀態</button>
   </nav>
 
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     const API_BASE = "https://stock-scanner-bot-f3kt.onrender.com/api/web";
+    const LIFF_ID_FROM_URL = new URLSearchParams(location.search).get("liffId") || "";
+    if (LIFF_ID_FROM_URL) localStorage.setItem("liffId", LIFF_ID_FROM_URL);
+    const LIFF_ID = LIFF_ID_FROM_URL || localStorage.getItem("liffId") || "";
     let stocks = [];
     let selected = null;
     let filter = "all";
@@ -623,7 +662,9 @@
     let statusPayload = null;
     let scanBubbles = [];
     let lookupTimer = null;
-    let webAccessToken = sessionStorage.getItem("webAccessToken") || "";
+    let webSessionToken = localStorage.getItem("webSessionToken") || "";
+    let webUser = JSON.parse(localStorage.getItem("webUser") || "null");
+    let legacyAccessToken = sessionStorage.getItem("webAccessToken") || "";
     let commandHistory = [];
 
     const $ = id => document.getElementById(id);
@@ -646,7 +687,83 @@
     }
 
     function commandFetchOptions() {
-      return webAccessToken ? { headers: { "X-Web-Access-Token": webAccessToken } } : {};
+      if (webSessionToken) return { headers: { "Authorization": `Bearer ${webSessionToken}` } };
+      return legacyAccessToken ? { headers: { "X-Web-Access-Token": legacyAccessToken } } : {};
+    }
+
+    async function postJson(url, body) {
+      const res = await fetch(url, {
+        cache: "no-store",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    }
+
+    function setAuthState(label, signedIn = false) {
+      $("authStatus").textContent = label;
+      $("authButton").textContent = signedIn ? "登出" : "登入";
+    }
+
+    function storeSession(data) {
+      webSessionToken = data.token || "";
+      webUser = data.user || null;
+      if (webSessionToken) localStorage.setItem("webSessionToken", webSessionToken);
+      else localStorage.removeItem("webSessionToken");
+      if (webUser) localStorage.setItem("webUser", JSON.stringify(webUser));
+      else localStorage.removeItem("webUser");
+      setAuthState(webUser?.name ? `已登入 ${webUser.name}` : "已登入", true);
+    }
+
+    function clearSession() {
+      webSessionToken = "";
+      webUser = null;
+      localStorage.removeItem("webSessionToken");
+      localStorage.removeItem("webUser");
+      setAuthState(LIFF_ID ? "尚未登入 LINE" : "LIFF ID 未設定", false);
+    }
+
+    async function checkStoredSession() {
+      if (!webSessionToken) {
+        setAuthState(LIFF_ID ? "尚未登入 LINE" : "LIFF ID 未設定", false);
+        return false;
+      }
+      try {
+        const payload = await getJson(`${API_BASE}/auth/session`, commandFetchOptions());
+        webUser = payload.data?.user || webUser;
+        if (webUser) localStorage.setItem("webUser", JSON.stringify(webUser));
+        setAuthState(webUser?.name ? `已登入 ${webUser.name}` : "已登入", true);
+        return true;
+      } catch (_error) {
+        clearSession();
+        return false;
+      }
+    }
+
+    async function authenticateWithLine() {
+      if (!LIFF_ID) {
+        setAuthState("LIFF ID 未設定", false);
+        throw new Error("LIFF ID is not configured");
+      }
+      if (!window.liff) throw new Error("LIFF SDK not loaded");
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: location.href });
+        return false;
+      }
+      const idToken = liff.getIDToken();
+      if (!idToken) throw new Error("LINE idToken unavailable");
+      const payload = await postJson(`${API_BASE}/auth/line`, { id_token: idToken });
+      storeSession(payload.data || {});
+      return true;
+    }
+
+    async function ensureAuth() {
+      if (webSessionToken) return true;
+      if (!LIFF_ID) return !webSessionToken;
+      return authenticateWithLine();
     }
 
     function mapStock(row) {
@@ -880,13 +997,28 @@
       const text = String(command || "").trim();
       if (!text) return;
       try {
+        if (LIFF_ID) {
+          const ready = await ensureAuth();
+          if (!ready) return;
+        }
         const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`, commandFetchOptions());
         rememberCommand(text);
         renderCommandPayload(text, payload.data || {});
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = payload.generated_at || "";
       } catch (error) {
-        const authHint = error.message.startsWith("401") ? "請輸入正確 Web 通行碼後再試一次。" : "";
+        if (error.message.startsWith("401") && LIFF_ID) {
+          clearSession();
+          try {
+            const ready = await authenticateWithLine();
+            if (ready) return loadCommand(text);
+            return;
+          } catch (authError) {
+            $("cardFeed").innerHTML = `<div class="message">LINE 登入失敗：${html(authError.message)}</div>`;
+            return;
+          }
+        }
+        const authHint = error.message.startsWith("401") ? "請使用 LINE 白名單帳號登入後再試一次。" : "";
         $("cardFeed").innerHTML = `<div class="message">查不到或暫時無法產生「${html(text)}」的小卡：${html(error.message)}。${authHint}</div>`;
         $("actionNotice").innerHTML = "";
       }
@@ -1133,11 +1265,16 @@
     });
 
     $("searchInput").addEventListener("input", queueLookup);
-    $("accessInput").value = webAccessToken;
-    $("accessInput").addEventListener("change", event => {
-      webAccessToken = event.target.value.trim();
-      if (webAccessToken) sessionStorage.setItem("webAccessToken", webAccessToken);
-      else sessionStorage.removeItem("webAccessToken");
+    $("authButton").addEventListener("click", async () => {
+      if (webSessionToken) {
+        clearSession();
+        return;
+      }
+      try {
+        await authenticateWithLine();
+      } catch (error) {
+        setAuthState(error.message, false);
+      }
     });
     $("backButton").addEventListener("click", goBack);
 
@@ -1185,7 +1322,7 @@
       }
     });
 
-    loadApp();
+    checkStoredSession().finally(loadApp);
   </script>
 </body>
 </html>

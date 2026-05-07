@@ -119,6 +119,13 @@ In `justin-trading-bot-web`:
   - Original bot PR pending/merged in this session adds optional `WEB_COMMAND_ACCESS_TOKEN` enforcement to `/api/web/command`.
   - When `WEB_COMMAND_ACCESS_TOKEN` is set in Render, requests must send `X-Web-Access-Token`; otherwise the endpoint returns 401 before calling LINE group command handlers or any FinMind-heavy logic.
   - Important: GitHub Pages cannot securely enforce a whitelist by itself. Real protection must stay on Render/backend. LIFF + LINE user id verification would be the stronger long-term whitelist design.
+- Implemented the formal LIFF + LINE whitelist direction.
+  - Original bot PR #8 (`Add LIFF web session auth`) was merged into `JustinFang1019/justin-trading-bot` on 2026-05-08.
+  - The original bot now has `POST /api/web/auth/line` and `GET /api/web/auth/session`.
+  - `/auth/line` verifies LIFF `id_token` through LINE Login v2.1 verify endpoint, extracts LINE user id from `sub`, checks admin or `stock_scanner.watchlist.is_whitelisted(user_id)`, then returns a signed web session token.
+  - `/api/web/command` now accepts `Authorization: Bearer <session>` and passes the session user id to `handle_group_query()`.
+  - Web `index.html` loads LIFF SDK, supports `?liffId=<LIFF_ID>` once to save the LIFF ID locally, logs in with LIFF, stores `webSessionToken` and `webUser` in `localStorage`, and reuses that token automatically for later queries.
+  - Legacy `WEB_COMMAND_ACCESS_TOKEN` remains as a fallback during transition. For formal whitelist mode, set `WEB_REQUIRE_LIFF_AUTH=true` in Render.
 
 In `justin-trading-bot`:
 
@@ -164,12 +171,13 @@ Important implementation notes:
 - Browser verification was not completed in this Codex environment. After GitHub Pages deploys, refresh the URL and confirm the visible cards match the LINE scan card order/content.
 - Browser verification was still not completed after the single-card lookup rewrite because this environment has no working Node/browser automation. Manually check GitHub Pages on desktop and mobile: initial page should show only an input prompt, and entering `3504` should render one LINE-style card without vertical digits.
 - Confirmed after Render deployment that `/api/web/command?text=2330` and `/api/web/command?text=即時%202330` both return 200 with one Flex message.
+- Python syntax check passed for the LIFF session backend with Python 3.12.
 
 ## Recommended Next Implementation Step
 
-1. If protecting FinMind usage, set Render env `WEB_COMMAND_ACCESS_TOKEN` to a private passcode, redeploy, then enter the same passcode in the web page's `Web 通行碼` field.
-2. Open the GitHub Pages URL with a cache-busting query string and enter `2330`; it should render the same stock lookup card as LINE group input `2330`.
-3. Click `即時` on a rendered card; it should call `/api/web/command?text=即時 <sid>` and replace the page with the web version of the LINE realtime card. The `上一頁` button should return to the prior card.
+1. Create/configure a LIFF app in LINE Developers and set its endpoint URL to the GitHub Pages URL.
+2. In Render set `LINE_LOGIN_CHANNEL_ID` (LINE Login channel id), `WEB_SESSION_SECRET` (random long secret), and `WEB_REQUIRE_LIFF_AUTH=true`, then redeploy.
+3. Open the GitHub Pages URL once with `?liffId=<LIFF_ID>` so the browser saves the LIFF ID. After login, entering `2330` should work without typing any passcode, and only LINE users in the original bot whitelist should pass.
 4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 
