@@ -146,6 +146,13 @@ In `justin-trading-bot-web`:
   - Original bot `stock_scanner/web_api.py` records unique signed-in Web users per Taiwan date in `/data/web_usage.json` using a hash of LINE user id, not the raw id.
   - It updates only on LIFF auth/session/command requests and does not call FinMind, Sheets, scanner, or Kbar logic.
   - `/api/web/status` now includes `web_usage.active_users_today`; Web displays it on the help card and status page.
+- User requested a new expandable `≡` feature menu and a Web-only active ETF module.
+  - This should live in the Web version; LINE should only get a light entry/summary later because full ETF holdings/change lists are too dense for Flex.
+  - Original bot backend now adds read-only active ETF endpoints: `GET /api/web/active-etfs` and `GET /api/web/active-etfs/<code>`.
+  - Ranking source is TWSE ETF e添富 page, parsed from the `今日資產規模(元)` table and cached daily under `/data/active_etf/ranking.json`.
+  - Holding source is MoneyDJ ETF holdings page, parsed for data date, stock id/name, holding weight, and shares. Detail snapshots are cached under `/data/active_etf/holdings_<ETF>.json`.
+  - Holding changes compare current and previous cached holding snapshots, so the first day may show little/no change until a second data date is cached.
+  - Web `index.html` now adds `≡` drawer navigation and an `activeEtfView` with ranking, changes, and holdings tabs.
 
 In `justin-trading-bot`:
 

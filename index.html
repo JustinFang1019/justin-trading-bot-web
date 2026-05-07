@@ -47,9 +47,25 @@
     .topbar {
       align-items: center;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 10px;
       margin-bottom: 10px;
+    }
+
+    .menu-btn {
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--blue);
+      cursor: pointer;
+      display: flex;
+      font-size: 22px;
+      font-weight: 900;
+      height: 42px;
+      justify-content: center;
+      line-height: 1;
+      width: 42px;
     }
 
     h1 {
@@ -198,6 +214,84 @@
       background: var(--blue);
       border-color: var(--blue);
       color: #fff;
+    }
+
+    .drawer-overlay {
+      background: rgba(15, 23, 42, .38);
+      bottom: 0;
+      display: none;
+      left: 0;
+      position: fixed;
+      right: 0;
+      top: 0;
+      z-index: 40;
+    }
+
+    .drawer-overlay.open { display: block; }
+
+    .drawer {
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      box-shadow: 18px 0 34px rgba(16, 24, 40, .22);
+      height: 100%;
+      max-width: 82vw;
+      padding: 16px 12px;
+      width: 284px;
+    }
+
+    .drawer-head {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .drawer-head strong {
+      font-size: 18px;
+    }
+
+    .drawer-close {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      height: 34px;
+      width: 34px;
+    }
+
+    .menu-item {
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      cursor: pointer;
+      display: grid;
+      gap: 2px 10px;
+      grid-template-columns: 34px minmax(0, 1fr);
+      margin-bottom: 8px;
+      padding: 10px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .menu-item.active {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+
+    .menu-item strong {
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .menu-item span {
+      color: var(--muted);
+      font-size: 11px;
+      grid-column: 2;
+      line-height: 1.35;
     }
 
     .view { display: none; }
@@ -449,6 +543,142 @@
       padding: 10px;
     }
 
+    .etf-tabs {
+      display: grid;
+      gap: 7px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .etf-tab {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--blue);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 9px 4px;
+      text-align: center;
+    }
+
+    .etf-tab.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .etf-row {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    .etf-line {
+      align-items: baseline;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .etf-line strong {
+      font-size: 16px;
+    }
+
+    .rank {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .mini-pills {
+      display: grid;
+      gap: 7px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 8px;
+    }
+
+    .mini-pill {
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .mini-pill small {
+      color: var(--muted);
+      display: block;
+      font-size: 10px;
+      margin-bottom: 2px;
+    }
+
+    .mini-pill strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .tone-green { background: var(--green-soft); color: var(--green); }
+    .tone-red { background: var(--red-soft); color: var(--red); }
+    .tone-amber { background: var(--amber-soft); color: var(--amber); }
+    .tone-purple { background: var(--purple-soft); color: var(--purple); }
+
+    .change-row {
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 62px minmax(0, 1fr) 78px;
+      padding: 9px;
+    }
+
+    .change-row .code {
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .change-row .name {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      margin-top: 1px;
+    }
+
+    .change-row .delta {
+      font-size: 12px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .mini-bar {
+      background: #edf2f7;
+      border-radius: 999px;
+      height: 7px;
+      overflow: hidden;
+    }
+
+    .mini-bar i {
+      background: var(--blue);
+      display: block;
+      height: 100%;
+    }
+
+    .section-title {
+      align-items: center;
+      display: flex;
+      font-size: 14px;
+      font-weight: 900;
+      justify-content: space-between;
+      margin: 3px 0 0;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 400;
+    }
+
     .warrant-row strong,
     .status-row strong {
       display: block;
@@ -609,6 +839,7 @@
 <body>
   <main class="app">
     <header class="topbar">
+      <button class="menu-btn" id="menuButton" type="button" aria-label="功能選單">≡</button>
       <div>
         <h1 id="pageTitle">LINE 小卡查詢</h1>
         <p class="sub" id="pageSub">輸入股票代號或名稱，只顯示原 LINE bot 小卡與群組已開放的按鈕。</p>
@@ -690,12 +921,46 @@
     <section class="view" id="statusView">
       <div class="status-grid" id="statusList"></div>
     </section>
+
+    <section class="view" id="activeEtfView">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" id="activeEtfTitle">主動 ETF 追蹤</div>
+            <div class="panel-sub" id="activeEtfSub">盤後每日更新，Web 只讀快照。</div>
+          </div>
+          <span class="badge blue" id="activeEtfBadge">讀取中</span>
+        </div>
+        <div class="panel-body">
+          <div class="etf-tabs">
+            <button class="etf-tab active" data-etf-tab="ranking">規模</button>
+            <button class="etf-tab" data-etf-tab="changes">異動</button>
+            <button class="etf-tab" data-etf-tab="holdings">持股</button>
+          </div>
+          <div class="status-grid" id="activeEtfList" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true">
+    <aside class="drawer" aria-label="功能選單">
+      <div class="drawer-head">
+        <strong>功能選單</strong>
+        <button class="drawer-close" id="drawerClose" type="button" aria-label="關閉">×</button>
+      </div>
+      <button class="menu-item active" data-menu-view="scanView"><strong>01</strong><strong>小卡查詢</strong><span>原 LINE bot 小卡網頁版</span></button>
+      <button class="menu-item" data-menu-view="activeEtfView"><strong>02</strong><strong>主動 ETF 追蹤</strong><span>規模排名、持股變化、共同異動</span></button>
+      <button class="menu-item" data-menu-command="RS排名"><strong>03</strong><strong>RS 排名</strong><span>強勢股 Top 20</span></button>
+      <button class="menu-item" data-menu-command="教學"><strong>04</strong><strong>教學</strong><span>策略與權證教學</span></button>
+      <button class="menu-item" data-menu-view="statusView"><strong>05</strong><strong>狀態</strong><span>資料更新與快取狀態</span></button>
+    </aside>
+  </div>
 
   <nav class="bottom-nav" aria-label="主選單">
     <button class="active" data-view="scanView"><strong>01</strong>小卡</button>
-    <button data-view="chartView"><strong>02</strong>K線</button>
-    <button data-view="warrantView"><strong>03</strong>權證</button>
+    <button data-view="activeEtfView"><strong>02</strong>ETF</button>
+    <button data-view="chartView"><strong>03</strong>K線</button>
     <button data-view="statusView"><strong>04</strong>狀態</button>
   </nav>
 
@@ -717,6 +982,10 @@
     let webUser = JSON.parse(localStorage.getItem("webUser") || "null");
     let legacyAccessToken = sessionStorage.getItem("webAccessToken") || "";
     let commandHistory = [];
+    let activeEtfs = [];
+    let activeEtfPayload = null;
+    let selectedEtf = null;
+    let activeEtfTab = "ranking";
 
     const $ = id => document.getElementById(id);
 
@@ -1196,14 +1465,17 @@
     function activate(viewId) {
       document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === viewId));
       document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.view === viewId));
+      document.querySelectorAll("[data-menu-view]").forEach(b => b.classList.toggle("active", b.dataset.menuView === viewId));
       const titleMap = {
         scanView: ["掃描小卡", "直接使用原 LINE bot 掃描結果與小卡欄位。"],
+        activeEtfView: ["主動 ETF 追蹤", "盤後每日更新規模排名與持股變化。"],
         chartView: ["K 線", "使用原 bot /kbar 快取繪製，Yahoo 只保留為外部備援。"],
         warrantView: ["權證", "讀取原 bot Top 3 權證快取。"],
         statusView: ["狀態", "部署、API、cache 與 read-only 狀態。"]
       };
       $("pageTitle").textContent = titleMap[viewId][0];
       $("pageSub").textContent = titleMap[viewId][1];
+      if (viewId === "activeEtfView" && !activeEtfs.length) loadActiveEtfs();
       if (viewId === "chartView") drawChart();
     }
 
@@ -1324,6 +1596,128 @@
       `).join("") : `<div class="message">目前沒有 Top 3 權證快取，或原 bot 判定無合適候選。</div>`;
     }
 
+    function fmtBillion(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-";
+      return `${n.toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 億`;
+    }
+
+    function fmtShares(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-";
+      if (Math.abs(n) >= 10000) return `${(n / 10000).toLocaleString("zh-TW", { maximumFractionDigits: 1 })}萬`;
+      return n.toLocaleString("zh-TW");
+    }
+
+    function renderActiveEtfRanking() {
+      $("activeEtfTitle").textContent = "主動 ETF 追蹤";
+      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，來源 ${activeEtfPayload.source || "-"}` : "盤後每日更新，Web 只讀快照。";
+      $("activeEtfBadge").textContent = `${activeEtfs.length || 0} 檔`;
+      $("activeEtfList").innerHTML = activeEtfs.length ? activeEtfs.map((etf, index) => `
+        <div class="etf-row" data-etf-code="${html(etf.code)}">
+          <div class="etf-line">
+            <strong><span class="rank">#${html(etf.rank || index + 1)}</span> ${html(etf.code)}</strong>
+            <span>${fmtBillion(etf.asset_size_billion)}</span>
+          </div>
+          <div class="meta"><span>${html(etf.name || "")}</span><span>年初至今 ${fmtBillion((etf.ytd_delta || 0) / 100000000)}</span><span>${etf.change_rate == null ? "" : `${html(etf.change_rate)}%`}</span></div>
+          <div class="mini-pills">
+            <div class="mini-pill tone-green"><small>排名</small><strong>${html(etf.rank || index + 1)}</strong></div>
+            <div class="mini-pill tone-amber"><small>規模</small><strong>${fmtBillion(etf.asset_size_billion)}</strong></div>
+            <div class="mini-pill tone-purple"><small>持股</small><strong>點入看</strong></div>
+          </div>
+        </div>
+      `).join("") : `<div class="message">目前沒有主動 ETF 快照。Render 部署後會在第一次讀取時建立快取。</div>`;
+    }
+
+    function changeRows(rows = [], emptyText = "目前沒有異動資料") {
+      return rows.length ? rows.slice(0, 12).map(row => {
+        const tone = (row.share_delta || row.weight_delta || 0) >= 0 ? "tone-green" : "tone-red";
+        const width = Math.max(8, Math.min(100, Math.abs(row.weight || row.weight_delta || 1) * 10));
+        const sign = (row.share_delta || row.weight_delta || 0) >= 0 ? "+" : "";
+        return `
+          <div class="change-row">
+            <div><div class="code">${html(row.stock_id)}</div><div class="name">${html(row.stock_name || "")}</div></div>
+            <div><div class="mini-bar"><i style="width:${width}%"></i></div><div class="meta"><span>權重 ${row.weight ?? "-"}%</span></div></div>
+            <div class="delta ${tone}">${sign}${fmtShares(row.share_delta)}<br>${sign}${row.weight_delta ?? 0}%</div>
+          </div>
+        `;
+      }).join("") : `<div class="message">${emptyText}</div>`;
+    }
+
+    function holdingRows(rows = []) {
+      return rows.length ? rows.slice(0, 30).map(row => {
+        const width = Math.max(8, Math.min(100, Number(row.weight || 0) * 10));
+        return `
+          <div class="change-row">
+            <div><div class="code">${html(row.stock_id)}</div><div class="name">${html(row.stock_name || "")}</div></div>
+            <div><div class="mini-bar"><i style="width:${width}%"></i></div><div class="meta"><span>${fmtShares(row.shares)} 股</span></div></div>
+            <div class="delta tone-amber">${row.weight ?? "-"}%</div>
+          </div>
+        `;
+      }).join("") : `<div class="message">目前沒有持股明細。</div>`;
+    }
+
+    function renderActiveEtfDetail() {
+      if (!selectedEtf) {
+        renderActiveEtfRanking();
+        return;
+      }
+      $("activeEtfTitle").textContent = `${selectedEtf.code} 持股變化`;
+      $("activeEtfSub").textContent = `${selectedEtf.name || selectedEtf.ranking?.name || ""} · ${selectedEtf.data_date || ""}`;
+      $("activeEtfBadge").textContent = selectedEtf.ranking?.asset_size_billion ? fmtBillion(selectedEtf.ranking.asset_size_billion) : `${(selectedEtf.holdings || []).length} 檔`;
+      const changes = selectedEtf.changes || {};
+      if (activeEtfTab === "holdings") {
+        $("activeEtfList").innerHTML = `
+          <div class="section-title">完整持股 <span>前 30 大</span></div>
+          ${holdingRows(selectedEtf.holdings || [])}
+        `;
+        return;
+      }
+      $("activeEtfList").innerHTML = `
+        <div class="mini-pills">
+          <div class="mini-pill tone-green"><small>新增</small><strong>${(changes.added || []).length}</strong></div>
+          <div class="mini-pill tone-amber"><small>加碼</small><strong>${(changes.increased || []).length}</strong></div>
+          <div class="mini-pill tone-red"><small>減碼</small><strong>${(changes.decreased || []).length + (changes.removed || []).length}</strong></div>
+        </div>
+        <div class="section-title">今日新增 <span>股數 / 權重</span></div>
+        ${changeRows(changes.added || [], "尚無新增，或需要累積兩個交易日快照。")}
+        <div class="section-title">今日加碼 <span>權重變化</span></div>
+        ${changeRows(changes.increased || [], "尚無加碼資料。")}
+        <div class="section-title">今日減碼 / 出清 <span>風險觀察</span></div>
+        ${changeRows([...(changes.decreased || []), ...(changes.removed || [])], "尚無減碼或出清資料。")}
+      `;
+    }
+
+    async function loadActiveEtfs() {
+      $("activeEtfList").innerHTML = `<div class="message">正在讀取主動 ETF 快照...</div>`;
+      try {
+        const payload = await getJson(`${API_BASE}/active-etfs`);
+        activeEtfPayload = payload.data || {};
+        activeEtfs = activeEtfPayload.etfs || [];
+        selectedEtf = null;
+        activeEtfTab = "ranking";
+        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.etfTab === "ranking"));
+        renderActiveEtfRanking();
+      } catch (error) {
+        $("activeEtfBadge").textContent = "失敗";
+        $("activeEtfList").innerHTML = `<div class="message">無法讀取主動 ETF：${html(error.message)}</div>`;
+      }
+    }
+
+    async function loadActiveEtfDetail(code) {
+      const etf = activeEtfs.find(item => item.code === code);
+      $("activeEtfList").innerHTML = `<div class="message">正在讀取 ${html(code)} 持股變化...</div>`;
+      try {
+        const payload = await getJson(`${API_BASE}/active-etfs/${encodeURIComponent(code)}`);
+        selectedEtf = { ...(payload.data || {}), ranking: payload.data?.ranking || etf };
+        activeEtfTab = "changes";
+        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.etfTab === "changes"));
+        renderActiveEtfDetail();
+      } catch (error) {
+        $("activeEtfList").innerHTML = `<div class="message">無法讀取 ${html(code)}：${html(error.message)}</div>`;
+      }
+    }
+
     function renderStatus(error = null) {
       const rows = [
         ["API", error ? `失敗：${error.message}` : "已連線 Render read-only API", error ? "red" : "green"],
@@ -1413,8 +1807,55 @@
       }
     });
     $("backButton").addEventListener("click", goBack);
+    $("menuButton").addEventListener("click", () => {
+      $("drawerOverlay").classList.add("open");
+      $("drawerOverlay").setAttribute("aria-hidden", "false");
+    });
+    $("drawerClose").addEventListener("click", () => {
+      $("drawerOverlay").classList.remove("open");
+      $("drawerOverlay").setAttribute("aria-hidden", "true");
+    });
+    $("drawerOverlay").addEventListener("click", event => {
+      if (event.target === $("drawerOverlay")) {
+        $("drawerOverlay").classList.remove("open");
+        $("drawerOverlay").setAttribute("aria-hidden", "true");
+      }
+    });
 
     document.addEventListener("click", async event => {
+      const menuView = event.target.closest("[data-menu-view]");
+      if (menuView) {
+        $("drawerOverlay").classList.remove("open");
+        $("drawerOverlay").setAttribute("aria-hidden", "true");
+        activate(menuView.dataset.menuView);
+        return;
+      }
+
+      const menuCommand = event.target.closest("[data-menu-command]");
+      if (menuCommand) {
+        $("drawerOverlay").classList.remove("open");
+        $("drawerOverlay").setAttribute("aria-hidden", "true");
+        $("searchInput").value = menuCommand.dataset.menuCommand;
+        activate("scanView");
+        renderOriginalFeed();
+        return;
+      }
+
+      const etfTab = event.target.closest("[data-etf-tab]");
+      if (etfTab) {
+        activeEtfTab = etfTab.dataset.etfTab;
+        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn === etfTab));
+        if (activeEtfTab === "ranking" || !selectedEtf) renderActiveEtfRanking();
+        else renderActiveEtfDetail();
+        return;
+      }
+
+      const etfRow = event.target.closest("[data-etf-code]");
+      if (etfRow) {
+        await loadActiveEtfDetail(etfRow.dataset.etfCode);
+        return;
+      }
+
       const pick = event.target.closest("[data-pick-id]");
       if (pick) {
         $("searchInput").value = pick.dataset.pickId;
