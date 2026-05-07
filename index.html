@@ -594,6 +594,7 @@
     let kbarById = new Map();
     let statusPayload = null;
     let scanBubbles = [];
+    let lookupTimer = null;
 
     const $ = id => document.getElementById(id);
 
@@ -759,6 +760,20 @@
       return match ? match[0] : "";
     }
 
+    function flexMessagesToBubbles(messages = []) {
+      const bubbles = [];
+      messages.forEach(message => {
+        const contents = message?.type === "flex" ? message.contents : message;
+        if (!contents) return;
+        if (contents.type === "carousel") {
+          (contents.contents || []).forEach(bubble => bubbles.push(bubble));
+        } else if (contents.type === "bubble") {
+          bubbles.push(contents);
+        }
+      });
+      return bubbles;
+    }
+
     function scanCard(stock) {
       return `
         <article class="line-card ${selected?.id === stock.id ? "selected" : ""}" data-id="${stock.id}">
@@ -804,33 +819,52 @@
       const q = $("searchInput").value.trim();
       if (!q) {
         selected = null;
-        $("cardFeed").innerHTML = `<div class="message">請輸入股票代號或名稱，例如 3504。Web 版只顯示單一原 LINE 小卡。</div>`;
+        $("cardFeed").innerHTML = `<div class="message">請輸入股票代號或名稱，例如 2330。Web 版會直接顯示 LINE 群組同款小卡。</div>`;
         return;
       }
-
-      const matches = matchingStocks(q);
-      const stock = requestedStock();
-      if (!stock) {
-        const chips = matches.slice(0, 8).map(s => `<button data-pick-id="${s.id}">${html(s.id)} ${html(s.name)}</button>`).join("");
-        $("cardFeed").innerHTML = `<div class="message">請輸入完整代號，或選擇一個符合的股票。${chips ? `<div class="suggestions">${chips}</div>` : ""}</div>`;
-        return;
-      }
-
-      selected = stock;
-      const item = scanBubbles.find(bubble => bubble.id === stock.id);
-      $("cardFeed").innerHTML = item
-        ? flexNode(item.bubble, item.id)
-        : `<div class="message">${html(stock.id)} ${html(stock.name)} 目前不在原 LINE 掃描小卡清單內。</div>`;
+      $("cardFeed").innerHTML = `<div class="message">正在讀取 ${html(q)} 的 LINE 小卡...</div>`;
+      loadCommand(q);
     }
 
-    function showCommand(text) {
-      $("actionNotice").innerHTML = `
-        <div class="message">
-          這個按鈕在 LINE 群組會送出以下指令：
-          <div class="command-text">${html(text)}</div>
-          <button class="copy-command" data-copy="${html(text)}">複製指令</button>
-        </div>
-      `;
+    function renderCommandPayload(command, data) {
+      const bubbles = flexMessagesToBubbles(data?.flex_messages || []);
+      if (bubbles.length) {
+        $("cardFeed").innerHTML = bubbles.map(bubble => {
+          const sid = stockIdFromBubble(bubble) || (command.match(/\d{4}/) || [""])[0];
+          return flexNode(bubble, sid);
+        }).join("");
+        $("actionNotice").innerHTML = data?.text_message
+          ? `<div class="message text-summary">${html(data.text_message)}</div>`
+          : "";
+        return;
+      }
+      $("cardFeed").innerHTML = `<div class="message">${html(data?.text_message || "沒有回傳小卡。")}</div>`;
+      $("actionNotice").innerHTML = "";
+    }
+
+    async function loadCommand(command) {
+      const text = String(command || "").trim();
+      if (!text) return;
+      try {
+        const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`);
+        renderCommandPayload(text, payload.data || {});
+        $("syncTitle").textContent = "已連線";
+        $("syncMeta").textContent = payload.generated_at || "";
+      } catch (error) {
+        $("cardFeed").innerHTML = `<div class="message">查不到或暫時無法產生「${html(text)}」的小卡：${html(error.message)}。</div>`;
+        $("actionNotice").innerHTML = "";
+      }
+    }
+
+    function queueLookup() {
+      window.clearTimeout(lookupTimer);
+      const q = $("searchInput").value.trim();
+      if (!q) {
+        renderOriginalFeed();
+        return;
+      }
+      $("cardFeed").innerHTML = `<div class="message">正在準備查詢...</div>`;
+      lookupTimer = window.setTimeout(renderOriginalFeed, 450);
     }
 
     function activate(viewId) {
@@ -1037,7 +1071,7 @@
       renderOriginalFeed();
     });
 
-    $("searchInput").addEventListener("input", renderOriginalFeed);
+    $("searchInput").addEventListener("input", queueLookup);
 
     document.addEventListener("click", async event => {
       const pick = event.target.closest("[data-pick-id]");
@@ -1067,7 +1101,12 @@
         if (id && selected?.id !== id) selected = stocks.find(s => s.id === id) || selected;
         const type = action.dataset.action;
         if (action.dataset.uri) { window.open(action.dataset.uri, "_blank", "noopener"); return; }
-        if (action.dataset.text) { showCommand(action.dataset.text); return; }
+        if (action.dataset.text) {
+          $("searchInput").value = action.dataset.text;
+          $("cardFeed").innerHTML = `<div class="message">正在讀取 ${html(action.dataset.text)} 的 LINE 小卡...</div>`;
+          await loadCommand(action.dataset.text);
+          return;
+        }
         if (type === "financial") { window.open(`https://statementdog.com/analysis/${id}`, "_blank", "noopener"); return; }
       }
 
