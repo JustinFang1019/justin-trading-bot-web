@@ -1312,7 +1312,7 @@
     function usageText() {
       const usage = statusPayload?.web_usage;
       if (!usage) return "今日使用人數讀取中";
-      return `今日使用 ${usage.active_users_today || 0} 人`;
+      return `今日 ${usage.active_users_today || 0} 人 / 線上 ${usage.online_users || 0} 人`;
     }
 
     function renderUsageCount() {
@@ -1722,7 +1722,7 @@
       const rows = [
         ["API", error ? `失敗：${error.message}` : "已連線 Render read-only API", error ? "red" : "green"],
         ["掃描資料", `${stocks.length} 檔`, stocks.length ? "green" : "amber"],
-        ["今日使用", statusPayload?.web_usage ? `${statusPayload.web_usage.active_users_today || 0} 人 / ${statusPayload.web_usage.date || ""}` : "尚未取得", statusPayload?.web_usage ? "green" : "amber"],
+        ["使用人數", statusPayload?.web_usage ? `今日 ${statusPayload.web_usage.active_users_today || 0} 人 / 線上 ${statusPayload.web_usage.online_users || 0} 人（${statusPayload.web_usage.online_window_minutes || 10} 分鐘）` : "尚未取得", statusPayload?.web_usage ? "green" : "amber"],
         ["K 線", selected ? `${selected.id} ${kbarById.has(selected.id) ? "已載入" : "未載入"}` : "尚未選股", kbarById.has(selected?.id) ? "green" : "amber"],
         ["寫入功能", "自選與管理動作等待 LIFF/auth；目前只讀", "amber"]
       ];

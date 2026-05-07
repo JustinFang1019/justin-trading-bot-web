@@ -145,7 +145,8 @@ In `justin-trading-bot-web`:
 - User asked whether adding today active-user count is expensive. Backend implementation is intentionally light:
   - Original bot `stock_scanner/web_api.py` records unique signed-in Web users per Taiwan date in `/data/web_usage.json` using a hash of LINE user id, not the raw id.
   - It updates only on LIFF auth/session/command requests and does not call FinMind, Sheets, scanner, or Kbar logic.
-  - `/api/web/status` now includes `web_usage.active_users_today`; Web displays it on the help card and status page.
+  - `/api/web/status` now includes `web_usage.active_users_today`, `web_usage.online_users`, and `web_usage.online_window_minutes`; Web displays today/online counts in the top-right status and status page.
+  - `online_users` means unique signed-in users seen within the last `WEB_ONLINE_WINDOW_MINUTES` minutes, default 10.
 - User requested a new expandable `≡` feature menu and a Web-only active ETF module.
   - This should live in the Web version; LINE should only get a light entry/summary later because full ETF holdings/change lists are too dense for Flex.
   - Original bot backend now adds read-only active ETF endpoints: `GET /api/web/active-etfs` and `GET /api/web/active-etfs/<code>`.
