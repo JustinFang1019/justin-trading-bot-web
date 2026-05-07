@@ -172,6 +172,8 @@ Important implementation notes:
 - Browser verification was still not completed after the single-card lookup rewrite because this environment has no working Node/browser automation. Manually check GitHub Pages on desktop and mobile: initial page should show only an input prompt, and entering `3504` should render one LINE-style card without vertical digits.
 - Confirmed after Render deployment that `/api/web/command?text=2330` and `/api/web/command?text=即時%202330` both return 200 with one Flex message.
 - Python syntax check passed for the LIFF session backend with Python 3.12.
+- Confirmed on 2026-05-08 that Render has the LIFF session endpoints deployed: `/api/web/health` returns 200 and `/api/web/auth/session` returns 401 without a session token.
+- Confirmed on 2026-05-08 that `/api/web/command?text=2330` still returns 200 without login. This means strict protection is not active yet; set `WEB_REQUIRE_LIFF_AUTH=true` only after the LIFF app and web login flow are ready.
 
 ## Recommended Next Implementation Step
 
