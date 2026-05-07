@@ -1418,10 +1418,6 @@
       const text = String(command || "").trim();
       if (!text) return;
       try {
-        if (LIFF_ID) {
-          const ready = await ensureAuth();
-          if (!ready) return;
-        }
         const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`, commandFetchOptions());
         rememberCommand(text);
         renderCommandPayload(text, payload.data || {});
@@ -1705,6 +1701,9 @@
       const changes = selectedEtf.changes || {};
       const rank = selectedEtf.ranking || {};
       const summary = `
+        <div class="suggestions" style="justify-content:flex-start;margin-top:0;">
+          <button data-etf-back="1">上一頁</button>
+        </div>
         <div class="mini-pills">
           <div class="mini-pill tone-amber"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
           <div class="mini-pill tone-green"><small>收盤</small><strong>${fmtNumber(rank.close_price)}</strong></div>
@@ -1923,6 +1922,16 @@
         document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn === etfTab));
         if (activeEtfTab === "ranking" || !selectedEtf) renderActiveEtfRanking();
         else renderActiveEtfDetail();
+        return;
+      }
+
+      const etfBack = event.target.closest("[data-etf-back]");
+      if (etfBack) {
+        selectedEtf = null;
+        activeEtfTab = "ranking";
+        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.etfTab === "ranking"));
+        renderActiveEtfRanking();
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
 

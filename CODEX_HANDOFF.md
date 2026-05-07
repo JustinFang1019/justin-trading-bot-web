@@ -159,6 +159,9 @@ In `justin-trading-bot-web`:
   - Holding changes compare current and previous cached holding snapshots, so the first day may show little/no change until a second data date is cached.
   - Web `index.html` now adds `≡` drawer navigation and an `activeEtfView` with ranking, changes, and holdings tabs. Ranking cards now show scale, close price, holders, listing date, issuer, and YTD trade value.
   - The active ETF view now has its own search box and category filters (`全部`, `股票型`, `債券/入息`), plus detail-page summary pills and external source buttons.
+  - Fixed MoneyDJ holdings mojibake by forcing UTF-8 response decoding and bumping holdings cache schema to `2`, so Render refetches corrupted same-day holding caches.
+  - ETF detail pages now include an in-card `上一頁` button that returns to the ETF ranking/filter list.
+  - Web stock commands no longer force LIFF login before the first request. They call `/api/web/command` directly and only trigger LINE login if the backend returns `401`, so public read-only mode and future strict whitelist mode both work.
 
 In `justin-trading-bot`:
 
