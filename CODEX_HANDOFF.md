@@ -111,7 +111,8 @@ In `justin-trading-bot-web`:
   - That endpoint reuses `stock_scanner.query.handle_group_query()` and is restricted to stock lookup plus `即時`, `回測`, `權證`, and `查` commands.
   - `index.html` now calls `/api/web/command?text=2330` for user input, so non-scan stocks like `2330` should work after Render deploys the bot main branch.
   - Flex message buttons with LINE `message` actions now call `/api/web/command` and render the returned web Flex card directly, instead of showing a copy-only command box.
-  - Render had not yet deployed PR #6 when checked; `/api/web/command?text=2330` still returned 404 immediately after merge. Manual Deploy may be required.
+  - Render initially returned 404 immediately after PR #6 merge, then later deployed successfully.
+  - Confirmed `/api/web/command?text=2330` and `/api/web/command?text=即時%202330` both return 200 with Flex card payloads.
 
 In `justin-trading-bot`:
 
@@ -156,13 +157,13 @@ Important implementation notes:
 - Confirmed live Render `/api/web/scan-cards` is deployed and returns `ok=True`, `count=30`, `generated_at=2026-05-08T00:28:12+08:00`.
 - Browser verification was not completed in this Codex environment. After GitHub Pages deploys, refresh the URL and confirm the visible cards match the LINE scan card order/content.
 - Browser verification was still not completed after the single-card lookup rewrite because this environment has no working Node/browser automation. Manually check GitHub Pages on desktop and mobile: initial page should show only an input prompt, and entering `3504` should render one LINE-style card without vertical digits.
-- Confirmed immediately after PR #6 merge that Render still returned 404 for `/api/web/command?text=2330`, so the web change depends on a later Render deployment.
+- Confirmed after Render deployment that `/api/web/command?text=2330` and `/api/web/command?text=即時%202330` both return 200 with one Flex message.
 
 ## Recommended Next Implementation Step
 
-1. In Render, confirm the original bot service deployed the latest main containing PR #6. If `/api/web/command?text=2330` returns 404, run Manual Deploy -> Deploy latest commit.
-2. Open the GitHub Pages URL and enter `2330`; it should render the same stock lookup card as LINE group input `2330`.
-3. Click `即時` on a rendered card; it should call `/api/web/command?text=即時 <sid>` and replace the page with the web version of the LINE realtime card.
+1. Open the GitHub Pages URL with a cache-busting query string and enter `2330`; it should render the same stock lookup card as LINE group input `2330`.
+2. Click `即時` on a rendered card; it should call `/api/web/command?text=即時 <sid>` and replace the page with the web version of the LINE realtime card.
+3. Compare the rendered stock and realtime cards against LINE screenshots and refine only the Flex renderer if spacing differs.
 4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 
