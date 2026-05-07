@@ -110,7 +110,7 @@
     }
 
     .filters {
-      display: flex;
+      display: none;
       gap: 8px;
       overflow-x: auto;
       padding-bottom: 2px;
@@ -143,6 +143,8 @@
     .feed {
       display: grid;
       gap: 10px;
+      margin: 0 auto;
+      max-width: 640px;
     }
 
     .line-card,
@@ -298,7 +300,14 @@
       color: #344054;
       font-size: 12px;
       line-height: 1.35;
-      overflow-wrap: anywhere;
+      min-width: 0;
+      overflow-wrap: normal;
+      word-break: keep-all;
+    }
+
+    .flex-text.wrap {
+      overflow-wrap: break-word;
+      white-space: normal;
     }
 
     .flex-text.lg,
@@ -401,6 +410,36 @@
       text-align: center;
     }
 
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .suggestions button,
+    .copy-command {
+      background: var(--blue);
+      border: 1px solid var(--blue);
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 800;
+      padding: 8px 10px;
+    }
+
+    .command-text {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+      margin-top: 8px;
+      padding: 10px;
+    }
+
     .text-summary {
       background: #f8fafc;
       border: 1px solid var(--line);
@@ -419,7 +458,7 @@
       border-top: 1px solid var(--line);
       bottom: 0;
       box-shadow: 0 -8px 22px rgba(16, 24, 40, .08);
-      display: grid;
+      display: none;
       grid-template-columns: repeat(4, 1fr);
       left: 0;
       position: fixed;
@@ -454,9 +493,7 @@
         align-items: start;
       }
 
-      .feed {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+      .feed { grid-template-columns: minmax(0, 1fr); }
 
       .detail-grid {
         grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
@@ -468,8 +505,8 @@
   <main class="app">
     <header class="topbar">
       <div>
-        <h1 id="pageTitle">掃描小卡</h1>
-        <p class="sub" id="pageSub">直接使用原 LINE bot 掃描結果與小卡欄位，Web 只做手機瀏覽與延伸資訊。</p>
+        <h1 id="pageTitle">LINE 小卡查詢</h1>
+        <p class="sub" id="pageSub">輸入股票代號或名稱，只顯示原 LINE bot 小卡與群組已開放的按鈕。</p>
       </div>
       <div class="status-pill">
         <strong id="syncTitle">連線中</strong>
@@ -492,8 +529,9 @@
 
     <section class="view active" id="scanView">
       <div class="feed" id="cardFeed">
-        <div class="message">正在讀取原 LINE bot 掃描小卡...</div>
+        <div class="message">正在讀取原 LINE bot 小卡...</div>
       </div>
+      <div class="feed" id="actionNotice"></div>
     </section>
 
     <section class="view" id="chartView">
@@ -624,6 +662,21 @@
       });
     }
 
+    function matchingStocks(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) return [];
+      return stocks.filter(s => s.id.includes(q) || s.name.toLowerCase().includes(q));
+    }
+
+    function requestedStock() {
+      const q = $("searchInput").value.trim().toLowerCase();
+      if (!q) return null;
+      const exact = stocks.find(s => s.id === q || s.name.toLowerCase() === q);
+      if (exact) return exact;
+      const matches = matchingStocks(q);
+      return matches.length === 1 ? matches[0] : null;
+    }
+
     function cardActions(stock) {
       return `
         <div class="card-actions">
@@ -643,10 +696,12 @@
       if (node.color) css.push(`color:${node.color}`);
       if (node.paddingAll) css.push(`padding:${node.paddingAll}`);
       if (node.margin && node.margin !== "none") css.push("margin-top:6px");
+      if (node.width) css.push(`width:${node.width}`);
+      if (node.height) css.push(`height:${node.height}`);
       if (node.cornerRadius) css.push(`border-radius:${node.cornerRadius}`);
       if (node.borderColor) css.push(`border-color:${node.borderColor}`);
       if (node.borderWidth) css.push(`border-style:solid;border-width:${node.borderWidth}`);
-      if (node.flex != null) css.push(`flex:${node.flex}`);
+      if (node.flex != null) css.push(node.flex === 0 ? "flex:0 0 auto" : `flex:${node.flex} 1 0`);
       if (node.align === "center") css.push("text-align:center");
       if (node.align === "end") css.push("text-align:right");
       return css.length ? ` style="${css.join(";")}"` : "";
@@ -655,7 +710,7 @@
     function flexNode(node, sid = "") {
       if (!node) return "";
       if (node.type === "text") {
-        const cls = ["flex-text", node.size || "xs", node.weight === "bold" ? "bold" : ""].filter(Boolean).join(" ");
+        const cls = ["flex-text", node.size || "xs", node.weight === "bold" ? "bold" : "", node.wrap ? "wrap" : ""].filter(Boolean).join(" ");
         return `<div class="${cls}"${flexStyle(node)}>${html(node.text)}</div>`;
       }
       if (node.type === "separator") return `<div style="border-top:1px solid var(--line);"></div>`;
@@ -669,7 +724,12 @@
           label.includes("即時") ? "realtime" :
           label.includes("回測") ? "backtest" :
           label.includes("自選") || label.includes("+") ? "watch" : "link";
-        return `<button class="card-button ${node.style === "primary" ? "primary" : ""}" data-action="${actionType}" data-id="${sid}" data-uri="${html(action.uri || "")}" data-text="${html(action.text || "")}"${flexStyle(node)}>${html(label)}</button>`;
+        const styles = [];
+        if (node.style === "primary" && node.color) styles.push(`background:${node.color}`, `border-color:${node.color}`, "color:#fff");
+        if (node.flex != null) styles.push(node.flex === 0 ? "flex:0 0 auto" : `flex:${node.flex} 1 0`);
+        if (node.height === "sm") styles.push("min-height:34px");
+        const styleAttr = styles.length ? ` style="${styles.join(";")}"` : flexStyle(node);
+        return `<button class="card-button ${node.style === "primary" ? "primary" : ""}" data-action="${actionType}" data-id="${sid}" data-uri="${html(action.uri || "")}" data-text="${html(action.text || "")}"${styleAttr}>${html(label)}</button>`;
       }
       if (node.type === "box") {
         return `<div class="flex-box ${node.layout || "vertical"}"${flexStyle(node)}>${(node.contents || []).map(child => flexNode(child, sid)).join("")}</div>`;
@@ -740,12 +800,37 @@
     }
 
     function renderOriginalFeed() {
-      const rows = filteredStocks();
-      const allowed = new Set(rows.map(stock => stock.id));
-      const bubbles = scanBubbles.filter(item => allowed.has(item.id));
-      $("cardFeed").innerHTML = bubbles.length
-        ? bubbles.map(item => flexNode(item.bubble, item.id)).join("")
-        : `<div class="message">沒有符合條件的原始 LINE 小卡。請確認搜尋條件，或等 Render /scan-cards 更新完成。</div>`;
+      $("actionNotice").innerHTML = "";
+      const q = $("searchInput").value.trim();
+      if (!q) {
+        selected = null;
+        $("cardFeed").innerHTML = `<div class="message">請輸入股票代號或名稱，例如 3504。Web 版只顯示單一原 LINE 小卡。</div>`;
+        return;
+      }
+
+      const matches = matchingStocks(q);
+      const stock = requestedStock();
+      if (!stock) {
+        const chips = matches.slice(0, 8).map(s => `<button data-pick-id="${s.id}">${html(s.id)} ${html(s.name)}</button>`).join("");
+        $("cardFeed").innerHTML = `<div class="message">請輸入完整代號，或選擇一個符合的股票。${chips ? `<div class="suggestions">${chips}</div>` : ""}</div>`;
+        return;
+      }
+
+      selected = stock;
+      const item = scanBubbles.find(bubble => bubble.id === stock.id);
+      $("cardFeed").innerHTML = item
+        ? flexNode(item.bubble, item.id)
+        : `<div class="message">${html(stock.id)} ${html(stock.name)} 目前不在原 LINE 掃描小卡清單內。</div>`;
+    }
+
+    function showCommand(text) {
+      $("actionNotice").innerHTML = `
+        <div class="message">
+          這個按鈕在 LINE 群組會送出以下指令：
+          <div class="command-text">${html(text)}</div>
+          <button class="copy-command" data-copy="${html(text)}">複製指令</button>
+        </div>
+      `;
     }
 
     function activate(viewId) {
@@ -929,12 +1014,11 @@
           });
         });
         if (!scanBubbles.length) throw new Error("scan-cards empty");
-        selected = stocks.find(stock => stock.id === scanBubbles[0]?.id) || stocks[0];
+        selected = null;
         statusPayload = status.status === "fulfilled" ? status.value.data : null;
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = `${stocks.length} 檔 / ${scans.value.generated_at || ""}`;
         renderOriginalFeed();
-        await selectStock(selected.id);
       } catch (error) {
         stocks = [];
         selected = null;
@@ -956,6 +1040,20 @@
     $("searchInput").addEventListener("input", renderOriginalFeed);
 
     document.addEventListener("click", async event => {
+      const pick = event.target.closest("[data-pick-id]");
+      if (pick) {
+        $("searchInput").value = pick.dataset.pickId;
+        renderOriginalFeed();
+        return;
+      }
+
+      const copy = event.target.closest("[data-copy]");
+      if (copy) {
+        await navigator.clipboard?.writeText(copy.dataset.copy);
+        copy.textContent = "已複製";
+        return;
+      }
+
       const nav = event.target.closest("[data-view]");
       if (nav) {
         activate(nav.dataset.view);
@@ -966,18 +1064,18 @@
       if (action) {
         event.preventDefault();
         const id = action.dataset.id;
-        if (id && selected?.id !== id) await selectStock(id);
+        if (id && selected?.id !== id) selected = stocks.find(s => s.id === id) || selected;
         const type = action.dataset.action;
-        if (type === "chart") { activate("chartView"); return; }
-        if (type === "warrant") { activate("warrantView"); return; }
-        if (type === "financial") { window.open(action.dataset.uri || `https://statementdog.com/analysis/${id}`, "_blank", "noopener"); return; }
-        if (type === "realtime") { activate("chartView"); return; }
-        if (type === "backtest") { activate("statusView"); return; }
-        if (type === "watch") { activate("statusView"); return; }
+        if (action.dataset.uri) { window.open(action.dataset.uri, "_blank", "noopener"); return; }
+        if (action.dataset.text) { showCommand(action.dataset.text); return; }
+        if (type === "financial") { window.open(`https://statementdog.com/analysis/${id}`, "_blank", "noopener"); return; }
       }
 
       const card = event.target.closest(".line-card");
-      if (card) await selectStock(card.dataset.id, "chartView");
+      if (card?.dataset.id) {
+        $("searchInput").value = card.dataset.id;
+        renderOriginalFeed();
+      }
     });
 
     loadApp();

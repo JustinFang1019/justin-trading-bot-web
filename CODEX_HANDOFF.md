@@ -99,6 +99,13 @@ In `justin-trading-bot-web`:
   - Search remains available: it filters the original Flex cards by stock id/name using `/scan-results` metadata.
   - The status tab remains because the user wanted to keep backend/deploy visibility.
   - Intentionally not changed: original `justin-trading-bot` strategy logic, LINE card builder, Google Sheets writes, webhook behavior, and existing LINE users.
+- Refined the web direction after the user reported the card format was broken and clarified access should be narrower.
+  - The web page is now a single-card lookup instead of a full scan feed.
+  - Users must type a stock id/name; the page renders only one matching original LINE Flex card.
+  - Filters and bottom navigation are hidden from the public UI.
+  - The renderer now maps LINE `flex: 0` to CSS `flex: 0 0 auto`, honors width/height, avoids `overflow-wrap:anywhere`, and preserves button colors to prevent stock ids from breaking into vertical digits.
+  - LINE URI buttons open their original URLs. LINE message buttons show the command text for copying, instead of exposing extra web-only actions.
+  - This keeps the public web surface aligned with functions already exposed in the LINE group.
 
 In `justin-trading-bot`:
 
@@ -142,12 +149,13 @@ Important implementation notes:
 - Confirmed live Render API still returns `Access-Control-Allow-Origin: *`, so GitHub Pages should be allowed to call it from the browser.
 - Confirmed live Render `/api/web/scan-cards` is deployed and returns `ok=True`, `count=30`, `generated_at=2026-05-08T00:28:12+08:00`.
 - Browser verification was not completed in this Codex environment. After GitHub Pages deploys, refresh the URL and confirm the visible cards match the LINE scan card order/content.
+- Browser verification was still not completed after the single-card lookup rewrite because this environment has no working Node/browser automation. Manually check GitHub Pages on desktop and mobile: initial page should show only an input prompt, and entering `3504` should render one LINE-style card without vertical digits.
 
 ## Recommended Next Implementation Step
 
-1. Open the GitHub Pages URL and verify the mobile page shows the same scan candidates as LINE. It should not show the old prototype names like `2330 台積電` unless those are actually in the live original Flex carousel.
-2. Compare the HTML-rendered Flex card spacing against a LINE screenshot and improve only the lightweight Flex renderer if needed.
-3. Keep the data source as `/api/web/scan-cards`; do not reconstruct scan cards from `/scan-results`.
+1. Open the GitHub Pages URL and verify the initial screen only asks for a stock id/name.
+2. Enter a known scan-card id such as `3504`; confirm only one card appears and the stock id/name stay horizontal.
+3. Compare the HTML-rendered Flex card spacing against a LINE screenshot and improve only the lightweight Flex renderer if needed.
 4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 
