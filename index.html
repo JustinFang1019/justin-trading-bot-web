@@ -652,9 +652,10 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     const API_BASE = "https://stock-scanner-bot-f3kt.onrender.com/api/web";
+    const DEFAULT_LIFF_ID = "2010007393-mkhkmHp3";
     const LIFF_ID_FROM_URL = new URLSearchParams(location.search).get("liffId") || "";
     if (LIFF_ID_FROM_URL) localStorage.setItem("liffId", LIFF_ID_FROM_URL);
-    const LIFF_ID = LIFF_ID_FROM_URL || localStorage.getItem("liffId") || "";
+    const LIFF_ID = LIFF_ID_FROM_URL || localStorage.getItem("liffId") || DEFAULT_LIFF_ID;
     let stocks = [];
     let selected = null;
     let filter = "all";

@@ -125,13 +125,14 @@ In `justin-trading-bot-web`:
   - `/auth/line` verifies LIFF `id_token` through LINE Login v2.1 verify endpoint, extracts LINE user id from `sub`, checks admin or `stock_scanner.watchlist.is_whitelisted(user_id)`, then returns a signed web session token.
   - `/api/web/command` now accepts `Authorization: Bearer <session>` and passes the session user id to `handle_group_query()`.
   - Web `index.html` loads LIFF SDK, supports `?liffId=<LIFF_ID>` once to save the LIFF ID locally, logs in with LIFF, stores `webSessionToken` and `webUser` in `localStorage`, and reuses that token automatically for later queries.
+  - User provided LIFF ID `2010007393-mkhkmHp3`; `index.html` now uses it as `DEFAULT_LIFF_ID`, so the public URL can be `https://justinfang1019.github.io/justin-trading-bot-web/` without a query string.
   - Legacy `WEB_COMMAND_ACCESS_TOKEN` remains as a fallback during transition. For formal whitelist mode, set `WEB_REQUIRE_LIFF_AUTH=true` in Render.
 - User confirmed there is a Google Sheet available for the whitelist: `https://docs.google.com/spreadsheets/d/1z_D0yUe1Cmxv4Wg7oMyxl9zsouzdB1sqZvPzuHVIkxg/edit?gid=461801463#gid=461801463`.
   - The existing original bot already reads whitelist data from worksheet `白名單` through `stock_scanner.watchlist.is_whitelisted(user_id)`.
   - To use this sheet, Render should have `GOOGLE_SHEET_ID=1z_D0yUe1Cmxv4Wg7oMyxl9zsouzdB1sqZvPzuHVIkxg`, and the service account from `GOOGLE_CREDENTIALS` must be shared into that Google Sheet.
   - The `白名單` worksheet should keep LINE user id in the first column. Existing helper functions expect rows like `user_id`, `display_name`, `date`; header names are less important than the first column containing the LINE user id.
 - User reported the Google Sheet and Render sheet sharing/setup are done. Next verification order:
-  - Create/configure LIFF app first and open the web URL once with `?liffId=<LIFF_ID>`.
+  - Create/configure LIFF app first. Since `DEFAULT_LIFF_ID` is now embedded, the clean GitHub Pages URL should work directly after deploy.
   - Set Render `LINE_LOGIN_CHANNEL_ID`, `WEB_SESSION_SECRET`, and `WEB_SESSION_TTL_DAYS=7`; keep `WEB_REQUIRE_LIFF_AUTH` off until LIFF login is confirmed.
   - Verify whitelisted LINE account can log in and query `2330`.
   - Only after that, set `WEB_REQUIRE_LIFF_AUTH=true`, redeploy, and confirm direct `/api/web/command?text=2330` returns 401 while the logged-in whitelisted web app still works.
@@ -190,7 +191,7 @@ Important implementation notes:
 2. Confirm Render has `GOOGLE_SHEET_ID=1z_D0yUe1Cmxv4Wg7oMyxl9zsouzdB1sqZvPzuHVIkxg`, and share that sheet with the service account email inside `GOOGLE_CREDENTIALS`.
 3. In the sheet, create/confirm worksheet `白名單` and put allowed LINE user ids in the first column.
 4. In Render set `LINE_LOGIN_CHANNEL_ID` (LINE Login channel id), `WEB_SESSION_SECRET` (random long secret), and `WEB_REQUIRE_LIFF_AUTH=true`, then redeploy.
-5. Open the GitHub Pages URL once with `?liffId=<LIFF_ID>` so the browser saves the LIFF ID. After login, entering `2330` should work without typing any passcode, and only LINE users in the original bot whitelist should pass.
+5. Open the GitHub Pages URL. After login, entering `2330` should work without typing any passcode, and only LINE users in the original bot whitelist should pass.
 6. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 7. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 
