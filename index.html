@@ -69,7 +69,9 @@
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 8px;
-      min-width: 118px;
+      display: grid;
+      gap: 3px;
+      min-width: 136px;
       padding: 8px 9px;
       text-align: right;
     }
@@ -83,7 +85,12 @@
       color: var(--muted);
       display: block;
       font-size: 10px;
-      margin-top: 2px;
+    }
+
+    .status-pill .usage-count {
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 900;
     }
 
     .toolbar {
@@ -511,6 +518,46 @@
       white-space: pre-wrap;
     }
 
+    .help-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .help-section {
+      background: #f8f8ff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .help-section-title {
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+
+    .help-row {
+      display: grid;
+      grid-template-columns: minmax(88px, .8fr) minmax(0, 1.2fr);
+      gap: 8px;
+      padding: 4px 0;
+    }
+
+    .help-row strong {
+      display: block;
+      color: #333;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .help-row span {
+      color: var(--muted);
+      display: block;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
     .bottom-nav {
       background: rgba(255,255,255,.97);
       border-top: 1px solid var(--line);
@@ -569,6 +616,7 @@
       <div class="status-pill">
         <strong id="syncTitle">連線中</strong>
         <span id="syncMeta">讀取原 bot</span>
+        <span class="usage-count" id="usageCount">今日使用 - 人</span>
       </div>
     </header>
 
@@ -992,12 +1040,70 @@
         : `<div class="message">沒有符合條件的小卡。若這裡是空的，請看狀態頁的 API 錯誤。</div>`;
     }
 
+    function usageText() {
+      const usage = statusPayload?.web_usage;
+      if (!usage) return "今日使用人數讀取中";
+      return `今日使用 ${usage.active_users_today || 0} 人`;
+    }
+
+    function renderUsageCount() {
+      $("usageCount").textContent = usageText();
+    }
+
+    function renderWebHelp() {
+      selected = null;
+      $("actionNotice").innerHTML = "";
+      $("cardFeed").innerHTML = `
+        <article class="line-card flex-card">
+          <div class="card-head">
+            <div class="card-title">
+              <strong>Web 版說明</strong>
+              <span class="score">白名單登入</span>
+            </div>
+            <div class="signal-line">
+              <span>直接輸入即可</span>
+              <span>不用輸入 /</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="help-list">
+              <div class="help-section">
+                <div class="help-section-title" style="color:#1a73e8">📊 查個股</div>
+                <div class="help-row"><strong>2330</strong><span>代號查詢</span></div>
+                <div class="help-row"><strong>台積電</strong><span>中文名查詢</span></div>
+              </div>
+              <div class="help-section">
+                <div class="help-section-title" style="color:#ea4335">📈 策略分析</div>
+                <div class="help-row"><strong>即時 2330</strong><span>即時策略卡</span></div>
+                <div class="help-row"><strong>回測 2330</strong><span>回測卡</span></div>
+                <div class="help-row"><strong>權證 2330</strong><span>權證 Top 3</span></div>
+                <div class="help-row"><strong>💡</strong><span>可用中文名、有無空格皆可</span></div>
+              </div>
+              <div class="help-section">
+                <div class="help-section-title" style="color:#3949ab">📡 排名 & 教學</div>
+                <div class="help-row"><strong>RS排名</strong><span>強勢股 Top 20，點列開 K 線</span></div>
+                <div class="help-row"><strong>教學</strong><span>教學選單</span></div>
+              </div>
+              <div class="help-section">
+                <div class="help-section-title" style="color:#546e7a">📖 其他</div>
+                <div class="help-row"><strong>說明</strong><span>顯示本清單</span></div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="card-button primary" data-action="link" data-text="2330">查 2330</button>
+              <button class="card-button primary" data-action="link" data-text="RS排名">RS排名</button>
+              <button class="card-button" data-action="link" data-text="即時 2330">即時範例</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
     function renderOriginalFeed() {
       $("actionNotice").innerHTML = "";
       const q = $("searchInput").value.trim();
-      if (!q) {
-        selected = null;
-        $("cardFeed").innerHTML = `<div class="message">請輸入股票代號或名稱，例如 2330。Web 版會直接顯示 LINE 群組同款小卡。</div>`;
+      if (!q || ["說明", "help", "HELP"].includes(q)) {
+        renderWebHelp();
         return;
       }
       $("cardFeed").innerHTML = `<div class="message">正在讀取 ${html(q)} 的 LINE 小卡...</div>`;
@@ -1222,12 +1328,14 @@
       const rows = [
         ["API", error ? `失敗：${error.message}` : "已連線 Render read-only API", error ? "red" : "green"],
         ["掃描資料", `${stocks.length} 檔`, stocks.length ? "green" : "amber"],
+        ["今日使用", statusPayload?.web_usage ? `${statusPayload.web_usage.active_users_today || 0} 人 / ${statusPayload.web_usage.date || ""}` : "尚未取得", statusPayload?.web_usage ? "green" : "amber"],
         ["K 線", selected ? `${selected.id} ${kbarById.has(selected.id) ? "已載入" : "未載入"}` : "尚未選股", kbarById.has(selected?.id) ? "green" : "amber"],
         ["寫入功能", "自選與管理動作等待 LIFF/auth；目前只讀", "amber"]
       ];
       if (statusPayload) {
         rows.push(["Backend", `Kbar cache ${statusPayload.kbar_cache_count || 0} / warrant cache ${statusPayload.warrant_top3_cache_count || 0}`, "blue"]);
       }
+      renderUsageCount();
       $("statusList").innerHTML = rows.map(([title, body, tone]) => `
         <div class="status-row">
           <strong>${html(title)}</strong>
@@ -1270,6 +1378,7 @@
         if (!scanBubbles.length) throw new Error("scan-cards empty");
         selected = null;
         statusPayload = status.status === "fulfilled" ? status.value.data : null;
+        renderUsageCount();
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = `${stocks.length} 檔 / ${scans.value.generated_at || ""}`;
         renderOriginalFeed();
