@@ -141,7 +141,7 @@ In `justin-trading-bot-web`:
   - This should make RS ranking rows open their intended Yahoo K-line URI instead of querying stock `2026`.
 - User requested the default first screen be `說明`, but with a Web-specific help card because Web queries do not need `/`.
   - Web `index.html` now renders a local Web help card when the input is empty or `說明`/`help`, instead of calling the original LINE `說明` command.
-  - The help card includes allowed Web commands and quick buttons for `2330`, `RS排名`, and `即時 2330`.
+  - The help card includes allowed Web commands and no bottom quick buttons, after the user asked to remove `查 2330`, `RS排名`, and `即時範例`.
 - User asked whether adding today active-user count is expensive. Backend implementation is intentionally light:
   - Original bot `stock_scanner/web_api.py` records unique signed-in Web users per Taiwan date in `/data/web_usage.json` using a hash of LINE user id, not the raw id.
   - It updates only on LIFF auth/session/command requests and does not call FinMind, Sheets, scanner, or Kbar logic.
