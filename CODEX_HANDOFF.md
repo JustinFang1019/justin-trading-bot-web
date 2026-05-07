@@ -1,6 +1,6 @@
 # Codex Handoff
 
-Last updated: 2026-05-06 Asia/Taipei
+Last updated: 2026-05-08 Asia/Taipei
 
 ## Current User Intent
 
@@ -91,6 +91,14 @@ In `justin-trading-bot-web`:
   - `/api/web/scan-results` remains for search/filter metadata and extended detail pages, but it is no longer the source used to reconstruct the Today cards.
   - PR #4 (`Expose scan flex cards API`) was opened and merged into `justin-trading-bot` main.
   - Render was still returning 404 for `/api/web/scan-cards` shortly after merge, so Render likely needs `Manual Deploy -> Deploy latest commit` or more time for auto deploy.
+- Rebuilt the web direction again after the user asked to restart from the original LINE version.
+  - `index.html` now treats `/api/web/scan-cards` as required, not optional.
+  - The Today feed no longer falls back to hand-built/reconstructed web cards when original Flex cards are unavailable.
+  - The first selected stock now follows the first original Flex bubble returned by the LINE card carousel.
+  - The outer rendered Flex card now carries `data-id`, so tapping a card or its buttons can select the matching stock.
+  - Search remains available: it filters the original Flex cards by stock id/name using `/scan-results` metadata.
+  - The status tab remains because the user wanted to keep backend/deploy visibility.
+  - Intentionally not changed: original `justin-trading-bot` strategy logic, LINE card builder, Google Sheets writes, webhook behavior, and existing LINE users.
 
 In `justin-trading-bot`:
 
@@ -104,6 +112,7 @@ Read-only API endpoints now available on that branch:
 
 - `GET /api/web/health`
 - `GET /api/web/scan-results`
+- `GET /api/web/scan-cards`
 - `GET /api/web/stock/<stock_id>`
 - `GET /api/web/stock/<stock_id>/kbar?limit=180`
 - `GET /api/web/stock/<stock_id>/card`
@@ -129,16 +138,16 @@ Important implementation notes:
 - Confirmed live `scan-results` returns 30 records from the original bot.
 - Confirmed live `/api/web/stock/6933/card` returns canonical Flex JSON and text summary.
 - JavaScript syntax check with local `node` was attempted but blocked by Windows access denied in this environment.
-- JavaScript syntax check was not rerun after the scan-card/button-routing update because local `node.exe` remains blocked in this environment.
+- JavaScript syntax check was attempted through the Node REPL after the latest web rewrite but local Node execution is blocked by Windows access denied in this environment.
 - Confirmed live Render API still returns `Access-Control-Allow-Origin: *`, so GitHub Pages should be allowed to call it from the browser.
-- The full rebuild has not been browser-verified yet after this edit; refresh GitHub Pages and check that first card is from live API, currently expected to start with `2355 敬鵬` for the 2026-05-05 scan payload.
-- After the latest change, also verify `/api/web/scan-cards` is deployed on Render before expecting GitHub Pages to show original Flex cards. If 404 persists, manually deploy latest main on Render.
+- Confirmed live Render `/api/web/scan-cards` is deployed and returns `ok=True`, `count=30`, `generated_at=2026-05-08T00:28:12+08:00`.
+- Browser verification was not completed in this Codex environment. After GitHub Pages deploys, refresh the URL and confirm the visible cards match the LINE scan card order/content.
 
 ## Recommended Next Implementation Step
 
-1. Open a PR from `codex/web-readonly-api` into the original bot repo main branch, test it on Render/staging, then merge only if the live bot remains stable.
-2. Open the GitHub Pages URL and verify the mobile page shows the same scan candidates as LINE. It should not show the old prototype names like `2330 台積電` unless those are actually in live scan-results.
-3. Improve the lightweight Flex renderer if spacing differs from LINE, but keep the data source as `/api/web/scan-cards`.
+1. Open the GitHub Pages URL and verify the mobile page shows the same scan candidates as LINE. It should not show the old prototype names like `2330 台積電` unless those are actually in the live original Flex carousel.
+2. Compare the HTML-rendered Flex card spacing against a LINE screenshot and improve only the lightweight Flex renderer if needed.
+3. Keep the data source as `/api/web/scan-cards`; do not reconstruct scan cards from `/scan-results`.
 4. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 5. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 

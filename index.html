@@ -675,7 +675,7 @@
         return `<div class="flex-box ${node.layout || "vertical"}"${flexStyle(node)}>${(node.contents || []).map(child => flexNode(child, sid)).join("")}</div>`;
       }
       if (node.type === "bubble") {
-        return `<div class="line-card flex-card">
+        return `<div class="line-card flex-card${selected?.id === sid ? " selected" : ""}" data-id="${html(sid)}">
           ${node.header ? flexNode(node.header, sid) : ""}
           ${node.body ? flexNode(node.body, sid) : ""}
           ${node.footer ? flexNode(node.footer, sid) : ""}
@@ -744,10 +744,8 @@
       const allowed = new Set(rows.map(stock => stock.id));
       const bubbles = scanBubbles.filter(item => allowed.has(item.id));
       $("cardFeed").innerHTML = bubbles.length
-        ? bubbles.map(item => `<article data-id="${item.id}" class="${selected?.id === item.id ? "selected" : ""}">${flexNode(item.bubble, item.id)}</article>`).join("")
-        : rows.length
-          ? rows.map(scanCard).join("")
-          : `<div class="message">沒有符合條件的小卡。若這裡是空的，請看狀態頁的 API 錯誤。</div>`;
+        ? bubbles.map(item => flexNode(item.bubble, item.id)).join("")
+        : `<div class="message">沒有符合條件的原始 LINE 小卡。請確認搜尋條件，或等 Render /scan-cards 更新完成。</div>`;
     }
 
     function activate(viewId) {
@@ -919,19 +917,19 @@
         ]);
         if (health.status !== "fulfilled") throw health.reason;
         if (scans.status !== "fulfilled") throw scans.reason;
+        if (cards.status !== "fulfilled") throw cards.reason;
         stocks = (scans.value.data || []).map(mapStock);
         if (!stocks.length) throw new Error("scan-results empty");
-        if (cards.status === "fulfilled" && cards.value?.data?.flex_messages) {
-          scanBubbles = [];
-          cards.value.data.flex_messages.forEach(message => {
-            const bubbles = message?.contents?.contents || [];
-            bubbles.forEach(bubble => {
-              const id = stockIdFromBubble(bubble);
-              if (id) scanBubbles.push({ id, bubble });
-            });
+        scanBubbles = [];
+        (cards.value?.data?.flex_messages || []).forEach(message => {
+          const bubbles = message?.contents?.contents || [];
+          bubbles.forEach(bubble => {
+            const id = stockIdFromBubble(bubble);
+            if (id) scanBubbles.push({ id, bubble });
           });
-        }
-        selected = stocks[0];
+        });
+        if (!scanBubbles.length) throw new Error("scan-cards empty");
+        selected = stocks.find(stock => stock.id === scanBubbles[0]?.id) || stocks[0];
         statusPayload = status.status === "fulfilled" ? status.value.data : null;
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = `${stocks.length} 檔 / ${scans.value.generated_at || ""}`;
@@ -972,7 +970,7 @@
         const type = action.dataset.action;
         if (type === "chart") { activate("chartView"); return; }
         if (type === "warrant") { activate("warrantView"); return; }
-        if (type === "financial") { window.open(`https://statementdog.com/analysis/${id}`, "_blank", "noopener"); return; }
+        if (type === "financial") { window.open(action.dataset.uri || `https://statementdog.com/analysis/${id}`, "_blank", "noopener"); return; }
         if (type === "realtime") { activate("chartView"); return; }
         if (type === "backtest") { activate("statusView"); return; }
         if (type === "watch") { activate("statusView"); return; }
