@@ -1604,9 +1604,15 @@
       return n.toLocaleString("zh-TW");
     }
 
+    function fmtNumber(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-";
+      return n.toLocaleString("zh-TW", { maximumFractionDigits: 1 });
+    }
+
     function renderActiveEtfRanking() {
       $("activeEtfTitle").textContent = "主動 ETF 追蹤";
-      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，來源 ${activeEtfPayload.source || "-"}` : "盤後每日更新，Web 只讀快照。";
+      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，${activeEtfPayload.source || "-"} 完整主動式清單` : "盤後每日更新，Web 只讀快照。";
       $("activeEtfBadge").textContent = `${activeEtfs.length || 0} 檔`;
       $("activeEtfList").innerHTML = activeEtfs.length ? activeEtfs.map((etf, index) => `
         <div class="etf-row" data-etf-code="${html(etf.code)}">
@@ -1614,11 +1620,11 @@
             <strong><span class="rank">#${html(etf.rank || index + 1)}</span> ${html(etf.code)}</strong>
             <span>${fmtBillion(etf.asset_size_billion)}</span>
           </div>
-          <div class="meta"><span>${html(etf.name || "")}</span><span>年初至今 ${fmtBillion((etf.ytd_delta || 0) / 100000000)}</span><span>${etf.change_rate == null ? "" : `${html(etf.change_rate)}%`}</span></div>
+          <div class="meta"><span>${html(etf.name || "")}</span><span>${html(etf.issuer || "")}</span><span>上市 ${html(etf.listing_date || "-")}</span></div>
           <div class="mini-pills">
-            <div class="mini-pill tone-green"><small>排名</small><strong>${html(etf.rank || index + 1)}</strong></div>
-            <div class="mini-pill tone-amber"><small>規模</small><strong>${fmtBillion(etf.asset_size_billion)}</strong></div>
-            <div class="mini-pill tone-purple"><small>持股</small><strong>點入看</strong></div>
+            <div class="mini-pill tone-green"><small>收盤</small><strong>${fmtNumber(etf.close_price)}</strong></div>
+            <div class="mini-pill tone-amber"><small>受益人</small><strong>${fmtNumber(etf.holders)}</strong></div>
+            <div class="mini-pill tone-purple"><small>YTD成交</small><strong>${fmtNumber(etf.ytd_trade_value_million)}百萬</strong></div>
           </div>
         </div>
       `).join("") : `<div class="message">目前沒有主動 ETF 快照。Render 部署後會在第一次讀取時建立快取。</div>`;
@@ -1661,14 +1667,17 @@
       $("activeEtfSub").textContent = `${selectedEtf.name || selectedEtf.ranking?.name || ""} · ${selectedEtf.data_date || ""}`;
       $("activeEtfBadge").textContent = selectedEtf.ranking?.asset_size_billion ? fmtBillion(selectedEtf.ranking.asset_size_billion) : `${(selectedEtf.holdings || []).length} 檔`;
       const changes = selectedEtf.changes || {};
+      const unavailable = selectedEtf.detail_unavailable ? `<div class="message">這檔 ETF 的規模/受益人資料已可用；持股明細來源尚未抓到或尚未公布。${selectedEtf.detail_error ? `<br>${html(selectedEtf.detail_error)}` : ""}</div>` : "";
       if (activeEtfTab === "holdings") {
         $("activeEtfList").innerHTML = `
+          ${unavailable}
           <div class="section-title">完整持股 <span>前 30 大</span></div>
           ${holdingRows(selectedEtf.holdings || [])}
         `;
         return;
       }
       $("activeEtfList").innerHTML = `
+        ${unavailable}
         <div class="mini-pills">
           <div class="mini-pill tone-green"><small>新增</small><strong>${(changes.added || []).length}</strong></div>
           <div class="mini-pill tone-amber"><small>加碼</small><strong>${(changes.increased || []).length}</strong></div>
