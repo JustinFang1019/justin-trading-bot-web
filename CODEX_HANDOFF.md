@@ -153,10 +153,12 @@ In `justin-trading-bot-web`:
   - Ranking source was upgraded after the user reported content was too little/wrong. It now uses TWSE ETF e添富 投資篩選器 AJAX with `managerType=Active`, which returns the full active ETF list instead of only the home-page top ranking table.
   - The active ETF list is sorted by `totalAv` asset size and includes code/name, issuer, listing date, close price, holders, YTD trade value, and asset size. The old home-page `今日資產規模(元)` parser remains as a fallback.
   - Active ETF ranking cache now has `schema_version=2`, so Render will refetch the new full-list format instead of reusing the earlier same-day 1-stock cache.
+  - Each active ETF row now also includes TWSE, MoneyDJ, and ETFInfo URLs for external drill-down/fallback.
   - Holding source is MoneyDJ ETF holdings page, parsed for data date, stock id/name, holding weight, and shares. Detail snapshots are cached under `/data/active_etf/holdings_<ETF>.json`.
   - If MoneyDJ holdings are not available for a newer ETF yet, `/api/web/active-etfs/<code>` now still returns ranking metadata with `detail_unavailable=true` instead of failing the whole card.
   - Holding changes compare current and previous cached holding snapshots, so the first day may show little/no change until a second data date is cached.
   - Web `index.html` now adds `≡` drawer navigation and an `activeEtfView` with ranking, changes, and holdings tabs. Ranking cards now show scale, close price, holders, listing date, issuer, and YTD trade value.
+  - The active ETF view now has its own search box and category filters (`全部`, `股票型`, `債券/入息`), plus detail-page summary pills and external source buttons.
 
 In `justin-trading-bot`:
 
