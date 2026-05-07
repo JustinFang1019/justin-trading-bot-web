@@ -352,6 +352,8 @@
     .flex-box.vertical { flex-direction: column; }
     .flex-box.horizontal { align-items: stretch; flex-direction: row; }
 
+    .flex-box[data-action] { cursor: pointer; }
+
     .flex-text {
       color: #344054;
       font-size: 12px;
@@ -860,6 +862,36 @@
       return css.length ? ` style="${css.join(";")}"` : "";
     }
 
+    function stockIdFromText(value) {
+      const text = String(value || "");
+      const matches = text.match(/\b\d{4}\b/g) || [];
+      const stock = matches.find(id => !/^20\d{2}$/.test(id));
+      return stock || "";
+    }
+
+    function stockIdFromUri(value) {
+      const match = String(value || "").match(/\/quote\/(\d{4})(?:\.(?:TW|TWO))?/i);
+      return match ? match[1] : "";
+    }
+
+    function actionKind(action = {}, label = "") {
+      const text = action.text || "";
+      const uri = action.uri || "";
+      const haystack = `${label} ${text} ${uri}`;
+      if (haystack.includes("K") || uri.includes("/technical-analysis")) return "chart";
+      if (haystack.includes("權證")) return "warrant";
+      if (haystack.includes("財報") || uri.includes("statementdog")) return "financial";
+      if (haystack.includes("即時")) return "realtime";
+      if (haystack.includes("回測")) return "backtest";
+      if (haystack.includes("自選") || label.includes("+")) return "watch";
+      return "link";
+    }
+
+    function actionAttrs(action = {}, label = "", fallbackSid = "") {
+      const sid = stockIdFromText(action.text) || stockIdFromUri(action.uri) || fallbackSid;
+      return `data-action="${actionKind(action, label)}" data-id="${html(sid)}" data-uri="${html(action.uri || "")}" data-text="${html(action.text || "")}"`;
+    }
+
     function flexNode(node, sid = "") {
       if (!node) return "";
       if (node.type === "text") {
@@ -870,22 +902,17 @@
       if (node.type === "button") {
         const action = node.action || {};
         const label = action.label || action.text || action.uri || "Action";
-        const actionType =
-          label.includes("K") ? "chart" :
-          label.includes("權證") ? "warrant" :
-          label.includes("財報") ? "financial" :
-          label.includes("即時") ? "realtime" :
-          label.includes("回測") ? "backtest" :
-          label.includes("自選") || label.includes("+") ? "watch" : "link";
         const styles = [];
         if (node.style === "primary" && node.color) styles.push(`background:${node.color}`, `border-color:${node.color}`, "color:#fff");
         if (node.flex != null) styles.push(node.flex === 0 ? "flex:0 0 auto" : `flex:${node.flex} 1 0`);
         if (node.height === "sm") styles.push("min-height:34px");
         const styleAttr = styles.length ? ` style="${styles.join(";")}"` : flexStyle(node);
-        return `<button class="card-button ${node.style === "primary" ? "primary" : ""}" data-action="${actionType}" data-id="${sid}" data-uri="${html(action.uri || "")}" data-text="${html(action.text || "")}"${styleAttr}>${html(label)}</button>`;
+        return `<button class="card-button ${node.style === "primary" ? "primary" : ""}" ${actionAttrs(action, label, sid)}${styleAttr}>${html(label)}</button>`;
       }
       if (node.type === "box") {
-        return `<div class="flex-box ${node.layout || "vertical"}"${flexStyle(node)}>${(node.contents || []).map(child => flexNode(child, sid)).join("")}</div>`;
+        const contents = (node.contents || []).map(child => flexNode(child, sid)).join("");
+        const actionable = node.action ? ` ${actionAttrs(node.action, "", sid)}` : "";
+        return `<div class="flex-box ${node.layout || "vertical"}"${actionable}${flexStyle(node)}>${contents}</div>`;
       }
       if (node.type === "bubble") {
         return `<div class="line-card flex-card${selected?.id === sid ? " selected" : ""}" data-id="${html(sid)}">
@@ -908,8 +935,7 @@
         if (node.footer) walk(node.footer);
       };
       walk(bubble);
-      const match = texts.join(" ").match(/\b\d{4}\b/);
-      return match ? match[0] : "";
+      return stockIdFromText(texts.join(" "));
     }
 
     function flexMessagesToBubbles(messages = []) {
@@ -1313,6 +1339,7 @@
           await loadCommand(action.dataset.text);
           return;
         }
+        if (type === "chart" && id) { await selectStock(id, "chartView"); return; }
         if (type === "financial") { window.open(`https://statementdog.com/analysis/${id}`, "_blank", "noopener"); return; }
       }
 

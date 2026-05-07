@@ -136,6 +136,9 @@ In `justin-trading-bot-web`:
   - Set Render `LINE_LOGIN_CHANNEL_ID`, `WEB_SESSION_SECRET`, and `WEB_SESSION_TTL_DAYS=7`; keep `WEB_REQUIRE_LIFF_AUTH` off until LIFF login is confirmed.
   - Verify whitelisted LINE account can log in and query `2330`.
   - Only after that, set `WEB_REQUIRE_LIFF_AUTH=true`, redeploy, and confirm direct `/api/web/command?text=2330` returns 401 while the logged-in whitelisted web app still works.
+- User reported a web Flex renderer bug: tapping RS ranking rows sent `/api/web/command?text=2026` because the renderer ignored `box.action` and treated the RS card date (`2026-...`) as a stock id.
+  - Web `index.html` now supports action attributes on Flex `box` nodes, extracts stock id from action text/URI when available, and ignores year-like `20xx` matches when deriving fallback stock ids from text.
+  - This should make RS ranking rows open their intended Yahoo K-line URI instead of querying stock `2026`.
 
 In `justin-trading-bot`:
 
