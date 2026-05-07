@@ -543,40 +543,10 @@
       padding: 10px;
     }
 
-    .etf-tabs {
-      display: grid;
-      gap: 7px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
     .etf-tools {
       display: grid;
       gap: 8px;
       margin: 0 0 10px;
-    }
-
-    .etf-filters {
-      display: grid;
-      gap: 7px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .etf-tab {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      color: var(--blue);
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 900;
-      padding: 9px 4px;
-      text-align: center;
-    }
-
-    .etf-tab.active {
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #fff;
     }
 
     .etf-row {
@@ -948,11 +918,6 @@
             <label class="search" aria-label="搜尋主動 ETF">
               <input id="activeEtfSearch" placeholder="搜尋 ETF 代號、名稱或發行人">
             </label>
-            <div class="etf-filters">
-              <button class="etf-tab active" data-etf-category="all">全部</button>
-              <button class="etf-tab" data-etf-category="stock">股票型</button>
-              <button class="etf-tab" data-etf-category="income">債券/入息</button>
-            </div>
           </div>
           <div class="status-grid" id="activeEtfList" style="margin-top:10px;"></div>
         </div>
@@ -1003,7 +968,6 @@
     let activeEtfPayload = null;
     let selectedEtf = null;
     let activeEtfTab = "ranking";
-    let activeEtfCategory = "all";
     let activeEtfSearch = "";
 
     const $ = id => document.getElementById(id);
@@ -1443,6 +1407,14 @@
     }
 
     async function goBack() {
+      if (document.querySelector("#activeEtfView.active") && selectedEtf) {
+        selectedEtf = null;
+        activeEtfTab = "ranking";
+        renderActiveEtfRanking();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        updateBackButton();
+        return;
+      }
       if (commandHistory.length <= 1) return;
       commandHistory.pop();
       const prev = commandHistory[commandHistory.length - 1];
@@ -1458,7 +1430,8 @@
     }
 
     function updateBackButton() {
-      $("backButton").disabled = commandHistory.length <= 1;
+      const etfDetailOpen = Boolean(document.querySelector("#activeEtfView.active") && selectedEtf);
+      $("backButton").disabled = !etfDetailOpen && commandHistory.length <= 1;
     }
 
     function queueLookup() {
@@ -1487,6 +1460,7 @@
       $("pageSub").textContent = titleMap[viewId][1];
       if (viewId === "activeEtfView" && !activeEtfs.length) loadActiveEtfs();
       if (viewId === "chartView") drawChart();
+      updateBackButton();
     }
 
     async function loadExtras(stock) {
@@ -1628,9 +1602,6 @@
     function visibleActiveEtfs() {
       const q = activeEtfSearch.trim().toLowerCase();
       return activeEtfs.filter(etf => {
-        const isIncome = String(etf.code || "").endsWith("D") || String(etf.category || "").includes("債券");
-        if (activeEtfCategory === "stock" && isIncome) return false;
-        if (activeEtfCategory === "income" && !isIncome) return false;
         if (!q) return true;
         return [etf.code, etf.name, etf.issuer].some(value => String(value || "").toLowerCase().includes(q));
       });
@@ -1696,9 +1667,6 @@
       const changes = selectedEtf.changes || {};
       const rank = selectedEtf.ranking || {};
       const summary = `
-        <div class="suggestions" style="justify-content:flex-start;margin-top:0;">
-          <button data-etf-back="1">上一頁</button>
-        </div>
         <div class="mini-pills">
           <div class="mini-pill tone-amber"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
           <div class="mini-pill tone-green"><small>收盤</small><strong>${fmtNumber(rank.close_price)}</strong></div>
@@ -1739,8 +1707,8 @@
         activeEtfs = activeEtfPayload.etfs || [];
         selectedEtf = null;
         activeEtfTab = "ranking";
-        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.etfTab === "ranking"));
         renderActiveEtfRanking();
+        updateBackButton();
       } catch (error) {
         $("activeEtfBadge").textContent = "失敗";
         $("activeEtfList").innerHTML = `<div class="message">無法讀取主動 ETF：${html(error.message)}</div>`;
@@ -1754,8 +1722,8 @@
         const payload = await getJson(`${API_BASE}/active-etfs/${encodeURIComponent(code)}`);
         selectedEtf = { ...(payload.data || {}), ranking: payload.data?.ranking || etf };
         activeEtfTab = "changes";
-        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.etfTab === "changes"));
         renderActiveEtfDetail();
+        updateBackButton();
       } catch (error) {
         $("activeEtfList").innerHTML = `<div class="message">無法讀取 ${html(code)}：${html(error.message)}</div>`;
       }
@@ -1842,9 +1810,9 @@
       activeEtfSearch = event.target.value || "";
       if (activeEtfTab !== "ranking") {
         activeEtfTab = "ranking";
-        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.etfTab === "ranking"));
       }
       renderActiveEtfRanking();
+      updateBackButton();
     });
     $("authButton").addEventListener("click", async () => {
       if (webSessionToken) {
@@ -1889,37 +1857,6 @@
         $("searchInput").value = menuCommand.dataset.menuCommand;
         activate("scanView");
         renderOriginalFeed();
-        return;
-      }
-
-      const etfCategory = event.target.closest("[data-etf-category]");
-      if (etfCategory) {
-        activeEtfCategory = etfCategory.dataset.etfCategory;
-        document.querySelectorAll("[data-etf-category]").forEach(btn => btn.classList.toggle("active", btn === etfCategory));
-        if (activeEtfTab !== "ranking") {
-          activeEtfTab = "ranking";
-          document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.etfTab === "ranking"));
-        }
-        renderActiveEtfRanking();
-        return;
-      }
-
-      const etfTab = event.target.closest("[data-etf-tab]");
-      if (etfTab) {
-        activeEtfTab = etfTab.dataset.etfTab;
-        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn === etfTab));
-        if (activeEtfTab === "ranking" || !selectedEtf) renderActiveEtfRanking();
-        else renderActiveEtfDetail();
-        return;
-      }
-
-      const etfBack = event.target.closest("[data-etf-back]");
-      if (etfBack) {
-        selectedEtf = null;
-        activeEtfTab = "ranking";
-        document.querySelectorAll("[data-etf-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.etfTab === "ranking"));
-        renderActiveEtfRanking();
-        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
 

@@ -164,6 +164,8 @@ In `justin-trading-bot-web`:
   - Web stock commands no longer force LIFF login before the first request. They call `/api/web/command` directly and only trigger LINE login if the backend returns `401`, so public read-only mode and future strict whitelist mode both work.
   - Active ETF daily changes now prefer ETFInfo `latestDiff` from the ETF active tracking page. MoneyDJ remains the full holdings source/fallback. This fixes cases like `00981A` where public daily changes exist but local snapshot comparison had no previous cache.
   - Removed the `規模 / 異動 / 持股` tabs. ETF ranking stays as the list view; after tapping an ETF, the detail page shows summary, daily changes, and top holdings together.
+  - Removed the active ETF category filter buttons (`全部`, `股票型`, `債券/入息`) and the duplicate in-card ETF `上一頁` button. The existing top `上一頁` button now returns from ETF detail to the active ETF list.
+  - Fixed a likely LINE web login 500: backend now accepts a full LIFF id such as `2010007393-mkhkmHp3` in Render env and normalizes it to the numeric LINE Login channel id (`2010007393`) for id-token verification. LINE verification failures now return a clear auth error instead of generic 500.
 
 In `justin-trading-bot`:
 
