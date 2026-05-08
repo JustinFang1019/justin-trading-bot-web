@@ -209,6 +209,10 @@ In `justin-trading-bot-web`:
   - ETF detail tabs need distinct colors: 新增=blue, 加碼=green, 減碼=red, 持股=purple. Non-active ETFs should show only the 持股 tab/list; 新增/加碼/減碼 are only useful for actively managed ETFs.
   - ETF detail helper copy above the stock list should use the short text `點個股可看有哪些 ETF 持有`; do not append longer wording like `異動清單完整列出，不截斷。`.
 
+Backend follow-up on 2026-05-09:
+
+- Cached ETF detail must enrich current/previous holdings with quotes before computing fallback holding diffs. Otherwise cached OTC rows can keep null close/change values in `changes`.
+
 In `justin-trading-bot`:
 
 - Added a conservative read-only API layer on branch `codex/web-readonly-api` and pushed it to GitHub.
