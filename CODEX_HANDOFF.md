@@ -167,6 +167,7 @@ In `justin-trading-bot-web`:
   - Removed the active ETF category filter buttons (`全部`, `股票型`, `債券/入息`) and the duplicate in-card ETF `上一頁` button. The existing top `上一頁` button now returns from ETF detail to the active ETF list.
   - Fixed a likely LINE web login 500: backend now accepts a full LIFF id such as `2010007393-mkhkmHp3` in Render env and normalizes it to the numeric LINE Login channel id (`2010007393`) for id-token verification. LINE verification failures now return a clear auth error instead of generic 500.
   - Follow-up LINE login 401 fix: Web now posts the actual `LIFF_ID` with the id token to `/api/web/auth/line`; backend tries all configured channel ids plus that LIFF id prefix, so a stale/wrong Render env channel id no longer blocks a previously working LIFF login. Web fetch helpers now surface backend `error` text instead of only `401 Unauthorized`.
+  - Follow-up LINE login 400 fix attempt for non-owner users: Web `liff.login()` now uses a clean canonical redirect URI (`location.origin + location.pathname`) instead of the current URL with cache-busting query params. If non-owner users still get LINE 400, check LINE Developers: LINE Login channel must be Published, LIFF endpoint URL should match `https://justinfang1019.github.io/justin-trading-bot-web/`, and scopes should include `profile` and `openid`.
 
 In `justin-trading-bot`:
 
