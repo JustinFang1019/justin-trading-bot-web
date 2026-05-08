@@ -195,6 +195,20 @@
       padding-bottom: 2px;
     }
 
+    .etf-type-tabs,
+    .etf-detail-tabs {
+      display: flex;
+      margin-top: 8px;
+    }
+
+    .etf-type-tabs button,
+    .etf-detail-tabs button {
+      flex: 1 0 auto;
+      font-weight: 900;
+      min-width: 74px;
+      text-align: center;
+    }
+
     .filters button,
     .icon-btn,
     .card-button {
@@ -611,33 +625,100 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       display: grid;
+      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) 94px;
+      overflow: hidden;
+      padding: 10px 10px 10px 14px;
+      position: relative;
+    }
+
+    .change-row::before {
+      border-radius: 8px 0 0 8px;
+      bottom: 0;
+      content: "";
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 5px;
+    }
+
+    .change-row.added::before { background: var(--blue); }
+    .change-row.increased::before { background: var(--green); }
+    .change-row.decreased::before { background: var(--red); }
+    .change-row.holdings::before { background: var(--purple); }
+
+    .change-main {
+      min-width: 0;
+    }
+
+    .change-title {
+      align-items: baseline;
+      display: flex;
       gap: 8px;
-      grid-template-columns: 62px minmax(0, 1fr) 78px;
-      padding: 9px;
+      min-width: 0;
+    }
+
+    .change-title .code {
+      flex: 0 0 auto;
+    }
+
+    .change-title .name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .change-row .code {
-      font-size: 14px;
+      font-size: 20px;
       font-weight: 900;
     }
 
     .change-row .name {
       color: var(--muted);
-      font-size: 11px;
+      font-size: 13px;
       line-height: 1.35;
-      margin-top: 1px;
     }
 
     .change-row .delta {
-      font-size: 12px;
+      align-items: center;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      font-size: 16px;
       font-weight: 900;
-      text-align: right;
+      justify-content: center;
+      min-height: 78px;
+      text-align: center;
+    }
+
+    .change-row .delta small {
+      font-size: 11px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .change-tags {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 7px;
+    }
+
+    .change-tag {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #475467;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 7px;
     }
 
     .mini-bar {
       background: #edf2f7;
       border-radius: 999px;
       height: 7px;
+      margin-top: 8px;
       overflow: hidden;
     }
 
@@ -1685,6 +1766,37 @@
       return n.toLocaleString("zh-TW", { maximumFractionDigits: 1 });
     }
 
+    function fmtSignedPct(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-%";
+      const sign = n > 0 ? "+" : "";
+      return `${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 2 })}%`;
+    }
+
+    function fmtCloseChange(row = {}) {
+      const close = fmtNumber(row.close_price);
+      const pct = fmtSignedPct(row.change_rate);
+      if (close === "-" && pct === "-%") return "收盤 -";
+      return `收盤 ${close} / ${pct}`;
+    }
+
+    function stockMarketLabel(row = {}) {
+      const stockId = String(row.stock_id || "").toUpperCase();
+      const market = row.market || (stockId.includes(".US") ? "美股" : (/^\d{4}[A-Z]?$/.test(stockId) ? "台股" : ""));
+      const industry = row.industry || "";
+      return [market, industry].filter(Boolean).join("・") || "未分類";
+    }
+
+    function changeNote(row = {}, kind = "added") {
+      const map = {
+        added: "新增持股",
+        increased: "加碼持股",
+        decreased: "減碼持股",
+        holdings: `持有 ${fmtShares(row.shares)}股`
+      };
+      return map[kind] || "持股";
+    }
+
     function listingAge(dateText) {
       if (!dateText) return "-";
       const date = new Date(String(dateText).replaceAll(".", "-").replaceAll("/", "-"));
@@ -1714,7 +1826,8 @@
 
     function etfDeltaText(etf) {
       const n = Number(etf.asset_delta_billion);
-      if (!Number.isFinite(n) || n === 0) return "本日規模 -";
+      if (!etf.asset_delta_available && !Number.isFinite(n)) return "待前日快照";
+      if (!Number.isFinite(n)) return "本日規模 -";
       const sign = n > 0 ? "+" : "";
       return `本日規模 ${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 億`;
     }
@@ -1737,7 +1850,7 @@
             </div>
             <div class="meta"><span>${html(etf.manager_type || "")}</span><span>${html(etf.category || "")}</span><span>${html(etf.issuer || "")}</span><span>${listingAge(etf.listing_date)}</span></div>
             <div class="mini-pills">
-              <div class="mini-pill tone-green"><small>收盤 / 漲跌</small><strong>${fmtNumber(etf.close_price)} / ${etf.change_rate ?? "-"}%</strong></div>
+              <div class="mini-pill tone-green"><small>收盤 / 漲跌</small><strong>${fmtNumber(etf.close_price)} / ${fmtSignedPct(etf.change_rate)}</strong></div>
               <div class="mini-pill ${deltaTone}"><small>規模變化</small><strong>${etfDeltaText(etf)}</strong></div>
               <div class="mini-pill tone-purple"><small>受益人</small><strong>${fmtNumber(etf.holders)}</strong></div>
             </div>
@@ -1748,17 +1861,26 @@
 
     function changeRows(rows = [], emptyText = "目前沒有異動資料", kind = "added") {
       const toneMap = { added: "tone-blue", increased: "tone-green", decreased: "tone-red", holdings: "tone-purple" };
-      const labelMap = { added: "新增", increased: "加碼", decreased: "減碼", holdings: "持有" };
       return rows.length ? rows.map(row => {
         const delta = row.share_delta ?? row.weight_delta ?? row.shares ?? row.weight ?? 0;
         const width = Math.max(8, Math.min(100, Math.abs(row.weight || row.weight_delta || 1) * 10));
         const sign = Number(delta) > 0 ? "+" : "";
-        const note = kind === "holdings" ? `持有 ${fmtShares(row.shares)} 股` : `調整後權重 ${row.weight ?? "-"}%`;
+        const marketLabel = stockMarketLabel(row);
+        const note = changeNote(row, kind);
+        const deltaText = kind === "holdings" ? `${row.weight ?? "-"}%` : `${sign}${fmtShares(delta)}`;
+        const deltaSub = kind === "holdings" ? "權重" : `${row.weight_delta ?? row.weight ?? "-"}%`;
         return `
-          <div class="change-row" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}">
-            <div><div class="code">${html(row.stock_id)}</div><div class="name">${html(row.stock_name || "")}</div></div>
-            <div><div class="mini-bar"><i style="width:${width}%"></i></div><div class="meta"><span>${labelMap[kind]}</span><span>${html(row.industry || "")}</span><span>${note}</span></div></div>
-            <div class="delta ${toneMap[kind] || "tone-amber"}">${sign}${fmtShares(delta)}<br>${row.weight_delta ?? row.weight ?? "-"}%</div>
+          <div class="change-row ${html(kind)}" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}">
+            <div class="change-main">
+              <div class="change-title"><div class="code">${html(row.stock_id)}</div><div class="name">${html(row.stock_name || "")}</div></div>
+              <div class="change-tags">
+                <span class="change-tag ${toneMap[kind] || "tone-amber"}">${html(marketLabel)}</span>
+                <span>${html(note)}</span>
+                <span class="change-tag">${html(fmtCloseChange(row))}</span>
+              </div>
+              <div class="mini-bar"><i style="width:${width}%"></i></div>
+            </div>
+            <div class="delta ${toneMap[kind] || "tone-amber"}">${html(deltaText)}<small>${html(deltaSub)}</small></div>
           </div>
         `;
       }).join("") : `<div class="message">${emptyText}</div>`;

@@ -173,8 +173,14 @@ In `justin-trading-bot-web`:
   - 2026-05-09 implementation batch: user approved pushing to GitHub after completion. Web now uses `/api/web/usage` for the public top-right 今日/線上人數, while `/api/web/status` is intended for admin only. Status page should show Kbar/warrant/ETF cache counts plus FinMind hourly quota and LINE monthly push quota for admin users.
   - ETF section is being promoted from preview to production UI as `ETF 研究`: all ETF ranking/search, category chips, ETF detail tabs (`新增`, `加碼`, `減碼`, `持股`), hierarchical `上一層`, stock-to-ETF overlap view sorted by weight, and an explicit incomplete-data warning when overlap is based only on cached holdings.
   - Important ETF overlap caveat: until the backend has warmed/cached holdings for every ETF, stock overlap lists must be marked incomplete. Do not present cached-only overlap as full-market truth.
-  - Latest access rule: `個股查詢` and original LINE command cards must require LINE whitelist login; `ETF 研究` and `教學` should remain available without login. `RS 排名` was removed from the main menu because users can reach related ranking/K-line flows from the individual stock card buttons.
-  - User-facing auth errors should stay short. Do not show raw LINE verify JSON such as `IdToken expired`; display `LINE 登入逾時，請重新按「登入」後再試一次。` and keep raw details only in console/backend logs.
+- Latest access rule: `個股查詢` and original LINE command cards must require LINE whitelist login; `ETF 研究` and `教學` should remain available without login. `RS 排名` was removed from the main menu because users can reach related ranking/K-line flows from the individual stock card buttons.
+- User-facing auth errors should stay short. Do not show raw LINE verify JSON such as `IdToken expired`; display `LINE 登入逾時，請重新按「登入」後再試一次。` and keep raw details only in console/backend logs.
+- 2026-05-09 ETF final polish requested by user:
+  - ETF category chips and ETF detail tabs must be visible in production; the generic hidden `.filters` rule previously hid them.
+  - Backend ETF ranking now enriches TWSE ETF rows with `STOCK_DAY_ALL` close price / price change / computed change rate, and bumps ETF cache schemas so Render refetches.
+  - Backend ETF holding/change rows now enrich Taiwan stock rows with close price, change rate, market, and TWSE listed-company industry code mapping when available.
+  - ETF ranking scale delta is computed from the previous cached snapshot when available. If there is no previous snapshot yet, the UI should show a clear pending state instead of pretending there is a value.
+  - ETF stock rows should match the agreed final layout: code/name, `台股・產業` style tag, standardized note such as `持有 176.1萬股`, `收盤 價格 / 漲跌%`, weight/action block on the right, and different color accents for 新增 / 加碼 / 減碼 / 持股.
 
 In `justin-trading-bot`:
 
