@@ -1835,6 +1835,21 @@
       return n.toLocaleString("zh-TW");
     }
 
+    function isTaiwanHolding(row = {}) {
+      const stockId = String(row.stock_id || "").toUpperCase();
+      return row.market === "台股" || /^\d{4}[A-Z]?$/.test(stockId);
+    }
+
+    function fmtShareUnit(value, row = {}, signed = false) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-";
+      const unitValue = isTaiwanHolding(row) ? n / 1000 : n;
+      const sign = signed && unitValue > 0 ? "+" : "";
+      const unit = isTaiwanHolding(row) ? "張" : "股";
+      const digits = Math.abs(unitValue) >= 100 ? 0 : 1;
+      return `${sign}${unitValue.toLocaleString("zh-TW", { maximumFractionDigits: digits })}${unit}`;
+    }
+
     function fmtNumber(value) {
       const n = Number(value);
       if (!Number.isFinite(n)) return "-";
@@ -1864,10 +1879,8 @@
     function actionDeltaText(row = {}, kind = "added") {
       if (kind === "holdings") return `${row.weight ?? "-"}%`;
       const shares = Number(row.share_delta);
-      if (Number.isFinite(shares)) {
-        const sign = shares > 0 ? "+" : "";
-        return `${sign}${fmtShares(shares)}股`;
-      }
+      if (Number.isFinite(shares) && shares !== 0) return fmtShareUnit(shares, row, true);
+      if (Number.isFinite(shares) && shares === 0) return "股數未變";
       const weightDelta = Number(row.weight_delta);
       if (Number.isFinite(weightDelta)) return fmtSignedPct(weightDelta);
       return "-";
@@ -1891,7 +1904,7 @@
         added: "新增持股",
         increased: "加碼持股",
         decreased: "減碼持股",
-        holdings: `持有 ${fmtShares(row.shares)}股`
+        holdings: `持有 ${fmtShareUnit(row.shares, row)}`
       };
       return map[kind] || "持股";
     }
@@ -2092,7 +2105,7 @@
         ${(data.etfs || []).map(row => `
           <div class="etf-row" data-etf-code="${html(row.code)}">
             <div class="etf-line"><strong>${html(row.code)} ${html(row.name || "")}</strong><span>${row.weight ?? "-"}%</span></div>
-            <div class="meta"><span>${html(row.issuer || "")}</span><span>${html(row.manager_type || "")}</span><span>${html(row.category || "")}</span><span>${fmtShares(row.shares)} 股</span></div>
+            <div class="meta"><span>${html(row.issuer || "")}</span><span>${html(row.manager_type || "")}</span><span>${html(row.category || "")}</span><span>${fmtShareUnit(row.shares, row)}</span></div>
           </div>
         `).join("") || `<div class="message">目前快取中找不到持有這檔個股的 ETF。</div>`}
       `;
