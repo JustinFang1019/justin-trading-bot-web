@@ -179,6 +179,7 @@ In `justin-trading-bot-web`:
   - ETF category chips and ETF detail tabs must be visible in production; the generic hidden `.filters` rule previously hid them.
   - Backend ETF ranking now enriches TWSE ETF rows with `STOCK_DAY_ALL` close price / price change / computed change rate, and bumps ETF cache schemas so Render refetches.
   - Backend ETF holding/change rows now enrich Taiwan stock rows with close price, change rate, market, and TWSE listed-company industry code mapping when available.
+  - MoneyDJ ETF holding parser must include overseas holdings such as `SNDK.US`, `009150.KS`, and `6787.JP`; do not restrict holdings to TW/TWO four-digit stocks.
   - ETF ranking scale delta is computed from the previous cached snapshot when available. If there is no previous snapshot yet, the UI should show a clear pending state instead of pretending there is a value.
   - ETF stock rows should match the agreed final layout: code/name, `台股・產業` style tag, standardized note such as `持有 176.1萬股`, `收盤 價格 / 漲跌%`, weight/action block on the right, and different color accents for 新增 / 加碼 / 減碼 / 持股.
 
