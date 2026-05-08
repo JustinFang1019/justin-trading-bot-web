@@ -212,6 +212,7 @@ In `justin-trading-bot-web`:
 Backend follow-up on 2026-05-09:
 
 - Cached ETF detail must enrich current/previous holdings with quotes before computing fallback holding diffs. Otherwise cached OTC rows can keep null close/change values in `changes`.
+- Public ETFInfo change rows should also get a direct quote fallback during merge. This covers OTC rows if the public change payload lacks close/change fields or the holding cache match misses.
 
 In `justin-trading-bot`:
 
