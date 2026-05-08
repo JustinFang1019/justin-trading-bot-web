@@ -44,6 +44,7 @@ It is not yet a real backend or LINE/LIFF app.
 - Fixed ETF subpages so the top-left page header follows the current ETF view (`ETF 研究`, detail, or overlap) instead of staying on the previous `說明` command.
 - Clarified ETF holding-change rows: the right-side `+X萬` number is share count, so the UI now labels it as `股`; the secondary line is the weight change/weight.
 - Backend quote enrichment now merges TWSE and TPEX daily close quote sources, so OTC stocks such as `8299` can show close price and daily change in ETF holdings.
+- Added a zero-network disk K-bar fallback for ETF holding quote enrichment. If an OTC quote is still missing from TWSE/TPEX during Render runtime, the web API can fill close/change from `/data/kbar/<stock>.json`.
 - Anonymous browser visitor IDs are recorded through `/api/web/usage?visitor_id=...` so web usage counts can work even before LINE login. LINE IDs remain preferred for logged-in users.
 - Local preview `active-etf-detail-preview.html` was adjusted for the share-count label only; it remains a temporary preview file and is not intended to be committed unless explicitly requested.
 - Files touched this round:
