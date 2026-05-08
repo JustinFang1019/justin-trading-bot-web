@@ -1923,12 +1923,51 @@
       });
     }
 
-    function etfDeltaText(etf) {
+    function taipeiToday() {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Taipei",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(new Date()).reduce((acc, part) => {
+        acc[part.type] = part.value;
+        return acc;
+      }, {});
+      return `${parts.year}-${parts.month}-${parts.day}`;
+    }
+
+    function isWeekendDate(dateText) {
+      const date = new Date(`${dateText || taipeiToday()}T12:00:00+08:00`);
+      return date.getDay() === 0 || date.getDay() === 6;
+    }
+
+    function etfDeltaState(etf = {}) {
+      const state = etf.asset_delta_state || "";
+      if (state) return state;
+      if (activeEtfPayload?.non_trading_day || isWeekendDate(taipeiToday())) return "non_trading_day";
       const n = Number(etf.asset_delta_billion);
-      if (!etf.asset_delta_available && !Number.isFinite(n)) return "待前日快照";
+      if (!etf.asset_delta_available && !Number.isFinite(n)) return "pending_previous";
+      if (!etf.asset_delta_available && Number.isFinite(n) && Math.abs(n) < 0.01) return "unchanged";
+      return "changed";
+    }
+
+    function etfDeltaText(etf) {
+      const state = etfDeltaState(etf);
+      if (state === "non_trading_day") return "非交易日";
+      if (state === "pending_previous") return "待前日快照";
+      if (state === "unchanged") return "資料未更新";
+      const n = Number(etf.asset_delta_billion);
       if (!Number.isFinite(n)) return "本日規模 -";
       const sign = n > 0 ? "+" : "";
       return `本日規模 ${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 億`;
+    }
+
+    function etfDeltaTone(etf) {
+      const state = etfDeltaState(etf);
+      if (state !== "changed") return "tone-amber";
+      const n = Number(etf.asset_delta_billion);
+      if (!Number.isFinite(n) || n === 0) return "tone-amber";
+      return n > 0 ? "tone-green" : "tone-red";
     }
 
     function renderActiveEtfRanking() {
@@ -1940,8 +1979,7 @@
       const rows = visibleActiveEtfs();
       $("activeEtfBadge").textContent = `${rows.length || 0}/${activeEtfs.length || 0} 檔`;
       $("activeEtfList").innerHTML = rows.length ? rows.map((etf, index) => {
-        const delta = Number(etf.asset_delta_billion);
-        const deltaTone = !Number.isFinite(delta) || delta === 0 ? "tone-amber" : delta > 0 ? "tone-green" : "tone-red";
+        const deltaTone = etfDeltaTone(etf);
         return `
           <div class="etf-row" data-etf-code="${html(etf.code)}">
             <div class="etf-line">

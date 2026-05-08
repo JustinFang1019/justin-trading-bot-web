@@ -45,6 +45,8 @@ It is not yet a real backend or LINE/LIFF app.
 - Clarified ETF holding-change rows: the right-side `+X萬` number is share count, so the UI now labels it as `股`; the secondary line is the weight change/weight.
 - Backend quote enrichment now merges TWSE and TPEX daily close quote sources, so OTC stocks such as `8299` can show close price and daily change in ETF holdings.
 - Added a zero-network disk K-bar fallback for ETF holding quote enrichment. If an OTC quote is still missing from TWSE/TPEX during Render runtime, the web API can fill close/change from `/data/kbar/<stock>.json`.
+- ETF ranking now treats weekends as non-trading days for asset-size delta display. Web rows should show `非交易日` instead of implying a true `0 億` change when Taiwan market is closed.
+- Taiwan stock industry tags now use official sources for both listed and OTC stocks: TWSE `t187ap03_L` plus MOPS/TPEX `t187ap03_O.csv`.
 - Anonymous browser visitor IDs are recorded through `/api/web/usage?visitor_id=...` so web usage counts can work even before LINE login. LINE IDs remain preferred for logged-in users.
 - Local preview `active-etf-detail-preview.html` was adjusted for the share-count label only; it remains a temporary preview file and is not intended to be committed unless explicitly requested.
 - Files touched this round:
