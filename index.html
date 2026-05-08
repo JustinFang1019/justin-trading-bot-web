@@ -230,6 +230,54 @@
       color: #fff;
     }
 
+    .etf-detail-tabs button.added {
+      background: var(--blue-soft);
+      border-color: #bfdbfe;
+      color: var(--blue);
+    }
+
+    .etf-detail-tabs button.increased {
+      background: var(--green-soft);
+      border-color: #bbf7d0;
+      color: var(--green);
+    }
+
+    .etf-detail-tabs button.decreased {
+      background: var(--red-soft);
+      border-color: #fecaca;
+      color: var(--red);
+    }
+
+    .etf-detail-tabs button.holdings {
+      background: var(--purple-soft);
+      border-color: #ddd6fe;
+      color: var(--purple);
+    }
+
+    .etf-detail-tabs button.added.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .etf-detail-tabs button.increased.active {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+
+    .etf-detail-tabs button.decreased.active {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+
+    .etf-detail-tabs button.holdings.active {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: #fff;
+    }
+
     .drawer-overlay {
       background: rgba(15, 23, 42, .38);
       bottom: 0;
@@ -1892,6 +1940,11 @@
       return changeRows(sorted, "目前沒有持股明細。", "holdings");
     }
 
+    function isActiveManagedEtf(etf = {}) {
+      const text = `${etf.manager_type || ""} ${etf.category || ""} ${etf.name || ""}`;
+      return text.includes("主動");
+    }
+
     function renderActiveEtfDetail() {
       if (!selectedEtf) {
         renderActiveEtfRanking();
@@ -1903,12 +1956,14 @@
       $("activeEtfBadge").textContent = selectedEtf.ranking?.asset_size_billion ? fmtBillion(selectedEtf.ranking.asset_size_billion) : `${(selectedEtf.holdings || []).length} 檔`;
       const changes = selectedEtf.changes || {};
       const rank = selectedEtf.ranking || {};
-      const groups = {
+      const allGroups = {
         added: { title: "今日新增", rows: changes.added || [], empty: "今日沒有新增持股。", kind: "added" },
         increased: { title: "今日加碼", rows: changes.increased || [], empty: "今日沒有加碼資料。", kind: "increased" },
         decreased: { title: "今日減碼 / 出清", rows: [...(changes.decreased || []), ...(changes.removed || [])], empty: "今日沒有減碼或出清資料。", kind: "decreased" },
         holdings: { title: "完整持股", rows: selectedEtf.holdings || [], empty: "目前沒有持股明細。", kind: "holdings" }
       };
+      const groups = isActiveManagedEtf(rank) ? allGroups : { holdings: allGroups.holdings };
+      if (!groups[activeEtfTab]) activeEtfTab = Object.keys(groups)[0] || "holdings";
       const current = groups[activeEtfTab] || groups.added;
       const unavailable = selectedEtf.detail_unavailable ? `<div class="message">這檔 ETF 的持股明細來源尚未抓到或尚未公布。${selectedEtf.detail_error ? `<br>${html(selectedEtf.detail_error)}` : ""}</div>` : "";
       $("activeEtfList").innerHTML = `
@@ -1925,7 +1980,7 @@
         </div>
         ${unavailable}
         <div class="filters etf-detail-tabs">
-          ${Object.entries(groups).map(([key, group]) => `<button class="${activeEtfTab === key ? "active" : ""}" data-etf-tab="${key}">${group.title.replace("今日", "")} ${group.rows.length}</button>`).join("")}
+          ${Object.entries(groups).map(([key, group]) => `<button class="${key} ${activeEtfTab === key ? "active" : ""}" data-etf-tab="${key}">${group.title.replace("今日", "")} ${group.rows.length}</button>`).join("")}
         </div>
         <div class="section-title">${html(current.title)} <span>點個股可看有哪些 ETF 持有；異動清單完整列出，不截斷。</span></div>
         ${current.kind === "holdings" ? holdingRows(current.rows) : changeRows(current.rows, current.empty, current.kind)}
@@ -1976,7 +2031,8 @@
       try {
         const payload = await getJson(`${API_BASE}/etfs/${encodeURIComponent(code)}`);
         selectedEtf = { ...(payload.data || {}), ranking: payload.data?.ranking || etf };
-        activeEtfTab = activeEtfTab === "ranking" ? "added" : activeEtfTab;
+        const rank = selectedEtf.ranking || {};
+        activeEtfTab = isActiveManagedEtf(rank) ? (activeEtfTab === "ranking" ? "added" : activeEtfTab) : "holdings";
         renderActiveEtfDetail();
         window.scrollTo({ top: 0, behavior: "smooth" });
         updateBackButton();
