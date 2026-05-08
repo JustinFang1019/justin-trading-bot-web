@@ -185,6 +185,7 @@ In `justin-trading-bot-web`:
   - ETF stock rows should match the agreed final layout: code/name, `台股・產業` style tag, standardized note such as `持有 176.1萬股`, `收盤 價格 / 漲跌%`, weight/action block on the right, and different color accents for 新增 / 加碼 / 減碼 / 持股.
   - User clarified `RS排名` should remain listed inside the Web help card under 教學, but not as a main menu item.
   - ETF detail tabs need distinct colors: 新增=blue, 加碼=green, 減碼=red, 持股=purple. Non-active ETFs should show only the 持股 tab/list; 新增/加碼/減碼 are only useful for actively managed ETFs.
+  - ETF detail helper copy above the stock list should use the short text `點個股可看有哪些 ETF 持有`; do not append longer wording like `異動清單完整列出，不截斷。`.
 
 In `justin-trading-bot`:
 

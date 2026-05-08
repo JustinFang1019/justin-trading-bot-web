@@ -1982,7 +1982,7 @@
         <div class="filters etf-detail-tabs">
           ${Object.entries(groups).map(([key, group]) => `<button class="${key} ${activeEtfTab === key ? "active" : ""}" data-etf-tab="${key}">${group.title.replace("今日", "")} ${group.rows.length}</button>`).join("")}
         </div>
-        <div class="section-title">${html(current.title)} <span>點個股可看有哪些 ETF 持有；異動清單完整列出，不截斷。</span></div>
+        <div class="section-title">${html(current.title)} <span>點個股可看有哪些 ETF 持有</span></div>
         ${current.kind === "holdings" ? holdingRows(current.rows) : changeRows(current.rows, current.empty, current.kind)}
       `;
     }
