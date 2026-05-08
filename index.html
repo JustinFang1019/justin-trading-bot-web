@@ -600,6 +600,7 @@
     }
 
     .tone-green { background: var(--green-soft); color: var(--green); }
+    .tone-blue { background: var(--blue-soft); color: var(--blue); }
     .tone-red { background: var(--red-soft); color: var(--red); }
     .tone-amber { background: var(--amber-soft); color: var(--amber); }
     .tone-purple { background: var(--purple-soft); color: var(--purple); }
@@ -823,8 +824,8 @@
     <header class="topbar">
       <button class="menu-btn" id="menuButton" type="button" aria-label="功能選單">≡</button>
       <div>
-        <h1 id="pageTitle">LINE 小卡查詢</h1>
-        <p class="sub" id="pageSub">輸入股票代號或名稱，只顯示原 LINE bot 小卡與群組已開放的按鈕。</p>
+        <h1 id="pageTitle">個股查詢</h1>
+        <p class="sub" id="pageSub">輸入股票代號或名稱，顯示原 LINE bot 小卡與群組已開放的按鈕。</p>
       </div>
       <div class="status-pill">
         <strong id="syncTitle">連線中</strong>
@@ -908,16 +909,23 @@
       <div class="panel">
         <div class="panel-head">
           <div>
-            <div class="panel-title" id="activeEtfTitle">主動 ETF 追蹤</div>
-            <div class="panel-sub" id="activeEtfSub">盤後每日更新，Web 只讀快照。</div>
+            <div class="panel-title" id="activeEtfTitle">ETF 研究</div>
+            <div class="panel-sub" id="activeEtfSub">全部 ETF 規模排名、持股變化與共同持有查詢。</div>
           </div>
           <span class="badge blue" id="activeEtfBadge">讀取中</span>
         </div>
         <div class="panel-body">
           <div class="etf-tools">
-            <label class="search" aria-label="搜尋主動 ETF">
-              <input id="activeEtfSearch" placeholder="搜尋 ETF 代號、名稱或發行人">
+            <label class="search" aria-label="搜尋 ETF 或個股">
+              <input id="activeEtfSearch" placeholder="搜尋 ETF 或個股代號，例如 00988A / 2330 / AVGO.US">
             </label>
+            <div class="filters etf-type-tabs" id="etfTypeTabs">
+              <button class="active" data-etf-filter="all">全部</button>
+              <button data-etf-filter="active">主動式</button>
+              <button data-etf-filter="stock">股票型</button>
+              <button data-etf-filter="highDividend">高股息</button>
+              <button data-etf-filter="bond">債券/入息</button>
+            </div>
           </div>
           <div class="status-grid" id="activeEtfList" style="margin-top:10px;"></div>
         </div>
@@ -931,16 +939,15 @@
         <strong>功能選單</strong>
         <button class="drawer-close" id="drawerClose" type="button" aria-label="關閉">×</button>
       </div>
-      <button class="menu-item active" data-menu-view="scanView"><strong>01</strong><strong>小卡查詢</strong><span>原 LINE bot 小卡網頁版</span></button>
-      <button class="menu-item" data-menu-view="activeEtfView"><strong>02</strong><strong>主動 ETF 追蹤</strong><span>規模排名、持股變化、共同異動</span></button>
-      <button class="menu-item" data-menu-command="RS排名"><strong>03</strong><strong>RS 排名</strong><span>強勢股 Top 20</span></button>
-      <button class="menu-item" data-menu-command="教學"><strong>04</strong><strong>教學</strong><span>策略與權證教學</span></button>
-      <button class="menu-item" data-menu-view="statusView"><strong>05</strong><strong>狀態</strong><span>資料更新與快取狀態</span></button>
+      <button class="menu-item active" data-menu-view="scanView"><strong>01</strong><strong>個股查詢</strong><span>原 LINE bot 小卡網頁版</span></button>
+      <button class="menu-item" data-menu-view="activeEtfView"><strong>02</strong><strong>ETF 研究</strong><span>規模排名、持股變化、共同異動</span></button>
+      <button class="menu-item" data-menu-command="教學"><strong>03</strong><strong>教學</strong><span>策略與權證教學</span></button>
+      <button class="menu-item" data-menu-view="statusView"><strong>04</strong><strong>管理狀態</strong><span>管理員限定</span></button>
     </aside>
   </div>
 
   <nav class="bottom-nav" aria-label="主選單">
-    <button class="active" data-view="scanView"><strong>01</strong>小卡</button>
+    <button class="active" data-view="scanView"><strong>01</strong>個股</button>
     <button data-view="activeEtfView"><strong>02</strong>ETF</button>
     <button data-view="chartView"><strong>03</strong>K線</button>
     <button data-view="statusView"><strong>04</strong>狀態</button>
@@ -970,6 +977,9 @@
     let selectedEtf = null;
     let activeEtfTab = "ranking";
     let activeEtfSearch = "";
+    let activeEtfFilter = "all";
+    let activeEtfLevel = "ranking";
+    let activeEtfOverlapParent = "ranking";
 
     const $ = id => document.getElementById(id);
 
@@ -1070,6 +1080,11 @@
       if (webSessionToken) return true;
       if (!LIFF_ID) return !webSessionToken;
       return authenticateWithLine();
+    }
+
+    function isPublicCommand(command) {
+      const text = String(command || "").trim().toLowerCase();
+      return ["教學", "說明", "help"].includes(text);
     }
 
     function mapStock(row) {
@@ -1316,16 +1331,16 @@
               <span class="score">白名單登入</span>
             </div>
             <div class="signal-line">
-              <span>直接輸入即可</span>
-              <span>不用輸入 /</span>
+              <span>ETF 與教學免登入</span>
+              <span>個股需 LINE 登入</span>
             </div>
           </div>
           <div class="card-body">
             <div class="help-list">
               <div class="help-section">
-                <div class="help-section-title" style="color:#1a73e8">📊 查個股</div>
-                <div class="help-row"><strong>2330</strong><span>代號查詢</span></div>
-                <div class="help-row"><strong>台積電</strong><span>中文名查詢</span></div>
+                <div class="help-section-title" style="color:#1a73e8">📊 個股查詢</div>
+                <div class="help-row"><strong>2330</strong><span>登入後代號查詢</span></div>
+                <div class="help-row"><strong>台積電</strong><span>登入後中文名查詢</span></div>
               </div>
               <div class="help-section">
                 <div class="help-section-title" style="color:#ea4335">📈 策略分析</div>
@@ -1335,8 +1350,7 @@
                 <div class="help-row"><strong>💡</strong><span>可用中文名、有無空格皆可</span></div>
               </div>
               <div class="help-section">
-                <div class="help-section-title" style="color:#3949ab">📡 排名 & 教學</div>
-                <div class="help-row"><strong>RS排名</strong><span>強勢股 Top 20，點列開 K 線</span></div>
+                <div class="help-section-title" style="color:#3949ab">📡 教學</div>
                 <div class="help-row"><strong>教學</strong><span>教學選單</span></div>
               </div>
               <div class="help-section">
@@ -1353,11 +1367,30 @@
       $("actionNotice").innerHTML = "";
       const q = $("searchInput").value.trim();
       if (!q || ["說明", "help", "HELP"].includes(q)) {
+        setPageForCommand("說明");
         renderWebHelp();
         return;
       }
       $("cardFeed").innerHTML = `<div class="message">正在讀取 ${html(q)} 的 LINE 小卡...</div>`;
       loadCommand(q);
+    }
+
+    function setPageForCommand(command) {
+      const text = String(command || "").trim().toUpperCase();
+      let title = "個股查詢";
+      let sub = "輸入股票代號或名稱，顯示原 LINE bot 小卡與群組已開放的按鈕。";
+      if (text === "教學") {
+        title = "教學";
+        sub = "策略、指標與操作教學。";
+      } else if (["RS", "RS排名", "RS 排名"].includes(text)) {
+        title = "RS 排名";
+        sub = "強勢股 Top 20，點列開 K 線。";
+      } else if (["說明", "HELP"].includes(text)) {
+        title = "說明";
+        sub = "Web 版功能與查詢方式。";
+      }
+      $("pageTitle").textContent = title;
+      $("pageSub").textContent = sub;
     }
 
     function renderCommandPayload(command, data) {
@@ -1379,6 +1412,25 @@
     async function loadCommand(command) {
       const text = String(command || "").trim();
       if (!text) return;
+      setPageForCommand(text);
+      if (!isPublicCommand(text) && !webSessionToken) {
+        $("cardFeed").innerHTML = `
+          <div class="message">
+            個股查詢需要 LINE 白名單登入。請先按右上角登入，再輸入股票代號或點小卡按鈕。
+          </div>
+        `;
+        if (LIFF_ID) {
+          try {
+            const ready = await authenticateWithLine();
+            if (ready) return loadCommand(text);
+            return;
+          } catch (authError) {
+            $("cardFeed").innerHTML = `<div class="message">LINE 登入失敗：${html(authError.message)}</div>`;
+            return;
+          }
+        }
+        return;
+      }
       try {
         const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`, commandFetchOptions());
         rememberCommand(text);
@@ -1410,9 +1462,16 @@
     }
 
     async function goBack() {
+      if (document.querySelector("#activeEtfView.active") && activeEtfLevel === "overlap") {
+        if (activeEtfOverlapParent === "detail" && selectedEtf) renderActiveEtfDetail();
+        else renderActiveEtfRanking();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        updateBackButton();
+        return;
+      }
       if (document.querySelector("#activeEtfView.active") && selectedEtf) {
         selectedEtf = null;
-        activeEtfTab = "ranking";
+        activeEtfLevel = "ranking";
         renderActiveEtfRanking();
         window.scrollTo({ top: 0, behavior: "smooth" });
         updateBackButton();
@@ -1433,8 +1492,9 @@
     }
 
     function updateBackButton() {
-      const etfDetailOpen = Boolean(document.querySelector("#activeEtfView.active") && selectedEtf);
-      $("backButton").disabled = !etfDetailOpen && commandHistory.length <= 1;
+      const etfNested = Boolean(document.querySelector("#activeEtfView.active") && activeEtfLevel !== "ranking");
+      $("backButton").textContent = etfNested ? "上一層" : "上一頁";
+      $("backButton").disabled = !etfNested && commandHistory.length <= 1;
     }
 
     function queueLookup() {
@@ -1453,16 +1513,17 @@
       document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.view === viewId));
       document.querySelectorAll("[data-menu-view]").forEach(b => b.classList.toggle("active", b.dataset.menuView === viewId));
       const titleMap = {
-        scanView: ["掃描小卡", "直接使用原 LINE bot 掃描結果與小卡欄位。"],
-        activeEtfView: ["主動 ETF 追蹤", "盤後每日更新規模排名與持股變化。"],
+        scanView: ["個股查詢", "輸入股票代號或名稱，顯示原 LINE bot 小卡與群組已開放的按鈕。"],
+        activeEtfView: ["ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。"],
         chartView: ["K 線", "使用原 bot /kbar 快取繪製，Yahoo 只保留為外部備援。"],
         warrantView: ["權證", "讀取原 bot Top 3 權證快取。"],
-        statusView: ["狀態", "部署、API、cache 與 read-only 狀態。"]
+        statusView: ["管理狀態", "僅管理員可查看部署、API、cache 與 quota 狀態。"]
       };
       $("pageTitle").textContent = titleMap[viewId][0];
       $("pageSub").textContent = titleMap[viewId][1];
       if (viewId === "activeEtfView" && !activeEtfs.length) loadActiveEtfs();
       if (viewId === "chartView") drawChart();
+      if (viewId === "statusView") loadStatus();
       updateBackButton();
     }
 
@@ -1602,61 +1663,88 @@
       return n.toLocaleString("zh-TW", { maximumFractionDigits: 1 });
     }
 
+    function listingAge(dateText) {
+      if (!dateText) return "-";
+      const date = new Date(String(dateText).replaceAll(".", "-").replaceAll("/", "-"));
+      if (Number.isNaN(date.getTime())) return dateText;
+      const days = Math.max(0, Math.round((Date.now() - date.getTime()) / 86400000));
+      if (days < 60) return `上市 ${days} 天`;
+      if (days < 730) return `上市約 ${Math.max(1, Math.round(days / 30))} 個月`;
+      return `上市約 ${Math.round(days / 365)} 年`;
+    }
+
+    function etfFilterOk(etf) {
+      const category = `${etf.category || ""} ${etf.manager_type || ""} ${etf.index_name || ""} ${etf.name || ""}`;
+      if (activeEtfFilter === "active") return category.includes("主動");
+      if (activeEtfFilter === "bond") return category.includes("債") || category.includes("息");
+      if (activeEtfFilter === "highDividend") return category.includes("高股息") || category.includes("高息");
+      if (activeEtfFilter === "stock") return category.includes("股票") || category.includes("權值") || category.includes("指數");
+      return true;
+    }
+
     function visibleActiveEtfs() {
       const q = activeEtfSearch.trim().toLowerCase();
       return activeEtfs.filter(etf => {
-        if (!q) return true;
-        return [etf.code, etf.name, etf.issuer].some(value => String(value || "").toLowerCase().includes(q));
+        const queryOk = !q || [etf.code, etf.name, etf.issuer, etf.category, etf.index_name].some(value => String(value || "").toLowerCase().includes(q));
+        return queryOk && etfFilterOk(etf);
       });
     }
 
-    function renderActiveEtfRanking() {
-      $("activeEtfTitle").textContent = "主動 ETF 追蹤";
-      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，${activeEtfPayload.source || "-"} 完整主動式清單` : "盤後每日更新，Web 只讀快照。";
-      const rows = visibleActiveEtfs();
-      $("activeEtfBadge").textContent = `${rows.length || 0}/${activeEtfs.length || 0} 檔`;
-      $("activeEtfList").innerHTML = rows.length ? rows.map((etf, index) => `
-        <div class="etf-row" data-etf-code="${html(etf.code)}">
-          <div class="etf-line">
-            <strong><span class="rank">#${html(etf.rank || index + 1)}</span> ${html(etf.code)}</strong>
-            <span>${fmtBillion(etf.asset_size_billion)}</span>
-          </div>
-          <div class="meta"><span>${html(etf.name || "")}</span><span>${html(etf.issuer || "")}</span><span>上市 ${html(etf.listing_date || "-")}</span></div>
-          <div class="mini-pills">
-            <div class="mini-pill tone-green"><small>收盤</small><strong>${fmtNumber(etf.close_price)}</strong></div>
-            <div class="mini-pill tone-amber"><small>受益人</small><strong>${fmtNumber(etf.holders)}</strong></div>
-            <div class="mini-pill tone-purple"><small>YTD成交</small><strong>${fmtNumber(etf.ytd_trade_value_million)}百萬</strong></div>
-          </div>
-        </div>
-      `).join("") : `<div class="message">${activeEtfs.length ? "沒有符合搜尋或分類的主動 ETF。" : "目前沒有主動 ETF 快照。Render 部署後會在第一次讀取時建立快取。"}</div>`;
+    function etfDeltaText(etf) {
+      const n = Number(etf.asset_delta_billion);
+      if (!Number.isFinite(n) || n === 0) return "本日規模 -";
+      const sign = n > 0 ? "+" : "";
+      return `本日規模 ${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 億`;
     }
 
-    function changeRows(rows = [], emptyText = "目前沒有異動資料") {
-      return rows.length ? rows.slice(0, 12).map(row => {
-        const tone = (row.share_delta || row.weight_delta || 0) >= 0 ? "tone-green" : "tone-red";
-        const width = Math.max(8, Math.min(100, Math.abs(row.weight || row.weight_delta || 1) * 10));
-        const sign = (row.share_delta || row.weight_delta || 0) >= 0 ? "+" : "";
+    function renderActiveEtfRanking() {
+      activeEtfLevel = "ranking";
+      selectedEtf = null;
+      $("activeEtfTitle").textContent = "ETF 研究";
+      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，全部 ETF 依規模排序；可輸入 ETF 或個股代號。` : "盤後每日更新，Web 只讀快照。";
+      const rows = visibleActiveEtfs();
+      $("activeEtfBadge").textContent = `${rows.length || 0}/${activeEtfs.length || 0} 檔`;
+      $("activeEtfList").innerHTML = rows.length ? rows.map((etf, index) => {
+        const delta = Number(etf.asset_delta_billion);
+        const deltaTone = !Number.isFinite(delta) || delta === 0 ? "tone-amber" : delta > 0 ? "tone-green" : "tone-red";
         return `
-          <div class="change-row">
+          <div class="etf-row" data-etf-code="${html(etf.code)}">
+            <div class="etf-line">
+              <strong><span class="rank">#${html(etf.rank || index + 1)}</span> ${html(etf.code)} ${html(etf.name || "")}</strong>
+              <span>${fmtBillion(etf.asset_size_billion)}</span>
+            </div>
+            <div class="meta"><span>${html(etf.manager_type || "")}</span><span>${html(etf.category || "")}</span><span>${html(etf.issuer || "")}</span><span>${listingAge(etf.listing_date)}</span></div>
+            <div class="mini-pills">
+              <div class="mini-pill tone-green"><small>收盤 / 漲跌</small><strong>${fmtNumber(etf.close_price)} / ${etf.change_rate ?? "-"}%</strong></div>
+              <div class="mini-pill ${deltaTone}"><small>規模變化</small><strong>${etfDeltaText(etf)}</strong></div>
+              <div class="mini-pill tone-purple"><small>受益人</small><strong>${fmtNumber(etf.holders)}</strong></div>
+            </div>
+          </div>
+        `;
+      }).join("") : `<div class="message">${activeEtfs.length ? "沒有符合搜尋或分類的 ETF。" : "目前沒有 ETF 快照。Render 部署後會在第一次讀取時建立快取。"}</div>`;
+    }
+
+    function changeRows(rows = [], emptyText = "目前沒有異動資料", kind = "added") {
+      const toneMap = { added: "tone-blue", increased: "tone-green", decreased: "tone-red", holdings: "tone-purple" };
+      const labelMap = { added: "新增", increased: "加碼", decreased: "減碼", holdings: "持有" };
+      return rows.length ? rows.map(row => {
+        const delta = row.share_delta ?? row.weight_delta ?? row.shares ?? row.weight ?? 0;
+        const width = Math.max(8, Math.min(100, Math.abs(row.weight || row.weight_delta || 1) * 10));
+        const sign = Number(delta) > 0 ? "+" : "";
+        const note = kind === "holdings" ? `持有 ${fmtShares(row.shares)} 股` : `調整後權重 ${row.weight ?? "-"}%`;
+        return `
+          <div class="change-row" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}">
             <div><div class="code">${html(row.stock_id)}</div><div class="name">${html(row.stock_name || "")}</div></div>
-            <div><div class="mini-bar"><i style="width:${width}%"></i></div><div class="meta"><span>權重 ${row.weight ?? "-"}%</span></div></div>
-            <div class="delta ${tone}">${sign}${fmtShares(row.share_delta)}<br>${sign}${row.weight_delta ?? 0}%</div>
+            <div><div class="mini-bar"><i style="width:${width}%"></i></div><div class="meta"><span>${labelMap[kind]}</span><span>${html(row.industry || "")}</span><span>${note}</span></div></div>
+            <div class="delta ${toneMap[kind] || "tone-amber"}">${sign}${fmtShares(delta)}<br>${row.weight_delta ?? row.weight ?? "-"}%</div>
           </div>
         `;
       }).join("") : `<div class="message">${emptyText}</div>`;
     }
 
     function holdingRows(rows = []) {
-      return rows.length ? rows.slice(0, 30).map(row => {
-        const width = Math.max(8, Math.min(100, Number(row.weight || 0) * 10));
-        return `
-          <div class="change-row">
-            <div><div class="code">${html(row.stock_id)}</div><div class="name">${html(row.stock_name || "")}</div></div>
-            <div><div class="mini-bar"><i style="width:${width}%"></i></div><div class="meta"><span>${fmtShares(row.shares)} 股</span></div></div>
-            <div class="delta tone-amber">${row.weight ?? "-"}%</div>
-          </div>
-        `;
-      }).join("") : `<div class="message">目前沒有持股明細。</div>`;
+      const sorted = [...rows].sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0));
+      return changeRows(sorted, "目前沒有持股明細。", "holdings");
     }
 
     function renderActiveEtfDetail() {
@@ -1664,57 +1752,76 @@
         renderActiveEtfRanking();
         return;
       }
+      activeEtfLevel = "detail";
       $("activeEtfTitle").textContent = `${selectedEtf.code} 持股變化`;
-      $("activeEtfSub").textContent = `${selectedEtf.name || selectedEtf.ranking?.name || ""} · ${selectedEtf.data_date || ""}`;
+      $("activeEtfSub").textContent = `${selectedEtf.name || selectedEtf.ranking?.name || ""} · ${selectedEtf.data_date || activeEtfPayload?.data_date || ""}`;
       $("activeEtfBadge").textContent = selectedEtf.ranking?.asset_size_billion ? fmtBillion(selectedEtf.ranking.asset_size_billion) : `${(selectedEtf.holdings || []).length} 檔`;
       const changes = selectedEtf.changes || {};
       const rank = selectedEtf.ranking || {};
-      const summary = `
+      const groups = {
+        added: { title: "今日新增", rows: changes.added || [], empty: "今日沒有新增持股。", kind: "added" },
+        increased: { title: "今日加碼", rows: changes.increased || [], empty: "今日沒有加碼資料。", kind: "increased" },
+        decreased: { title: "今日減碼 / 出清", rows: [...(changes.decreased || []), ...(changes.removed || [])], empty: "今日沒有減碼或出清資料。", kind: "decreased" },
+        holdings: { title: "完整持股", rows: selectedEtf.holdings || [], empty: "目前沒有持股明細。", kind: "holdings" }
+      };
+      const current = groups[activeEtfTab] || groups.added;
+      const unavailable = selectedEtf.detail_unavailable ? `<div class="message">這檔 ETF 的持股明細來源尚未抓到或尚未公布。${selectedEtf.detail_error ? `<br>${html(selectedEtf.detail_error)}` : ""}</div>` : "";
+      $("activeEtfList").innerHTML = `
         <div class="mini-pills">
           <div class="mini-pill tone-amber"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
-          <div class="mini-pill tone-green"><small>收盤</small><strong>${fmtNumber(rank.close_price)}</strong></div>
+          <div class="mini-pill tone-green"><small>上市 / 天數</small><strong>${html(rank.listing_date || "-")}<br>${listingAge(rank.listing_date)}</strong></div>
           <div class="mini-pill tone-purple"><small>受益人</small><strong>${fmtNumber(rank.holders)}</strong></div>
         </div>
-        <div class="meta"><span>${html(rank.issuer || "")}</span><span>上市 ${html(rank.listing_date || "-")}</span><span>${html(rank.category || "")}</span></div>
+        <div class="meta"><span>${html(rank.issuer || "")}</span><span>${html(rank.manager_type || "")}</span><span>${html(rank.category || "")}</span><span>${html(rank.index_name || "")}</span></div>
         <div class="suggestions">
           ${rank.twse_url ? `<button data-action="external" data-url="${html(rank.twse_url)}">TWSE</button>` : ""}
           ${rank.moneydj_url ? `<button data-action="external" data-url="${html(rank.moneydj_url)}">MoneyDJ</button>` : ""}
           ${rank.etfinfo_url ? `<button data-action="external" data-url="${html(rank.etfinfo_url)}">ETFInfo</button>` : ""}
         </div>
-      `;
-      const unavailable = selectedEtf.detail_unavailable ? `<div class="message">這檔 ETF 的規模/受益人資料已可用；持股明細來源尚未抓到或尚未公布。${selectedEtf.detail_error ? `<br>${html(selectedEtf.detail_error)}` : ""}</div>` : "";
-      $("activeEtfList").innerHTML = `
-        ${summary}
         ${unavailable}
-        <div class="mini-pills">
-          <div class="mini-pill tone-green"><small>新增</small><strong>${(changes.added || []).length}</strong></div>
-          <div class="mini-pill tone-amber"><small>加碼</small><strong>${(changes.increased || []).length}</strong></div>
-          <div class="mini-pill tone-red"><small>減碼</small><strong>${(changes.decreased || []).length + (changes.removed || []).length}</strong></div>
+        <div class="filters etf-detail-tabs">
+          ${Object.entries(groups).map(([key, group]) => `<button class="${activeEtfTab === key ? "active" : ""}" data-etf-tab="${key}">${group.title.replace("今日", "")} ${group.rows.length}</button>`).join("")}
         </div>
-        <div class="section-title">今日新增 <span>股數 / 權重</span></div>
-        ${changeRows(changes.added || [], "尚無新增，或需要累積兩個交易日快照。")}
-        <div class="section-title">今日加碼 <span>權重變化</span></div>
-        ${changeRows(changes.increased || [], "尚無加碼資料。")}
-        <div class="section-title">今日減碼 / 出清 <span>風險觀察</span></div>
-        ${changeRows([...(changes.decreased || []), ...(changes.removed || [])], "尚無減碼或出清資料。")}
-        <div class="section-title">完整持股 <span>前 30 大</span></div>
-        ${holdingRows(selectedEtf.holdings || [])}
+        <div class="section-title">${html(current.title)} <span>點個股可看有哪些 ETF 持有；異動清單完整列出，不截斷。</span></div>
+        ${current.kind === "holdings" ? holdingRows(current.rows) : changeRows(current.rows, current.empty, current.kind)}
       `;
     }
 
+    function renderEtfOverlap(data = {}) {
+      activeEtfLevel = "overlap";
+      $("activeEtfTitle").textContent = `${data.stock_id || ""} ${data.stock_name || ""}`;
+      $("activeEtfSub").textContent = "共同持有這檔個股的 ETF，依權重由大到小排序。";
+      $("activeEtfBadge").textContent = `${(data.etfs || []).length} 檔`;
+      const warning = data.complete === false ? `<div class="message">${html(data.warning || "共同持有清單目前來自已快取 ETF，尚非完整全市場。")}</div>` : "";
+      $("activeEtfList").innerHTML = `
+        <div class="mini-pills">
+          <div class="mini-pill tone-purple"><small>共同 ETF</small><strong>${(data.etfs || []).length} 檔</strong></div>
+          <div class="mini-pill tone-amber"><small>最高權重</small><strong>${(data.etfs || [])[0]?.weight ?? "-"}%</strong></div>
+          <div class="mini-pill tone-green"><small>已掃快取</small><strong>${data.scanned_cached_etf_count || 0}/${data.ranking_count || 0}</strong></div>
+        </div>
+        ${warning}
+        ${(data.etfs || []).map(row => `
+          <div class="etf-row" data-etf-code="${html(row.code)}">
+            <div class="etf-line"><strong>${html(row.code)} ${html(row.name || "")}</strong><span>${row.weight ?? "-"}%</span></div>
+            <div class="meta"><span>${html(row.issuer || "")}</span><span>${html(row.manager_type || "")}</span><span>${html(row.category || "")}</span><span>${fmtShares(row.shares)} 股</span></div>
+          </div>
+        `).join("") || `<div class="message">目前快取中找不到持有這檔個股的 ETF。</div>`}
+      `;
+      updateBackButton();
+    }
+
     async function loadActiveEtfs() {
-      $("activeEtfList").innerHTML = `<div class="message">正在讀取主動 ETF 快照...</div>`;
+      $("activeEtfList").innerHTML = `<div class="message">正在讀取 ETF 快照...</div>`;
       try {
-        const payload = await getJson(`${API_BASE}/active-etfs`);
+        const payload = await getJson(`${API_BASE}/etfs`);
         activeEtfPayload = payload.data || {};
         activeEtfs = activeEtfPayload.etfs || [];
-        selectedEtf = null;
-        activeEtfTab = "ranking";
+        activeEtfTab = "added";
         renderActiveEtfRanking();
         updateBackButton();
       } catch (error) {
         $("activeEtfBadge").textContent = "失敗";
-        $("activeEtfList").innerHTML = `<div class="message">無法讀取主動 ETF：${html(error.message)}</div>`;
+        $("activeEtfList").innerHTML = `<div class="message">無法讀取 ETF：${html(error.message)}</div>`;
       }
     }
 
@@ -1722,17 +1829,39 @@
       const etf = activeEtfs.find(item => item.code === code);
       $("activeEtfList").innerHTML = `<div class="message">正在讀取 ${html(code)} 持股變化...</div>`;
       try {
-        const payload = await getJson(`${API_BASE}/active-etfs/${encodeURIComponent(code)}`);
+        const payload = await getJson(`${API_BASE}/etfs/${encodeURIComponent(code)}`);
         selectedEtf = { ...(payload.data || {}), ranking: payload.data?.ranking || etf };
-        activeEtfTab = "changes";
+        activeEtfTab = activeEtfTab === "ranking" ? "added" : activeEtfTab;
         renderActiveEtfDetail();
+        window.scrollTo({ top: 0, behavior: "smooth" });
         updateBackButton();
       } catch (error) {
         $("activeEtfList").innerHTML = `<div class="message">無法讀取 ${html(code)}：${html(error.message)}</div>`;
       }
     }
 
+    async function loadEtfOverlap(stockId, stockName = "") {
+      activeEtfOverlapParent = selectedEtf ? "detail" : "ranking";
+      $("activeEtfList").innerHTML = `<div class="message">正在查詢 ${html(stockId)} 被哪些 ETF 持有...</div>`;
+      try {
+        const payload = await getJson(`${API_BASE}/etfs/stock/${encodeURIComponent(stockId)}`);
+        renderEtfOverlap({ ...(payload.data || {}), stock_name: payload.data?.stock_name || stockName });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (error) {
+        $("activeEtfList").innerHTML = `<div class="message">無法查詢共同持有 ETF：${html(error.message)}</div>`;
+      }
+    }
+
     function renderStatus(error = null) {
+      if (!webSessionToken) {
+        $("statusList").innerHTML = `
+          <div class="message">
+            管理狀態頁只開放管理員 LINE 帳號查看。請先登入；一般使用者仍可使用個股查詢與 ETF 研究。
+          </div>
+        `;
+        renderUsageCount();
+        return;
+      }
       const rows = [
         ["API", error ? `失敗：${error.message}` : "已連線 Render read-only API", error ? "red" : "green"],
         ["掃描資料", `${stocks.length} 檔`, stocks.length ? "green" : "amber"],
@@ -1742,6 +1871,11 @@
       ];
       if (statusPayload) {
         rows.push(["Backend", `Kbar cache ${statusPayload.kbar_cache_count || 0} / warrant cache ${statusPayload.warrant_top3_cache_count || 0}`, "blue"]);
+        rows.push(["ETF 快取", `${statusPayload.etf_holding_cache_count || 0} 檔持股快取`, "blue"]);
+        const fin = statusPayload.finmind_quota || {};
+        rows.push(["FinMind Quota", fin.error ? `查詢失敗：${fin.error}` : `本小時 ${fin.used || 0}/${fin.limit || 600}，剩 ${fin.remaining ?? "-"}，約 ${Math.ceil((fin.reset_in_sec || 0) / 60)} 分鐘重置`, fin.error ? "red" : (fin.pct || 0) >= 85 ? "red" : "green"]);
+        const line = statusPayload.line_push_quota || {};
+        rows.push(["LINE 推播 Quota", line.error ? `查詢失敗：${line.error}` : `本月 ${line.used || 0}/${line.limit || "-"}，剩 ${line.remaining ?? "-"}，${line.pct || 0}%`, line.error ? "red" : (line.pct || 0) >= 85 ? "red" : "green"]);
       }
       renderUsageCount();
       $("statusList").innerHTML = rows.map(([title, body, tone]) => `
@@ -1750,6 +1884,21 @@
           <div class="meta"><span>${html(body)}</span><span class="badge ${tone}">${tone.toUpperCase()}</span></div>
         </div>
       `).join("");
+    }
+
+    async function loadStatus() {
+      if (!webSessionToken) {
+        renderStatus();
+        return;
+      }
+      $("statusList").innerHTML = `<div class="message">正在讀取管理狀態...</div>`;
+      try {
+        const payload = await getJson(`${API_BASE}/status`, commandFetchOptions());
+        statusPayload = { ...(statusPayload || {}), ...(payload.data || {}) };
+        renderStatus();
+      } catch (error) {
+        $("statusList").innerHTML = `<div class="message">管理狀態讀取失敗：${html(error.message)}。請確認目前 LINE 帳號是管理員。</div>`;
+      }
     }
 
     async function selectStock(id, nextView = null) {
@@ -1764,11 +1913,11 @@
 
     async function loadApp() {
       try {
-        const [health, scans, cards, status] = await Promise.allSettled([
+        const [health, scans, cards, usage] = await Promise.allSettled([
           getJson(`${API_BASE}/health`),
           getJson(`${API_BASE}/scan-results`),
           getJson(`${API_BASE}/scan-cards`),
-          getJson(`${API_BASE}/status`)
+          getJson(`${API_BASE}/usage`)
         ]);
         if (health.status !== "fulfilled") throw health.reason;
         if (scans.status !== "fulfilled") throw scans.reason;
@@ -1785,7 +1934,7 @@
         });
         if (!scanBubbles.length) throw new Error("scan-cards empty");
         selected = null;
-        statusPayload = status.status === "fulfilled" ? status.value.data : null;
+        statusPayload = usage.status === "fulfilled" ? usage.value.data : null;
         renderUsageCount();
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = `${stocks.length} 檔 / ${scans.value.generated_at || ""}`;
@@ -1811,9 +1960,25 @@
     $("searchInput").addEventListener("input", queueLookup);
     $("activeEtfSearch").addEventListener("input", event => {
       activeEtfSearch = event.target.value || "";
-      if (activeEtfTab !== "ranking") {
-        activeEtfTab = "ranking";
+      renderActiveEtfRanking();
+      updateBackButton();
+    });
+    $("activeEtfSearch").addEventListener("keydown", async event => {
+      if (event.key !== "Enter") return;
+      const q = $("activeEtfSearch").value.trim().toUpperCase();
+      if (!q) return;
+      const etf = activeEtfs.find(item => String(item.code || "").toUpperCase() === q || String(item.name || "").includes(q));
+      if (etf) {
+        await loadActiveEtfDetail(etf.code);
+      } else {
+        await loadEtfOverlap(q, "");
       }
+    });
+    $("etfTypeTabs").addEventListener("click", event => {
+      const btn = event.target.closest("button[data-etf-filter]");
+      if (!btn) return;
+      activeEtfFilter = btn.dataset.etfFilter;
+      document.querySelectorAll("[data-etf-filter]").forEach(b => b.classList.toggle("active", b === btn));
       renderActiveEtfRanking();
       updateBackButton();
     });
@@ -1850,6 +2015,11 @@
         $("drawerOverlay").classList.remove("open");
         $("drawerOverlay").setAttribute("aria-hidden", "true");
         activate(menuView.dataset.menuView);
+        if (menuView.dataset.menuView === "scanView") {
+          $("searchInput").value = "";
+          setPageForCommand("");
+          renderWebHelp();
+        }
         return;
       }
 
@@ -1859,7 +2029,20 @@
         $("drawerOverlay").setAttribute("aria-hidden", "true");
         $("searchInput").value = menuCommand.dataset.menuCommand;
         activate("scanView");
-        renderOriginalFeed();
+        await loadCommand(menuCommand.dataset.menuCommand);
+        return;
+      }
+
+      const etfTab = event.target.closest("[data-etf-tab]");
+      if (etfTab) {
+        activeEtfTab = etfTab.dataset.etfTab;
+        renderActiveEtfDetail();
+        return;
+      }
+
+      const etfStock = event.target.closest("[data-etf-stock]");
+      if (etfStock) {
+        await loadEtfOverlap(etfStock.dataset.etfStock, etfStock.dataset.etfStockName);
         return;
       }
 
