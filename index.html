@@ -1873,6 +1873,7 @@
       const close = fmtNumber(row.close_price);
       const pct = fmtSignedPct(row.change_rate);
       if (close === "-" && pct === "-%") return "收盤 -";
+      if (pct === "-%") return `收盤 ${close}`;
       return `收盤 ${close} / ${pct}`;
     }
 
