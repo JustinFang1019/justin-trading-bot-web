@@ -994,6 +994,26 @@
       }[ch]));
     }
 
+    function friendlyError(error, fallback = "暫時無法完成，請稍後再試。") {
+      const message = String(error?.message || error || "");
+      if (/idtoken expired|id token verify failed|line auth failed|invalid_request|expired/i.test(message)) {
+        return "LINE 登入逾時，請重新按「登入」後再試一次。";
+      }
+      if (/not whitelisted|whitelist/i.test(message)) {
+        return "這個 LINE 帳號尚未在白名單，請聯絡管理員開通。";
+      }
+      if (/admin only|403/i.test(message)) {
+        return "這頁僅管理員可查看。";
+      }
+      if (/failed to fetch|network|connection/i.test(message)) {
+        return "目前連線不穩，請稍後再試。";
+      }
+      if (/401|web command access denied|web session invalid/i.test(message)) {
+        return "請先用白名單 LINE 帳號登入。";
+      }
+      return fallback;
+    }
+
     async function getJson(url, options = {}) {
       const res = await fetch(url, { cache: "no-store", ...options });
       const payload = await res.json().catch(() => null);
@@ -1425,7 +1445,8 @@
             if (ready) return loadCommand(text);
             return;
           } catch (authError) {
-            $("cardFeed").innerHTML = `<div class="message">LINE 登入失敗：${html(authError.message)}</div>`;
+            console.warn("[web auth]", authError);
+            $("cardFeed").innerHTML = `<div class="message">${html(friendlyError(authError, "LINE 登入失敗，請重新登入。"))}</div>`;
             return;
           }
         }
@@ -1445,12 +1466,13 @@
             if (ready) return loadCommand(text);
             return;
           } catch (authError) {
-            $("cardFeed").innerHTML = `<div class="message">LINE 登入失敗：${html(authError.message)}</div>`;
+            console.warn("[web auth]", authError);
+            $("cardFeed").innerHTML = `<div class="message">${html(friendlyError(authError, "LINE 登入失敗，請重新登入。"))}</div>`;
             return;
           }
         }
-        const authHint = error.message.startsWith("401") ? "請使用 LINE 白名單帳號登入後再試一次。" : "";
-        $("cardFeed").innerHTML = `<div class="message">查不到或暫時無法產生「${html(text)}」的小卡：${html(error.message)}。${authHint}</div>`;
+        const friendly = error.message.startsWith("401") ? friendlyError(error) : `查不到或暫時無法產生「${html(text)}」的小卡，請稍後再試。`;
+        $("cardFeed").innerHTML = `<div class="message">${html(friendly)}</div>`;
         $("actionNotice").innerHTML = "";
       }
     }
@@ -1990,7 +2012,8 @@
       try {
         await authenticateWithLine();
       } catch (error) {
-        setAuthState(error.message, false);
+        console.warn("[web auth]", error);
+        setAuthState(friendlyError(error, "登入失敗"), false);
       }
     });
     $("backButton").addEventListener("click", goBack);

@@ -174,6 +174,7 @@ In `justin-trading-bot-web`:
   - ETF section is being promoted from preview to production UI as `ETF 研究`: all ETF ranking/search, category chips, ETF detail tabs (`新增`, `加碼`, `減碼`, `持股`), hierarchical `上一層`, stock-to-ETF overlap view sorted by weight, and an explicit incomplete-data warning when overlap is based only on cached holdings.
   - Important ETF overlap caveat: until the backend has warmed/cached holdings for every ETF, stock overlap lists must be marked incomplete. Do not present cached-only overlap as full-market truth.
   - Latest access rule: `個股查詢` and original LINE command cards must require LINE whitelist login; `ETF 研究` and `教學` should remain available without login. `RS 排名` was removed from the main menu because users can reach related ranking/K-line flows from the individual stock card buttons.
+  - User-facing auth errors should stay short. Do not show raw LINE verify JSON such as `IdToken expired`; display `LINE 登入逾時，請重新按「登入」後再試一次。` and keep raw details only in console/backend logs.
 
 In `justin-trading-bot`:
 
