@@ -40,6 +40,14 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- ETF API speed fix after user reported slow ETF loading.
+  - Backend `stock_scanner/web_api.py` bumped `ACTIVE_ETF_CACHE_VERSION` to 8 and changed ETF ranking enrichment to fast mode by default.
+  - `/api/web/etfs` now merges only already-cached ETFInfo metrics from disk and no longer blocks the ETF home list on fetching many ETFInfo detail pages. Missing metrics are fetched lazily by ETF detail/compare/calendar flows instead.
+  - The frontend ETF home no longer pre-fetches `/api/web/etfs/flow`; it shows a clear note and only reads monthly subscription/redemption when the user enters the fund-flow detail page.
+  - Intentionally accepted tradeoff: some ETF list rows may show `待資料` until their metric cache is created by detail/compare/calendar usage or a later batch job, but the ETF home page should become much faster.
+  - Verification: web script parsed successfully with Node `new Function(...)`; `git diff --check` passed in both repos. Backend Python compile still could not run because `py -3` reports no installed Python runtime.
+  - Recommended next prompt: "等 Render 部署後測 `/api/web/etfs` 速度，如果還慢就把 TWSE quote enrichment 也拆成快取/背景。"
+
 - ETF fund-flow refresh cleanup after user clarified the product is盤後研究.
   - Web `index.html` removed the ETF fund-flow `刷新`, `自動刷新`, and `每5分鐘刷新` controls.
   - ETF fund-flow cards now state `資料期 ... · 月申購/贖回，非盤中買賣超`; detail page says the same data period usually will not change during the same盤後 session.

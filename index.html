@@ -3215,7 +3215,7 @@
         <section class="etf-flow-summary">
           <div>
             <div class="panel-title">ETF 資金流向</div>
-            <div class="panel-sub">${data ? `資料期 ${html(data.data_date || "待資料")} · 月申購/贖回，非盤中買賣超。` : "正在讀取近月申購贖回資料..."}</div>
+            <div class="panel-sub">${data ? `資料期 ${html(data.data_date || "待資料")} · 月申購/贖回，非盤中買賣超。` : "月申購/贖回屬低頻資料，進入詳情時讀取。"}</div>
           </div>
           <div class="etf-period-tabs">
             <button data-etf-tool="flow" type="button">詳情</button>
@@ -3226,20 +3226,9 @@
           </div>
           ${topIn ? `<div class="etf-flow-mini"><div><strong>${html(topIn.code)} ${html(topIn.name || "")}</strong><span>${html(topIn.flow_period || "淨申贖流入最高")}</span></div><b>${html(topIn.flow_text || fmtBillionSigned(topIn.flow_billion))}</b></div>` : ""}
           ${topOut ? `<div class="etf-flow-mini"><div><strong>${html(topOut.code)} ${html(topOut.name || "")}</strong><span>${html(topOut.flow_period || "淨申贖流出最高")}</span></div><b class="neg">${html(topOut.flow_text || fmtBillionSigned(topOut.flow_billion))}</b></div>` : ""}
-          ${hasFlowData ? "" : `<div class="message">目前尚無可呈現的月申贖資料，點「詳情」可看原因與可先觀察清單。</div>`}
+          ${hasFlowData ? "" : `<div class="message">為了加快 ETF 首頁，資金流向不在首頁預抓；點「詳情」再讀取近月申贖。</div>`}
         </section>
       `;
-      if (!data) loadEtfFlowSummary();
-    }
-
-    async function loadEtfFlowSummary() {
-      try {
-        const payload = await getJson(`${API_BASE}/etfs/flow?period=${encodeURIComponent(etfFlowPeriod)}`);
-        etfFlowLastPayload = payload.data || {};
-      } catch (error) {
-        etfFlowLastPayload = { inflows: [], outflows: [], warning: friendlyError(error, "資金流向讀取失敗") };
-      }
-      renderActiveEtfFlowSummary();
     }
 
     function renderActiveEtfRanking() {
