@@ -611,6 +611,170 @@
       margin: 0 0 10px;
     }
 
+    .upcoming-etf-section {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .upcoming-etf-head {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .upcoming-etf-head strong {
+      font-size: 15px;
+    }
+
+    .upcoming-etf-head span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      text-align: right;
+    }
+
+    .upcoming-etf-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .upcoming-etf-row {
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      cursor: pointer;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 64px minmax(0, 1fr) auto;
+      min-height: 72px;
+      padding: 8px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .upcoming-etf-row:hover {
+      border-color: var(--blue);
+      box-shadow: 0 8px 18px rgba(29, 78, 216, .08);
+    }
+
+    .upcoming-date {
+      align-items: center;
+      background: #eef4ff;
+      border-radius: 8px;
+      color: var(--blue);
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+      font-weight: 900;
+      justify-content: center;
+      min-height: 54px;
+      padding: 5px;
+      text-align: center;
+    }
+
+    .upcoming-date small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .upcoming-main {
+      min-width: 0;
+    }
+
+    .upcoming-main strong {
+      display: block;
+      font-size: 16px;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .upcoming-main span {
+      color: var(--muted);
+      display: block;
+      font-size: 12px;
+      line-height: 1.35;
+      margin-top: 2px;
+    }
+
+    .upcoming-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .upcoming-tag {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 2px 7px;
+    }
+
+    .upcoming-tag.green { background: var(--green-soft); color: var(--green); }
+    .upcoming-tag.blue { background: var(--blue-soft); color: var(--blue); }
+    .upcoming-tag.amber { background: var(--amber-soft); color: var(--amber); }
+    .upcoming-tag.purple { background: var(--purple-soft); color: var(--purple); }
+
+    .upcoming-state {
+      background: #f7f9fc;
+      border-radius: 8px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      padding: 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .upcoming-detail-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .upcoming-detail-hero {
+      background: var(--navy);
+      border-radius: 8px;
+      color: #fff;
+      padding: 12px;
+    }
+
+    .upcoming-detail-hero h2 {
+      font-size: 20px;
+      line-height: 1.25;
+      margin: 0;
+    }
+
+    .upcoming-detail-hero p {
+      color: #c9d2ff;
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 5px 0 0;
+    }
+
+    .upcoming-note {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      padding: 9px;
+    }
+
     .etf-row {
       background: #fff;
       border: 1px solid var(--line);
@@ -880,20 +1044,57 @@
     }
 
     .help-row {
+      appearance: none;
+      background: #fff;
+      border: 1px solid #d7e3f4;
+      border-radius: 8px;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: minmax(88px, .8fr) minmax(0, 1.2fr) auto;
+      gap: 8px;
+      padding: 9px 10px;
+      text-align: left;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+      width: 100%;
+    }
+
+    .help-row:hover {
+      border-color: var(--blue);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, .12);
+      transform: translateY(-1px);
+    }
+
+    .help-row::after {
+      align-self: center;
+      background: #eaf1ff;
+      border-radius: 999px;
+      color: var(--blue);
+      content: "點擊";
+      font-size: 11px;
+      font-weight: 900;
+      padding: 4px 8px;
+    }
+
+    .help-note {
+      background: transparent;
+      border: 0;
+      color: var(--muted);
       display: grid;
       grid-template-columns: minmax(88px, .8fr) minmax(0, 1.2fr);
       gap: 8px;
       padding: 4px 0;
     }
 
-    .help-row strong {
+    .help-row strong,
+    .help-note strong {
       display: block;
       color: #333;
       font-size: 12px;
       line-height: 1.35;
     }
 
-    .help-row span {
+    .help-row span,
+    .help-note span {
       color: var(--muted);
       display: block;
       font-size: 12px;
@@ -1048,6 +1249,13 @@
             <label class="search" aria-label="搜尋 ETF 或個股">
               <input id="activeEtfSearch" placeholder="搜尋 ETF 或個股代號，例如 00988A / 2330 / AVGO.US">
             </label>
+            <section class="upcoming-etf-section" id="upcomingEtfSection">
+              <div class="upcoming-etf-head">
+                <strong>即將上市 ETF</strong>
+                <span>預購是先登記，募集是正式申購期間</span>
+              </div>
+              <div class="upcoming-etf-list" id="upcomingEtfList"></div>
+            </section>
             <div class="filters etf-type-tabs" id="etfTypeTabs">
               <button class="active" data-etf-filter="all">全部</button>
               <button data-etf-filter="active">主動式</button>
@@ -1109,6 +1317,74 @@
     let activeEtfFilter = "all";
     let activeEtfLevel = "ranking";
     let activeEtfOverlapParent = "ranking";
+    const upcomingEtfs = [
+      {
+        code: "00403A",
+        name: "統一台股升級50主動式ETF",
+        issuer: "統一投信",
+        status: "待掛牌",
+        listingDate: "2026-05-12",
+        preorderDate: "",
+        offeringPeriod: "2026-04-22 至 2026-04-24",
+        price: "10 元",
+        minimum: "10,000 元 / 張",
+        type: "國內股票型・主動式",
+        market: "台股",
+        income: "季配，含收益平準金",
+        custodian: "彰化銀行",
+        theme: "以台股市值前 200 大為選股池，透過汰弱、增強、靈活、彈性四面向追求超額報酬。",
+        tags: ["主動式", "台股", "待掛牌"],
+        sources: [
+          ["LINE Bank", "https://www.linebank.com.tw/investment/etf-ipo"],
+          ["國泰證券", "https://www.icathaysec.com.tw/product/etfipo/00403a"],
+          ["經濟日報", "https://money.udn.com/money/story/5618/9425943"]
+        ]
+      },
+      {
+        code: "00405A",
+        name: "富邦台灣龍耀主動式ETF",
+        issuer: "富邦投信",
+        status: "即將募集",
+        listingDate: "待公告",
+        preorderDate: "2026-05-11",
+        offeringPeriod: "2026-05-18 起募集",
+        price: "10 元",
+        minimum: "10,000 元 / 張",
+        type: "國內股票型・主動式",
+        market: "台股",
+        income: "配息來源可能為收益平準金",
+        custodian: "待公開說明書確認",
+        theme: "聚焦 AI 應用、半導體、伺服器、光通訊與 CCL 等台股成長企業。",
+        tags: ["主動式", "AI", "即將募集"],
+        sources: [
+          ["LINE Bank", "https://www.linebank.com.tw/investment/etf-ipo"],
+          ["經濟日報", "https://money.udn.com/money/story/5612/9483612"],
+          ["科技新報", "https://technews.tw/2026/05/05/small-and-medium-sized-stocks/"]
+        ]
+      },
+      {
+        code: "00402A",
+        name: "安聯美國科技領航主動式ETF",
+        issuer: "安聯投信",
+        status: "即將募集",
+        listingDate: "2026-06 上旬",
+        preorderDate: "2026-05-11",
+        offeringPeriod: "2026-05-22 至 2026-05-27",
+        price: "10 元",
+        minimum: "10,000 元 / 張",
+        type: "海外股票型・主動式",
+        market: "美國科技",
+        income: "配息來源可能為收益平準金",
+        custodian: "待公開說明書確認",
+        theme: "鎖定美國科技產業鏈，聚焦 AI、半導體、雲端運算、消費電子與資安等主題。",
+        tags: ["主動式", "海外", "科技"],
+        sources: [
+          ["LINE Bank", "https://www.linebank.com.tw/investment/etf-ipo"],
+          ["科技新報", "https://finance.technews.tw/2026/05/06/00402a/"],
+          ["聯合新聞網", "https://udn.com/news/story/7239/9485186"]
+        ]
+      }
+    ];
 
     const $ = id => document.getElementById(id);
 
@@ -1516,24 +1792,24 @@
             <div class="help-list">
               <div class="help-section">
                 <div class="help-section-title" style="color:#1a73e8">📊 個股查詢</div>
-                <div class="help-row"><strong>2330</strong><span>登入後代號查詢</span></div>
-                <div class="help-row"><strong>台積電</strong><span>登入後中文名查詢</span></div>
+                <button class="help-row" type="button" data-help-command="2330"><strong>2330</strong><span>填入搜尋框並查詢</span></button>
+                <button class="help-row" type="button" data-help-command="台積電"><strong>台積電</strong><span>用中文名查詢</span></button>
               </div>
               <div class="help-section">
                 <div class="help-section-title" style="color:#ea4335">📈 策略分析</div>
-                <div class="help-row"><strong>即時 2330</strong><span>即時策略卡</span></div>
-                <div class="help-row"><strong>回測 2330</strong><span>回測卡</span></div>
-                <div class="help-row"><strong>權證 2330</strong><span>權證 Top 3</span></div>
-                <div class="help-row"><strong>💡</strong><span>可用中文名、有無空格皆可</span></div>
+                <button class="help-row" type="button" data-help-command="即時 2330"><strong>即時 2330</strong><span>打開即時策略卡</span></button>
+                <button class="help-row" type="button" data-help-command="回測 2330"><strong>回測 2330</strong><span>打開回測卡</span></button>
+                <button class="help-row" type="button" data-help-command="權證 2330"><strong>權證 2330</strong><span>打開權證 Top 3</span></button>
+                <div class="help-note"><strong>💡</strong><span>可用中文名、有無空格皆可</span></div>
               </div>
               <div class="help-section">
                 <div class="help-section-title" style="color:#3949ab">📡 教學</div>
-                <div class="help-row"><strong>RS排名</strong><span>強勢股 Top 20</span></div>
-                <div class="help-row"><strong>教學</strong><span>教學選單</span></div>
+                <button class="help-row" type="button" data-help-command="RS排名"><strong>RS排名</strong><span>直接跳到強勢股 Top 20</span></button>
+                <button class="help-row" type="button" data-help-command="教學"><strong>教學</strong><span>打開教學選單</span></button>
               </div>
               <div class="help-section">
                 <div class="help-section-title" style="color:#546e7a">📖 其他</div>
-                <div class="help-row"><strong>說明</strong><span>顯示本清單</span></div>
+                <button class="help-row" type="button" data-help-command="說明"><strong>說明</strong><span>回到這張示範清單</span></button>
               </div>
             </div>
           </div>
@@ -1545,12 +1821,25 @@
       $("actionNotice").innerHTML = "";
       const q = $("searchInput").value.trim();
       if (!q || ["說明", "help", "HELP"].includes(q)) {
-        setPageForCommand("說明");
+        setPageForCommand("");
         renderWebHelp();
         return;
       }
       $("cardFeed").innerHTML = `<div class="message">正在讀取 ${html(q)} 的 LINE 小卡...</div>`;
       loadCommand(q);
+    }
+
+    async function runHelpCommand(command) {
+      const text = String(command || "").trim();
+      if (!text) return;
+      activate("scanView");
+      $("searchInput").value = text;
+      if (["說明", "help", "HELP"].includes(text)) {
+        renderOriginalFeed();
+        return;
+      }
+      $("cardFeed").innerHTML = `<div class="message">正在示範查詢 ${html(text)}...</div>`;
+      await loadCommand(text);
     }
 
     function setPageForCommand(command) {
@@ -1563,9 +1852,6 @@
       } else if (["RS", "RS排名", "RS 排名"].includes(text)) {
         title = "RS 排名";
         sub = "強勢股 Top 20，點列開 K 線。";
-      } else if (["說明", "HELP"].includes(text)) {
-        title = "說明";
-        sub = "Web 版功能與查詢方式。";
       }
       setPageHeader(title, sub);
     }
@@ -1644,6 +1930,13 @@
       if (document.querySelector("#activeEtfView.active") && activeEtfLevel === "overlap") {
         if (activeEtfOverlapParent === "detail" && selectedEtf) renderActiveEtfDetail();
         else renderActiveEtfRanking();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        updateBackButton();
+        return;
+      }
+      if (document.querySelector("#activeEtfView.active") && activeEtfLevel === "upcoming") {
+        activeEtfLevel = "ranking";
+        renderActiveEtfRanking();
         window.scrollTo({ top: 0, behavior: "smooth" });
         updateBackButton();
         return;
@@ -1937,6 +2230,89 @@
       });
     }
 
+    function upcomingSortKey(etf = {}) {
+      const date = String(etf.listingDate || "").match(/\d{4}-\d{2}-\d{2}/)?.[0]
+        || String(etf.offeringPeriod || "").match(/\d{4}-\d{2}-\d{2}/)?.[0]
+        || String(etf.preorderDate || "").match(/\d{4}-\d{2}-\d{2}/)?.[0]
+        || "2099-12-31";
+      return date;
+    }
+
+    function visibleUpcomingEtfs() {
+      const q = activeEtfSearch.trim().toLowerCase();
+      return [...upcomingEtfs]
+        .filter(etf => !q || [etf.code, etf.name, etf.issuer, etf.market, etf.theme].some(value => String(value || "").toLowerCase().includes(q)))
+        .sort((a, b) => upcomingSortKey(a).localeCompare(upcomingSortKey(b)));
+    }
+
+    function findUpcomingEtf(query) {
+      const q = String(query || "").trim().toUpperCase();
+      return upcomingEtfs.find(etf => String(etf.code).toUpperCase() === q || String(etf.name || "").includes(query));
+    }
+
+    function renderUpcomingEtfs() {
+      const list = $("upcomingEtfList");
+      if (!list) return;
+      const rows = visibleUpcomingEtfs();
+      list.innerHTML = rows.map(etf => `
+        <button class="upcoming-etf-row" data-upcoming-etf-code="${html(etf.code)}" type="button">
+          <div class="upcoming-date">
+            <small>掛牌</small>
+            <span>${html(etf.listingDate)}</span>
+          </div>
+          <div class="upcoming-main">
+            <strong>${html(etf.code)} ${html(etf.name)}</strong>
+            <span>${html(etf.issuer)}・募集 ${html(etf.offeringPeriod)}</span>
+            <div class="upcoming-tags">
+              ${(etf.tags || []).map((tag, index) => `<span class="upcoming-tag ${index === 0 ? "green" : index === 1 ? "purple" : "amber"}">${html(tag)}</span>`).join("")}
+            </div>
+          </div>
+          <div class="upcoming-state">${html(etf.status)}</div>
+        </button>
+      `).join("") || `<div class="message">目前沒有符合搜尋的即將上市 ETF。</div>`;
+    }
+
+    function renderUpcomingEtfDetail(code) {
+      const etf = upcomingEtfs.find(item => item.code === code);
+      if (!etf) return;
+      activeEtfLevel = "upcoming";
+      selectedEtf = null;
+      setPageHeader("ETF 研究", `${etf.code} 即將上市 ETF`);
+      $("activeEtfTitle").textContent = `${etf.code} 即將上市`;
+      $("activeEtfSub").textContent = `${etf.name} · ${etf.issuer}`;
+      $("activeEtfBadge").textContent = etf.status;
+      $("activeEtfList").innerHTML = `
+        <div class="upcoming-detail-card">
+          <div class="upcoming-detail-hero">
+            <h2>${html(etf.code)} ${html(etf.name)}</h2>
+            <p>${html(etf.issuer)}・${html(etf.type)}・${html(etf.market)}</p>
+          </div>
+          <div class="mini-pills">
+            <div class="mini-pill tone-blue"><small>發行價</small><strong>${html(etf.price)}</strong></div>
+            <div class="mini-pill tone-green"><small>最低申購</small><strong>${html(etf.minimum)}</strong></div>
+            <div class="mini-pill tone-amber"><small>預計掛牌</small><strong>${html(etf.listingDate)}</strong></div>
+          </div>
+          <div class="upcoming-note">
+            預購是券商或平台先開放登記；募集是基金正式公開申購期間。實際申購仍以投信公告與公開說明書為準。
+          </div>
+          <div class="status-grid">
+            <div class="status-row"><strong>預購</strong><div class="meta"><span>${html(etf.preorderDate || "未提供 / 不適用")}</span></div></div>
+            <div class="status-row"><strong>募集</strong><div class="meta"><span>${html(etf.offeringPeriod)}</span></div></div>
+            <div class="status-row"><strong>掛牌</strong><div class="meta"><span>${html(etf.listingDate)}</span></div></div>
+            <div class="status-row"><strong>配息說明</strong><div class="meta"><span>${html(etf.income)}</span></div></div>
+            <div class="status-row"><strong>保管銀行</strong><div class="meta"><span>${html(etf.custodian)}</span></div></div>
+          </div>
+          <div class="section-title">重點 <span>${html(etf.market)}</span></div>
+          <div class="upcoming-note">${html(etf.theme)}</div>
+          <div class="suggestions">
+            ${(etf.sources || []).map(([label, url]) => `<button data-action="external" data-url="${html(url)}">${html(label)}</button>`).join("")}
+          </div>
+        </div>
+      `;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      updateBackButton();
+    }
+
     function taipeiToday() {
       const parts = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Taipei",
@@ -1987,6 +2363,7 @@
     function renderActiveEtfRanking() {
       activeEtfLevel = "ranking";
       selectedEtf = null;
+      renderUpcomingEtfs();
       setPageHeader("ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。");
       $("activeEtfTitle").textContent = "ETF 研究";
       $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，全部 ETF 依規模排序；可輸入 ETF 或個股代號。` : "盤後每日更新，Web 只讀快照。";
@@ -2114,6 +2491,7 @@
     }
 
     async function loadActiveEtfs() {
+      renderUpcomingEtfs();
       $("activeEtfList").innerHTML = `<div class="message">正在讀取 ETF 快照...</div>`;
       try {
         const payload = await getJson(`${API_BASE}/etfs`);
@@ -2125,6 +2503,7 @@
       } catch (error) {
         $("activeEtfBadge").textContent = "失敗";
         $("activeEtfList").innerHTML = `<div class="message">無法讀取 ETF：${html(error.message)}</div>`;
+        renderUpcomingEtfs();
       }
     }
 
@@ -2273,6 +2652,11 @@
       if (event.key !== "Enter") return;
       const q = $("activeEtfSearch").value.trim().toUpperCase();
       if (!q) return;
+      const upcoming = findUpcomingEtf(q);
+      if (upcoming) {
+        renderUpcomingEtfDetail(upcoming.code);
+        return;
+      }
       const etf = activeEtfs.find(item => String(item.code || "").toUpperCase() === q || String(item.name || "").includes(q));
       if (etf) {
         await loadActiveEtfDetail(etf.code);
@@ -2353,6 +2737,12 @@
         return;
       }
 
+      const upcomingEtf = event.target.closest("[data-upcoming-etf-code]");
+      if (upcomingEtf) {
+        renderUpcomingEtfDetail(upcomingEtf.dataset.upcomingEtfCode);
+        return;
+      }
+
       const etfRow = event.target.closest("[data-etf-code]");
       if (etfRow) {
         await loadActiveEtfDetail(etfRow.dataset.etfCode);
@@ -2363,6 +2753,12 @@
       if (pick) {
         $("searchInput").value = pick.dataset.pickId;
         renderOriginalFeed();
+        return;
+      }
+
+      const helpCommand = event.target.closest("[data-help-command]");
+      if (helpCommand) {
+        await runHelpCommand(helpCommand.dataset.helpCommand);
         return;
       }
 
