@@ -2224,7 +2224,15 @@
       return authenticateWithLine();
     }
 
-    const PUBLIC_TRIAL_COMMANDS = new Set(["2330", "台積電", "即時2330", "回測2330", "權證2330", "RS排名", "教學", "說明", "HELP"]);
+    const PUBLIC_EDU_COMMANDS = [
+      "教學", "學習", "KD", "KD指標", "均線", "MA", "風報比", "RS",
+      "Minervini", "亞當", "亞當理論", "巨人傑", "巨人傑心法",
+      "型態", "選股型態", "起漲", "續強", "權證怎麼選", "常見錯誤"
+    ];
+    const PUBLIC_TRIAL_COMMANDS = new Set([
+      "2330", "台積電", "即時2330", "回測2330", "權證2330", "RS排名", "說明", "HELP",
+      ...PUBLIC_EDU_COMMANDS
+    ].map(command => compactCommand(command)));
 
     function normalizeCommand(command) {
       return String(command || "").trim().replace(/\s+/g, " ").toUpperCase();
@@ -2236,6 +2244,14 @@
 
     function isPublicCommand(command) {
       return PUBLIC_TRIAL_COMMANDS.has(compactCommand(command));
+    }
+
+    function hasCommandAccess() {
+      return Boolean(webSessionToken || legacyAccessToken);
+    }
+
+    function isEducationCommand(command) {
+      return PUBLIC_EDU_COMMANDS.some(item => compactCommand(item) === compactCommand(command));
     }
 
     function renderJoinLineBotPrompt(command) {
@@ -2540,6 +2556,50 @@
       `;
     }
 
+    function renderWebEducation() {
+      selected = null;
+      setPageForCommand("教學");
+      $("searchInput").value = "教學";
+      $("actionNotice").innerHTML = "";
+      const topics = [
+        ["KD", "低位、黃金交叉與即將交叉"],
+        ["均線", "多頭排列、60MA 與趨勢支撐"],
+        ["風報比", "停損、部位與期望值"],
+        ["RS", "跨股比較的相對強度"],
+        ["Minervini", "超級績效心法"],
+        ["亞當", "交易觀想與紀律"],
+        ["巨人傑", "供需邏輯、期望值與試單"],
+        ["型態", "起漲與續強策略"]
+      ];
+      $("cardFeed").innerHTML = `
+        <article class="line-card flex-card">
+          <div class="card-head">
+            <div class="card-title">
+              <strong>教學選單</strong>
+              <span class="score">免登入</span>
+            </div>
+            <div class="signal-line">
+              <span>策略、指標與操作教學</span>
+              <span>點主題看卡片</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="help-list">
+              <div class="help-section">
+                <div class="help-section-title" style="color:#3949ab">教學主題</div>
+                ${topics.map(([command, desc]) => `<button class="help-row" type="button" data-help-command="${html(command)}"><strong>${html(command)}</strong><span>${html(desc)}</span></button>`).join("")}
+              </div>
+              <div class="help-section">
+                <div class="help-section-title" style="color:#546e7a">權證</div>
+                <button class="help-row" type="button" data-help-command="權證怎麼選"><strong>權證怎麼選</strong><span>價內外、槓桿、天期與流動性</span></button>
+                <button class="help-row" type="button" data-help-command="常見錯誤"><strong>常見錯誤</strong><span>避免追高、流動性與時間價值陷阱</span></button>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
     function renderOriginalFeed() {
       $("actionNotice").innerHTML = "";
       const q = $("searchInput").value.trim();
@@ -2548,7 +2608,11 @@
         renderWebHelp();
         return;
       }
-      if (!isPublicCommand(q)) {
+      if (isEducationCommand(q) && compactCommand(q) === compactCommand("教學")) {
+        renderWebEducation();
+        return;
+      }
+      if (!isPublicCommand(q) && !hasCommandAccess()) {
         renderJoinLineBotPrompt(q);
         return;
       }
@@ -2565,7 +2629,11 @@
         renderOriginalFeed();
         return;
       }
-      if (!isPublicCommand(text)) {
+      if (isEducationCommand(text) && compactCommand(text) === compactCommand("教學")) {
+        renderWebEducation();
+        return;
+      }
+      if (!isPublicCommand(text) && !hasCommandAccess()) {
         renderJoinLineBotPrompt(text);
         return;
       }
@@ -2607,7 +2675,11 @@
       const text = String(command || "").trim();
       if (!text) return;
       setPageForCommand(text);
-      if (!isPublicCommand(text)) {
+      if (isEducationCommand(text) && compactCommand(text) === compactCommand("教學")) {
+        renderWebEducation();
+        return;
+      }
+      if (!isPublicCommand(text) && !hasCommandAccess()) {
         renderJoinLineBotPrompt(text);
         return;
       }
@@ -2631,6 +2703,15 @@
           }
         }
         const friendly = error.message.startsWith("401") ? friendlyError(error) : `查不到或暫時無法產生「${html(text)}」的小卡，請稍後再試。`;
+        if (isEducationCommand(text)) {
+          if (compactCommand(text) === compactCommand("教學")) {
+            renderWebEducation();
+          } else {
+            $("cardFeed").innerHTML = `<div class="message">教學主題「${html(text)}」暫時無法讀取，請稍後再試。</div>`;
+          }
+          $("actionNotice").innerHTML = "";
+          return;
+        }
         $("cardFeed").innerHTML = `<div class="message">${html(friendly)}</div>`;
         $("actionNotice").innerHTML = "";
       }

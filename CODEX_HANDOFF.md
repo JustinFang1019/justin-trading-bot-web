@@ -40,6 +40,15 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- Teaching public-access fix after user reported the third "教學" topic should be available without login.
+  - Live check showed `/api/web/command?text=教學` already returned the teaching menu, but teaching subtopic commands such as `KD` returned `401 Unauthorized`, so clicking a teaching topic could still look blocked.
+  - Web `index.html` now treats teaching subtopics (`KD`, `均線`, `風報比`, `RS`, `Minervini`, `亞當`, `巨人傑`, `型態`, `權證怎麼選`, `常見錯誤`, etc.) as public commands.
+  - Web `index.html` now allows authenticated users to run non-public commands instead of always applying the trial-only frontend gate.
+  - Web `index.html` adds a local public teaching-menu fallback for the "教學" entry, so the third menu item opens even if the command API is temporarily unavailable.
+  - Backend `stock_scanner/web_api.py` now marks teaching subtopics as public web commands, so `/api/web/command?text=KD` and related topic buttons do not require LINE login.
+  - Verification: live Render check confirmed `教學` currently returns the menu and `KD` was previously 401; web script parsed with Node `new Function(...)`; `git diff --check` passed in both repos. Python compile still could not run because `py -3` reports no installed Python runtime.
+  - Recommended next prompt: "等 Render 部署後，請在未登入手機版依序點 03 教學、KD、均線，確認都不再跳登入限制。"
+
 - Stock search placement follow-up.
   - User clarified the stock command search should sit below the login/home/back control row.
   - Web `index.html` moved `#topSearchWrap` from above `.controls` to below `.controls`, so the stock page order is login status/actions first, then command search, then filters.
