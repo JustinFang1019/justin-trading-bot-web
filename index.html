@@ -1246,6 +1246,7 @@
     .calendar-grid .calendar-day {
       display: grid;
       gap: 4px;
+      grid-auto-rows: min-content;
       padding: 6px;
     }
 
@@ -1273,14 +1274,31 @@
       cursor: pointer;
       display: block;
       font-family: inherit;
-      font-size: 10px;
       font-weight: 900;
       line-height: 1.2;
       overflow: hidden;
-      padding: 3px 4px;
+      padding: 3px 2px;
+      width: 100%;
+    }
+
+    .calendar-code {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+
+    .calendar-amount {
+      color: var(--muted);
+      display: block;
+      font-size: 9px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-top: 1px;
+      overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      width: 100%;
     }
 
     .calendar-more {
@@ -3708,7 +3726,7 @@
         const classes = ["calendar-day"];
         if (day < today) classes.push("muted");
         if (key === formatYmd(today)) classes.push("today");
-        return `<div class="${classes.join(" ")}" ${items[0]?.code ? `data-etf-code="${html(items[0].code)}"` : ""}><span class="calendar-date">${day.getDate()}</span>${items.slice(0, 3).map(item => `<button class="calendar-event" data-etf-code="${html(item.code)}" type="button">${html(item.code)} ${html(item.amount_text || "")}</button>`).join("")}${items.length > 3 ? `<span class="calendar-more">+${items.length - 3} 筆</span>` : ""}</div>`;
+        return `<div class="${classes.join(" ")}" ${items[0]?.code ? `data-etf-code="${html(items[0].code)}"` : ""}><span class="calendar-date">${day.getDate()}</span>${items.slice(0, 3).map(item => `<button class="calendar-event" data-etf-code="${html(item.code)}" type="button"><span class="calendar-code">${html(item.code || "-")}</span><span class="calendar-amount">${html(item.amount_text || "配息")}</span></button>`).join("")}${items.length > 3 ? `<span class="calendar-more">+${items.length - 3} 筆</span>` : ""}</div>`;
       }).join("");
       return `
         <div class="calendar-wrap">

@@ -40,6 +40,13 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- ETF dividend calendar readability fix.
+  - User reported the dividend calendar cells did not clearly show ETF codes.
+  - Web `index.html` now renders each calendar event as two lines: ETF code first in a stronger `calendar-code` line, dividend amount second in smaller muted `calendar-amount` text.
+  - The calendar event chip no longer squeezes code and amount into one nowrap string, so mobile cells prioritize readable ETF codes.
+  - Verification: web script parsed with Node `new Function(...)`; `git diff --check` passed. Browser visual verification was not run because the previous local ETF API preview was blocked by fetch, but the markup/CSS change is isolated to calendar event rendering.
+  - Recommended next prompt: "請在手機版配息行事曆看日期格，確認 ETF 代號是否清楚；如果同一天太多檔，再改成只顯示代號、點開看金額。"
+
 - ETF metric-pill cleanup after user noted each ETF row used to have four boxes and `費用率/經保費` wraps.
   - Root cause: the previous fourth ETF row metric was removed when the misleading `資金/規模` indicator was taken out; the row was left with only yield, fee, and premium/discount.
   - Web `index.html` now restores the fourth ETF row metric as `規模`, keeping the four-box layout without implying intraday fund flow.
