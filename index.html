@@ -1202,6 +1202,11 @@
     .heatmap-grid .mid { background: #fef3c7; color: var(--amber); font-weight: 900; }
     .heatmap-grid .high { background: #fee2e2; color: var(--red); font-weight: 900; }
 
+    .calendar-wrap {
+      display: grid;
+      gap: 10px;
+    }
+
     .calendar-grid {
       display: grid;
       gap: 5px;
@@ -1209,26 +1214,70 @@
     }
 
     .calendar-grid div {
-      align-items: center;
+      align-items: flex-start;
       background: #f8fafc;
       border: 1px solid #eef2f7;
       border-radius: 6px;
       color: var(--muted);
       display: flex;
       font-size: 11px;
-      justify-content: center;
-      min-height: 36px;
+      justify-content: flex-start;
+      min-height: 58px;
+      min-width: 0;
     }
 
     .calendar-grid .head {
+      align-items: center;
       background: transparent;
       border: 0;
       font-weight: 900;
+      justify-content: center;
       min-height: 22px;
     }
 
-    .calendar-grid .event { background: var(--red-soft); border-color: #fecaca; color: var(--red); font-weight: 900; }
-    .calendar-grid .soon { background: var(--amber-soft); border-color: #fde68a; color: var(--amber); font-weight: 900; }
+    .calendar-grid .calendar-day {
+      display: grid;
+      gap: 4px;
+      padding: 6px;
+    }
+
+    .calendar-day.muted {
+      opacity: .48;
+    }
+
+    .calendar-day.today {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, .16);
+    }
+
+    .calendar-date {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .calendar-event {
+      background: #fff;
+      border: 1px solid #dbeafe;
+      border-radius: 5px;
+      color: var(--blue);
+      display: block;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.2;
+      overflow: hidden;
+      padding: 3px 4px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    .calendar-more {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
 
     .filter-panel {
       background: #f8fafc;
@@ -3047,40 +3096,6 @@
       return `${parts.year}-${parts.month}-${parts.day}`;
     }
 
-    function isWeekendDate(dateText) {
-      const date = new Date(`${dateText || taipeiToday()}T12:00:00+08:00`);
-      return date.getDay() === 0 || date.getDay() === 6;
-    }
-
-    function etfDeltaState(etf = {}) {
-      const state = etf.asset_delta_state || "";
-      if (state) return state;
-      if (activeEtfPayload?.non_trading_day || isWeekendDate(taipeiToday())) return "non_trading_day";
-      const n = Number(etf.asset_delta_billion);
-      if (!etf.asset_delta_available && !Number.isFinite(n)) return "pending_previous";
-      if (!etf.asset_delta_available && Number.isFinite(n) && Math.abs(n) < 0.01) return "unchanged";
-      return "changed";
-    }
-
-    function etfDeltaText(etf) {
-      const state = etfDeltaState(etf);
-      if (state === "non_trading_day") return "非交易日";
-      if (state === "pending_previous") return "待前日快照";
-      if (state === "unchanged") return "資料未更新";
-      const n = Number(etf.asset_delta_billion);
-      if (!Number.isFinite(n)) return "本日規模 -";
-      const sign = n > 0 ? "+" : "";
-      return `本日規模 ${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 億`;
-    }
-
-    function etfDeltaTone(etf) {
-      const state = etfDeltaState(etf);
-      if (state !== "changed") return "tone-amber";
-      const n = Number(etf.asset_delta_billion);
-      if (!Number.isFinite(n) || n === 0) return "tone-amber";
-      return n > 0 ? "tone-green" : "tone-red";
-    }
-
     function firstValue(...values) {
       return values.find(value => value !== undefined && value !== null && value !== "");
     }
@@ -3107,11 +3122,24 @@
       };
     }
 
-    function etfSparkHtml(seed = 1) {
-      return `<div class="etf-spark">${Array.from({ length: 12 }, (_, index) => {
-        const h = 20 + ((index * 13 + seed * 7) % 52);
-        return `<i class="${index > 6 ? "up" : ""}" style="height:${h}%"></i>`;
+    function etfTrendSparkHtml(points = []) {
+      const values = (points || []).map(point => Number(point.weight)).filter(Number.isFinite);
+      if (values.length < 2) return "";
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = Math.max(0.01, max - min);
+      return `<div class="etf-spark">${values.map((value, index) => {
+        const h = 18 + ((value - min) / range) * 62;
+        return `<i class="${index === values.length - 1 || value >= values[Math.max(0, index - 1)] ? "up" : ""}" style="height:${Math.round(h)}%"></i>`;
       }).join("")}</div>`;
+    }
+
+    function etfAssetTrendText(etf = {}) {
+      if (etf.asset_delta_state === "non_trading_day") return "非交易日，暫不判斷資金流";
+      if (etf.asset_delta_state === "pending_previous") return "等待前後交易日快照";
+      if (etf.asset_delta_state === "unchanged") return "較前次快照變化不明顯";
+      if (etf.asset_delta_billion != null) return `較前次快照 ${fmtBillionSigned(etf.asset_delta_billion)}`;
+      return "等待可用快照";
     }
 
     function metricPillsHtml(etf = {}) {
@@ -3186,8 +3214,7 @@
             </div>
             <div class="meta"><span>${html(etf.manager_type || "")}</span><span>${html(etf.category || "")}</span><span>${html(etf.issuer || "")}</span><span>${listingAge(etf.listing_date)}</span></div>
             ${metricPillsHtml(etf)}
-            ${etfSparkHtml(index + 1)}
-            <div class="etf-spark-note">近 30 日規模趨勢：${etfDeltaText(etf)}</div>
+            <div class="etf-spark-note">規模變化狀態：${etfAssetTrendText(etf)}</div>
           </div>
         `;
       }).join("") : `<div class="message">${activeEtfs.length ? "沒有符合搜尋或分類的 ETF。" : "目前沒有 ETF 快照。Render 部署後會在第一次讀取時建立快取。"}</div>`;
@@ -3478,6 +3505,57 @@
       `;
     }
 
+    function parseYmd(value) {
+      const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return null;
+      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
+
+    function formatYmd(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function addDays(date, days) {
+      const next = new Date(date);
+      next.setDate(next.getDate() + days);
+      return next;
+    }
+
+    function dividendCalendarGridHtml(events = [], data = {}) {
+      const today = parseYmd(data.data_date) || new Date();
+      const start = addDays(today, -today.getDay());
+      const days = Math.max(42, Math.ceil(((data.days || 45) + today.getDay()) / 7) * 7);
+      const eventMap = new Map();
+      for (const event of events) {
+        const key = event.ex_date;
+        if (!key) continue;
+        if (!eventMap.has(key)) eventMap.set(key, []);
+        eventMap.get(key).push(event);
+      }
+      const headers = ["日", "一", "二", "三", "四", "五", "六"];
+      const cells = Array.from({ length: days }, (_, index) => {
+        const day = addDays(start, index);
+        const key = formatYmd(day);
+        const items = eventMap.get(key) || [];
+        const classes = ["calendar-day"];
+        if (day < today) classes.push("muted");
+        if (key === formatYmd(today)) classes.push("today");
+        return `<div class="${classes.join(" ")}"><span class="calendar-date">${day.getDate()}</span>${items.slice(0, 2).map(item => `<span class="calendar-event">${html(item.code)} ${html(item.amount_text || "")}</span>`).join("")}${items.length > 2 ? `<span class="calendar-more">+${items.length - 2} 筆</span>` : ""}</div>`;
+      }).join("");
+      return `
+        <div class="calendar-wrap">
+          <div class="section-title">除息日曆 <span>${formatYmd(today)} 起 ${data.days || 45} 天</span></div>
+          <div class="calendar-grid">
+            ${headers.map(day => `<div class="head">${day}</div>`).join("")}
+            ${cells}
+          </div>
+        </div>
+      `;
+    }
+
     function applyEtfFilterPreset(preset) {
       const presets = {
         highDividend: { preset, minAsset: 300, minYield: 4, maxExpense: 1, completeOnly: true },
@@ -3658,7 +3736,7 @@
     }
 
     async function renderDividendCalendarPage() {
-      setEtfToolShell("配息行事曆", "未來 45 天除息日與近期配息。", "API");
+      setEtfToolShell("配息行事曆", "用月曆格查看未來除息日與近期配息。", "日曆");
       try {
         const payload = await getJson(`${API_BASE}/etfs/dividends/calendar?days=45`);
         const data = payload.data || {};
@@ -3666,6 +3744,8 @@
         $("activeEtfBadge").textContent = `${events.length} 筆`;
         $("activeEtfList").innerHTML = `
           ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
+          ${dividendCalendarGridHtml(events, data)}
+          <div class="section-title">配息清單 <span>依除息日排序</span></div>
           ${events.map(item => `<div class="status-row" data-etf-code="${html(item.code)}"><strong>${html(item.ex_date || "")} ${html(item.code)} ${html(item.name || "")}</strong><div class="meta"><span>配息 ${html(item.amount_text || "-")}</span><span>發放 ${html(item.payment_date || "-")}</span><span>近12月殖利率 ${fmtPctValue(item.yield_12m)}</span></div></div>`).join("") || `<div class="message">目前沒有近期配息資料。</div>`}
         `;
       } catch (error) {
@@ -3709,7 +3789,7 @@
           <div class="etf-hero"><h2>${html(code)} 成分股權重趨勢</h2><p>下方是這檔 ETF 持有的個股，呈現近 14 日權重升降，不是個股查詢結果。</p><div class="etf-price-line"><strong>${(data.rows || []).length} 檔成分股</strong><span>${html(data.data_date || "API")}</span></div></div>
           ${data.warning && data.complete === false ? `<div class="message">${html(data.warning)}</div>` : ""}
           <div class="section-title">成分股權重變化 <span>點個股可看有哪些 ETF 持有</span></div>
-          ${(data.rows || []).slice(0, 20).map((row, index) => `<div class="etf-row" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}"><div class="etf-line"><strong>${html(row.stock_id)} ${html(row.stock_name || "")}</strong><span>${fmtPctValue(row.weight_delta)}</span></div>${etfSparkHtml(index + 3)}<div class="etf-spark-note">目前權重 ${fmtPctValue(row.weight)}・前次/最早快照 ${fmtPctValue(row.old_weight)}・${html(data.data_date || "")}</div></div>`).join("") || `<div class="message">目前沒有持股趨勢資料。</div>`}
+          ${(data.rows || []).slice(0, 20).map(row => `<div class="etf-row" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}"><div class="etf-line"><strong>${html(row.stock_id)} ${html(row.stock_name || "")}</strong><span>${fmtPctValue(row.weight_delta)}</span></div>${etfTrendSparkHtml(row.trend_points)}<div class="etf-spark-note">目前權重 ${fmtPctValue(row.weight)}・前次/最早快照 ${fmtPctValue(row.old_weight)}・${html(data.data_date || "")}</div></div>`).join("") || `<div class="message">目前沒有持股趨勢資料。</div>`}
         `;
       } catch (error) {
         $("activeEtfList").innerHTML = etfToolError(error);
