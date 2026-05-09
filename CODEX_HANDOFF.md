@@ -40,6 +40,12 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- Stock search placement follow-up.
+  - User clarified the stock command search should sit below the login/home/back control row.
+  - Web `index.html` moved `#topSearchWrap` from above `.controls` to below `.controls`, so the stock page order is login status/actions first, then command search, then filters.
+  - Verification: `git diff --check` passed; script parsing via Node `new Function(...)` passed; local HTTP browser preview confirmed the auth/login/home/back row appears before the stock search input.
+  - Recommended next prompt: "請在手機版看個股查詢頁，確認登入列、搜尋欄、篩選列的垂直順序是否自然。"
+
 - Stock search visibility and font-size follow-up after user reported the stock-query search bar disappeared.
   - Root cause: `setActiveEtfNestedChrome(false)` still hid `#topSearchWrap` when returning to `scanView`, so the ETF chrome accidentally hid the stock command search on the stock-query page.
   - Web `index.html` now hides the top global stock-command search only while `activeEtfView` is active. ETF pages still keep their own ETF-specific search input.
