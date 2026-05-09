@@ -1236,7 +1236,7 @@
       <button class="menu-btn" id="menuButton" type="button" aria-label="功能選單">≡</button>
       <div>
         <h1 id="pageTitle">個股查詢</h1>
-        <p class="sub" id="pageSub">輸入股票代號或名稱，顯示原 LINE bot 小卡與群組已開放的按鈕。</p>
+        <p class="sub" id="pageSub">未登入可使用說明小卡上的示範指令；其它個股請加入 LINE bot。</p>
       </div>
       <div class="status-pill">
         <strong id="syncTitle">連線中</strong>
@@ -1247,7 +1247,7 @@
 
     <div class="toolbar">
       <label class="search" id="topSearchWrap" aria-label="搜尋股票">
-        <input id="searchInput" placeholder="搜尋代號或名稱">
+        <input id="searchInput" placeholder="可試用說明小卡指令；其它股票請加入 LINE bot">
       </label>
       <div class="controls">
         <div class="auth-panel">
@@ -1607,9 +1607,33 @@
       return authenticateWithLine();
     }
 
+    const PUBLIC_TRIAL_COMMANDS = new Set(["2330", "台積電", "即時2330", "回測2330", "權證2330", "RS排名", "教學", "說明", "HELP"]);
+
+    function normalizeCommand(command) {
+      return String(command || "").trim().replace(/\s+/g, " ").toUpperCase();
+    }
+
+    function compactCommand(command) {
+      return normalizeCommand(command).replace(/\s+/g, "");
+    }
+
     function isPublicCommand(command) {
-      const text = String(command || "").trim().toLowerCase();
-      return ["教學", "說明", "help"].includes(text);
+      return PUBLIC_TRIAL_COMMANDS.has(compactCommand(command));
+    }
+
+    function renderJoinLineBotPrompt(command) {
+      const text = String(command || "").trim();
+      selected = null;
+      $("actionNotice").innerHTML = "";
+      $("cardFeed").innerHTML = `
+        <div class="message">
+          未登入版目前只開放說明小卡上的示範指令。想查${text ? `「${html(text)}」` : "其它股票"}或使用更多個股功能，請加入 LINE bot。
+          <div class="suggestions" style="margin-top:12px;">
+            <button data-help-command="2330" type="button">試用 2330</button>
+            <button data-help-command="說明" type="button">回說明</button>
+          </div>
+        </div>
+      `;
     }
 
     function mapStock(row) {
@@ -1863,11 +1887,11 @@
           <div class="card-head">
             <div class="card-title">
               <strong>Web 版說明</strong>
-              <span class="score">白名單登入</span>
+              <span class="score">試用開放</span>
             </div>
             <div class="signal-line">
               <span>ETF 與教學免登入</span>
-              <span>個股需 LINE 登入</span>
+              <span>示範指令可試用</span>
             </div>
           </div>
           <div class="card-body">
@@ -1882,7 +1906,7 @@
                 <button class="help-row" type="button" data-help-command="即時 2330"><strong>即時 2330</strong><span>打開即時策略卡</span></button>
                 <button class="help-row" type="button" data-help-command="回測 2330"><strong>回測 2330</strong><span>打開回測卡</span></button>
                 <button class="help-row" type="button" data-help-command="權證 2330"><strong>權證 2330</strong><span>打開權證 Top 3</span></button>
-                <div class="help-note"><strong>💡</strong><span>可用中文名、有無空格皆可</span></div>
+                <div class="help-note"><strong>💡</strong><span>未登入只開放這張說明小卡上的示範指令；其它股票請加入 LINE bot。</span></div>
               </div>
               <div class="help-section">
                 <div class="help-section-title" style="color:#3949ab">📡 教學</div>
@@ -1907,6 +1931,10 @@
         renderWebHelp();
         return;
       }
+      if (!isPublicCommand(q)) {
+        renderJoinLineBotPrompt(q);
+        return;
+      }
       $("cardFeed").innerHTML = `<div class="message">正在讀取 ${html(q)} 的 LINE 小卡...</div>`;
       loadCommand(q);
     }
@@ -1920,6 +1948,10 @@
         renderOriginalFeed();
         return;
       }
+      if (!isPublicCommand(text)) {
+        renderJoinLineBotPrompt(text);
+        return;
+      }
       $("cardFeed").innerHTML = `<div class="message">正在示範查詢 ${html(text)}...</div>`;
       await loadCommand(text);
     }
@@ -1927,7 +1959,7 @@
     function setPageForCommand(command) {
       const text = String(command || "").trim().toUpperCase();
       let title = "個股查詢";
-      let sub = "輸入股票代號或名稱，顯示原 LINE bot 小卡與群組已開放的按鈕。";
+      let sub = "未登入可使用說明小卡上的示範指令；其它個股請加入 LINE bot。";
       if (text === "教學") {
         title = "教學";
         sub = "策略、指標與操作教學。";
@@ -1958,23 +1990,8 @@
       const text = String(command || "").trim();
       if (!text) return;
       setPageForCommand(text);
-      if (!isPublicCommand(text) && !webSessionToken) {
-        $("cardFeed").innerHTML = `
-          <div class="message">
-            個股查詢需要 LINE 白名單登入。請先按右上角登入，再輸入股票代號或點小卡按鈕。
-          </div>
-        `;
-        if (LIFF_ID) {
-          try {
-            const ready = await authenticateWithLine();
-            if (ready) return loadCommand(text);
-            return;
-          } catch (authError) {
-            console.warn("[web auth]", authError);
-            $("cardFeed").innerHTML = `<div class="message">${html(friendlyError(authError, "LINE 登入失敗，請重新登入。"))}</div>`;
-            return;
-          }
-        }
+      if (!isPublicCommand(text)) {
+        renderJoinLineBotPrompt(text);
         return;
       }
       try {
@@ -2078,7 +2095,7 @@
         $("searchInput").value = "";
       }
       const titleMap = {
-        scanView: ["個股查詢", "輸入股票代號或名稱，顯示原 LINE bot 小卡與群組已開放的按鈕。"],
+        scanView: ["個股查詢", "未登入可使用說明小卡上的示範指令；其它個股請加入 LINE bot。"],
         activeEtfView: ["ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。"],
         chartView: ["K 線", "使用原 bot /kbar 快取繪製，Yahoo 只保留為外部備援。"],
         warrantView: ["權證", "讀取原 bot Top 3 權證快取。"],
