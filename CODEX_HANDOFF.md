@@ -40,6 +40,15 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- ETF fund-flow correction after user pointed out historical flow should be fetchable.
+  - Important data distinction: TWSE ETF e-Fortune product ranking is still a current ETF list/scale source, and TPEx official historical ETF endpoint provides historical trading/turnover data, not true fund inflow/outflow.
+  - Backend `stock_scanner/web_api.py` in `justin-trading-bot-main-deploy` now maps known active ETF stock codes to ifa.ai fund IDs and fetches the fund redemption page `__NEXT_DATA__` to read historical monthly subscription/redemption/net-subscription values.
+  - `/api/web/etfs/flow` now prioritizes ifa.ai monthly fund flow (`subscription - redemption = net subscription`) and only falls back to old cached scale/flow fields when no ifa flow is available. Returned rows include flow period, flow data date, subscription, redemption, net subscription, ifa fund ID, and source URL.
+  - Web `index.html` now labels ETF fund flow as `近1月淨申贖`, shows `申` and `贖` values per row, translates the new IFA source status, and no longer describes this page as a 5-day scale-change proxy.
+  - Intentionally not changed: this is not intraday ETF buy/sell imbalance, and unknown ETF-to-ifa mappings are skipped instead of inventing values.
+  - Verification: web script parsed successfully with Node `new Function(...)`; `git diff --check` passed in both repos. Backend Python compile could not run because the Windows `py` launcher reported no installed Python runtime.
+  - Recommended next prompt: "幫我看 Render 部署後 `/api/web/etfs/flow` 回傳的 IFA 近月淨申贖，哪些 ETF 還缺 ifa fund id 對應就補上。"
+
 - ETF tools follow-up: user pointed out `ETF 比較` and `進階篩選` were connected to data but not actually adjustable.
   - `index.html` now makes `ETF 比較工具` interactive: selected ETF chips, manual ETF-code input, popular quick-pick chips, remove-by-click, and dynamic compare table width for up to 6 ETFs.
   - `進階篩選器` now has presets (`高股息`, `低費用`, `大型 ETF`, `主動式`, `全部`), search text, range controls for asset size / trailing yield / expense ratio, and a data-completeness checkbox. Results update immediately and still click through to ETF detail.

@@ -3458,7 +3458,9 @@
         "TWSE ETF ranking": "證交所 ETF 清單",
         "ETFInfo metrics": "ETFInfo 指標資料",
         "MoneyDJ holdings": "MoneyDJ 持股資料",
-        "Official net purchase": "官方淨申購資料"
+        "IFA monthly fund flow": "IFA 月申贖資料",
+        "Official net purchase": "官方淨申購資料",
+        "Official intraday net purchase": "官方盤中買賣超"
       };
       return labels[name] || name || "資料來源";
     }
@@ -3471,12 +3473,15 @@
       if (metrics) return `${Number(metrics[1]).toLocaleString("zh-TW")} 份指標快取`;
       const holdings = text.match(/^(\d+) cached holding files$/);
       if (holdings) return `${Number(holdings[1]).toLocaleString("zh-TW")} 份持股快取`;
+      const flows = text.match(/^(\d+) cached flow files$/);
+      if (flows) return `${Number(flows[1]).toLocaleString("zh-TW")} 份資金流快取`;
       if (text === "waiting for stable public source") return "等待穩定公開來源";
       return text;
     }
 
     function etfFlowFieldLabel(field) {
       const labels = {
+        ifa_net_subscription_1m: "近月淨申贖",
         net_flow_5d_billion: "近5日淨流",
         asset_delta_billion: "規模變化"
       };
@@ -3485,6 +3490,7 @@
 
     function etfFlowSourceLabel(source) {
       const labels = {
+        "ifa.ai monthly subscription/redemption + TWSE ETF ranking": "ifa.ai 申購贖回 + 證交所 ETF 清單",
         "TWSE ETF ranking + cached ETFInfo metrics": "證交所 ETF 清單 + ETFInfo 指標快取"
       };
       return labels[source] || source || "資料來源";
@@ -3498,7 +3504,7 @@
         .slice(0, 8);
       return `
         <div class="message">
-          目前這個快照不能判斷真正的流入 / 流出。官方淨申購資料還在等待穩定公開來源；週末或還沒有前後交易日快照時，不能把 0 億當成真的沒有資金流。
+          目前沒有可呈現的申購 / 贖回月資料。已建立 ifa 基金 ID 對應的 ETF 會優先顯示歷史淨申贖；沒有對應的才不納入，避免把成交熱度或週末快照誤當資金流。
         </div>
         <div class="section-title">可先觀察 <span>規模大且指標較完整的 ETF</span></div>
         ${watchRows.map((row, index) => `<div class="etf-row" data-etf-code="${html(row.code)}"><div class="etf-line"><strong><span class="rank">#${index + 1}</span> ${html(row.code)} ${html(row.name || "")}</strong><span>${fmtBillion(row.asset_size_billion)}</span></div><div class="meta"><span>${html(row.category || "")}</span><span>${html(row.issuer || "")}</span><span>資料狀態 ${html(row.asset_delta_state === "non_trading_day" ? "非交易日" : row.asset_delta_state === "pending_previous" ? "等待前後快照" : "可觀察")}</span></div>${metricPillsHtml(row)}</div>`).join("") || `<div class="message">目前 ETF 清單尚未載入，請回 ETF 研究首頁重新整理。</div>`}
@@ -3635,7 +3641,7 @@
     }
 
     async function renderEtfFlowPage() {
-      setEtfToolShell("ETF 資金流向", "以可取得的淨流與規模變化判斷流入流出。", "資料");
+      setEtfToolShell("ETF 資金流向", "以基金申購 / 贖回月資料判斷淨流入流出。", "資料");
       try {
         const payload = await getJson(`${API_BASE}/etfs/flow`);
         const data = payload.data || {};
@@ -3647,17 +3653,17 @@
           <div class="change-row ${tone === "red" ? "decreased" : "increased"}" data-etf-code="${html(row.code)}">
             <div class="change-main">
               <div class="change-title"><div class="code">${index + 1}</div><div class="name">${html(row.code)} ${html(row.name || "")}</div></div>
-              <div class="change-tags"><span>${html(row.category || "")}</span><span>${html(etfFlowFieldLabel(row.source_field))}</span><span>規模 ${fmtBillion(row.asset_size_billion)}</span></div>
+              <div class="change-tags"><span>${html(row.category || "")}</span><span>${html(etfFlowFieldLabel(row.source_field))}</span><span>${html(row.flow_period || data.data_date || "")}</span><span>申 ${fmtBillion(row.subscription_billion)}</span><span>贖 ${fmtBillion(row.redemption_billion)}</span></div>
             </div>
             <div class="delta ${tone === "red" ? "tone-red" : "tone-green"}">${html(row.flow_text || fmtBillionSigned(row.flow_billion))}<small>${tone === "red" ? "流出" : "流入"}</small></div>
           </div>
         `;
         $("activeEtfList").innerHTML = `
           <div class="etf-flow-summary">
-            <div class="etf-period-tabs"><button class="active" type="button">近5日/規模變化</button><button type="button" disabled>本週</button><button type="button" disabled>近30日</button></div>
+            <div class="etf-period-tabs"><button class="active" type="button">近1月淨申贖</button><button type="button" disabled>近3月</button><button type="button" disabled>近12月</button></div>
             <div class="etf-flow-grid">
-              <div class="etf-flow-stat"><small>流入合計</small><strong>${hasFlowData ? fmtBillionSigned(data.inflow_total_billion, "待資料") : "待交易日快取"}</strong></div>
-              <div class="etf-flow-stat"><small>流出合計</small><strong>${hasFlowData ? fmtBillionSigned(data.outflow_total_billion, "待資料") : "待交易日快取"}</strong></div>
+              <div class="etf-flow-stat"><small>流入合計</small><strong>${hasFlowData ? fmtBillionSigned(data.inflow_total_billion, "待資料") : "待申贖快取"}</strong></div>
+              <div class="etf-flow-stat"><small>流出合計</small><strong>${hasFlowData ? fmtBillionSigned(data.outflow_total_billion, "待資料") : "待申贖快取"}</strong></div>
             </div>
           </div>
           ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
