@@ -1214,7 +1214,7 @@
         <input id="searchInput" placeholder="搜尋代號或名稱">
       </label>
       <div class="controls">
-        <button class="back-btn" id="backButton" type="button" disabled>上一頁</button>
+        <button class="back-btn" id="backButton" type="button" disabled>上一層</button>
         <div class="auth-panel">
           <span id="authStatus">LINE 登入檢查中</span>
           <button id="authButton" type="button">登入</button>
@@ -2016,7 +2016,7 @@
 
     function updateBackButton() {
       const etfNested = Boolean(document.querySelector("#activeEtfView.active") && activeEtfLevel !== "ranking");
-      $("backButton").textContent = etfNested ? "上一層" : "上一頁";
+      $("backButton").textContent = "上一層";
       $("backButton").disabled = !etfNested && commandHistory.length <= 1;
     }
 
