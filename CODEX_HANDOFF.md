@@ -1,6 +1,6 @@
 # Codex Handoff
 
-Last updated: 2026-05-09 Asia/Taipei
+Last updated: 2026-05-10 Asia/Taipei
 
 ## Current User Intent
 
@@ -37,6 +37,16 @@ Then commit and push the handoff update to GitHub so another computer can contin
 - `.github/workflows/update-market-data.yml` to update snapshots on weekdays.
 
 It is not yet a real backend or LINE/LIFF app.
+
+## Latest Session Notes - 2026-05-10
+
+- ETF detail sixth metric clarification after user said the target is the detail page's sixth box, not the ranking row.
+  - Web `index.html` now adds the ETF detail hero's sixth mini-pill as `5日淨申購`, reading `net_purchase_5d_text` first and falling back to today's `net_purchase_today_text` only when fewer rows are available.
+  - Backend `stock_scanner/web_api.py` now has an env-configurable parser/cache for the official `sysItemFundDataAction.do` style payload with `net_purchase` rows. It writes `net_purchase_{code}.json` under the active ETF cache directory and returns `net_purchase_today_text`, `net_purchase_5d_text`, data date, source URL, and stale/error flags.
+  - Important blocker: the spec only named `/sysItemFundDataAction.do`; a guessed SITCA full URL returned 404 during validation, so the backend intentionally requires `ETF_NET_PURCHASE_URL` or `ETF_TODAY_FLOW_URL` to be configured with the actual full endpoint before live data appears. Until then the UI shows `未取得` instead of inventing flow.
+  - ETF source-status now reports `Official net purchase` cache count and whether the endpoint is configured.
+  - Verification: web script parsed with Node `new Function(...)`; `git diff --check` passed in both repos. Live network probe confirmed the guessed SITCA endpoint is not valid. Python compile still could not run because the Windows `py` launcher reports no installed Python runtime.
+  - Recommended next prompt: "把真正的 `sysItemFundDataAction.do` 完整網址貼給 Codex，或在 Render 設 `ETF_NET_PURCHASE_URL`，再測 `/api/web/etfs/00919?refresh=1` 是否回傳 `net_purchase_5d_text`。"
 
 ## Latest Session Notes - 2026-05-09
 

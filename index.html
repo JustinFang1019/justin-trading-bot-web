@@ -3281,7 +3281,7 @@
 
     function etfDecisionMetrics(etf = {}) {
       return {
-        flow5d: firstValue(etf.net_flow_5d_text, etf.net_flow_5d, etf.net_flow_5d_billion != null ? fmtBillionSigned(etf.net_flow_5d_billion) : "", etf.asset_delta_billion != null ? fmtBillionSigned(etf.asset_delta_billion) : "", "看詳情"),
+        flow5d: firstValue(etf.net_purchase_5d_text, etf.net_purchase_5d_billion != null ? fmtBillionSigned(etf.net_purchase_5d_billion) : "", etf.net_purchase_today_text, etf.net_flow_5d_text, etf.net_flow_5d, etf.net_flow_5d_billion != null ? fmtBillionSigned(etf.net_flow_5d_billion) : "", "未取得"),
         yield12m: firstValue(etf.yield_12m_text, etf.yield_12m != null ? fmtPctValue(etf.yield_12m) : "", "未公布"),
         expense: firstValue(etf.expense_ratio_text, etf.expense_ratio != null ? fmtPctValue(etf.expense_ratio) : "", "未公布"),
         premium: firstValue(etf.nav_premium_text, etf.nav_premium != null ? fmtPctValue(etf.nav_premium) : "", "未公布")
@@ -3428,6 +3428,7 @@
           <div class="mini-pill tone-amber"><small>折溢價</small><strong>${html(heroMetrics.premium)}</strong></div>
           <div class="mini-pill tone-blue"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
           <div class="mini-pill tone-purple"><small>受益人</small><strong>${fmtHolders(rank.holders)}</strong></div>
+          <div class="mini-pill tone-green"><small>5日淨申購</small><strong>${html(heroMetrics.flow5d)}</strong></div>
         </div>
         <div class="meta"><span>${html(rank.issuer || "")}</span><span>${html(rank.manager_type || "")}</span><span>${html(rank.category || "")}</span><span>${html(rank.index_name || "")}</span></div>
         <div class="suggestions">
@@ -3640,6 +3641,9 @@
       if (holdings) return `${Number(holdings[1]).toLocaleString("zh-TW")} 份持股快取`;
       const flows = text.match(/^(\d+) cached flow files$/);
       if (flows) return `${Number(flows[1]).toLocaleString("zh-TW")} 份資金流快取`;
+      const netPurchases = text.match(/^(\d+) cached net purchase files$/);
+      if (netPurchases) return `${Number(netPurchases[1]).toLocaleString("zh-TW")} 份淨申購快取`;
+      if (text === "ETF_NET_PURCHASE_URL not configured") return "尚未設定淨申購來源";
       if (text === "waiting for stable public source") return "等待穩定公開來源";
       return text;
     }
