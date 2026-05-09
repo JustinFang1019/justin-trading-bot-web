@@ -40,6 +40,13 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- ETF fund-flow refresh cleanup after user clarified the product is盤後研究.
+  - Web `index.html` removed the ETF fund-flow `刷新`, `自動刷新`, and `每5分鐘刷新` controls.
+  - ETF fund-flow cards now state `資料期 ... · 月申購/贖回，非盤中買賣超`; detail page says the same data period usually will not change during the same盤後 session.
+  - Remaining `近1月 / 近3月 / 近12月` controls are period switches, not refresh controls.
+  - Verification: web script parsed successfully with Node `new Function(...)`; `git diff --check` passed. No backend change in this cleanup.
+  - Recommended next prompt: "看 GitHub Pages 更新後 ETF 資金流向首頁和詳情頁，確認沒有刷新/自動刷新誤導。"
+
 - ETF usability/data cleanup after user reported confusing ETF home/search, missing fee/yield/flow fields, non-clickable calendar, and fixed heatmap.
   - Web `index.html` now changes the global search placeholder to Web trial-command wording, so it no longer looks like a stale prior command.
   - ETF fund flow home card now reads `/api/web/etfs/flow` instead of deriving from stale ranking scale deltas, labels it as near-month subscription/redemption data, states it is not an intraday jumping buy/sell imbalance, and adds refresh plus optional 5-minute auto refresh.
