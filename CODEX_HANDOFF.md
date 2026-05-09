@@ -300,3 +300,14 @@ Ask Codex:
 - 後續預覽頁尺寸與字級偏好：用手機窄版約 430px 內容寬；整體字體比目前正式頁再小一點，主標題約 25-26px、區塊標題 18px、卡片主標 16-17px、內文 12-14px、標籤 11px。不要做成桌面滿版大字預覽。
 - 全站返回按鈕名稱統一用「上一層」，包含個股查詢與教學；它代表回上一張小卡或上一層 ETF 畫面，不是瀏覽器上一頁。
 - 2026-05-09 後續 UI 修正：ETF 分類篩選列只在 ETF 主排名頁顯示；即將上市清單、即將上市詳情、一般 ETF 詳情與共同持有頁都不要顯示分類列。一般 ETF 詳情中也不要夾「即將上市 ETF」入口。即將上市黑底標頭需避免怪異換行，代號與名稱分開排，名稱要夠明顯。
+
+## 2026-05-09 Line Bot Web Implementation 2
+
+- Correct repo for this session is `JustinFang1019/justin-trading-bot-web`, cloned at `C:\Users\Siriu\Documents\New project\justin-trading-bot-web`.
+- Branch opened for this work: `codex/line-bot-web-impl2`.
+- Fixed ETF navigation state in `index.html`: when users enter a stock overlap / shared-holding page from an upcoming ETF detail page, the global `上一層` button now returns to that upcoming ETF detail page instead of falling back to the listed ETF ranking page.
+- Follow-up correction: from the upcoming ETF detail page itself, `上一層` now returns to the upcoming ETF list, not the ETF ranking home.
+- Fixed stale cross-feature search text in `index.html`: entering `ETF 研究` now clears the top stock-command search input, so old commands such as `即時 2330` do not remain visible above the ETF module.
+- Intentionally not changed: original LINE bot strategy logic, backend command behavior, ETF data sources, and public/auth access rules.
+- Verification: `git diff --check` passed with only the existing Windows LF/CRLF warning; inline scripts in `index.html` parsed successfully through the Node REPL.
+- Next prompt suggestion: `請先讀 CODEX_HANDOFF.md，檢查 ETF 研究裡「即將上市 ETF 詳情 → 個股共同持有 → 上一層」是否回到即將上市詳情，並確認切換功能時搜尋欄不會殘留上一個主題的指令。`

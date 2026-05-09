@@ -1397,6 +1397,8 @@
     let activeEtfFilter = "all";
     let activeEtfLevel = "ranking";
     let activeEtfOverlapParent = "ranking";
+    let activeEtfOverlapParentCode = "";
+    let selectedUpcomingEtfCode = "";
     const upcomingEtfs = [
       {
         code: "00403A",
@@ -2009,14 +2011,15 @@
     async function goBack() {
       if (document.querySelector("#activeEtfView.active") && activeEtfLevel === "overlap") {
         if (activeEtfOverlapParent === "detail" && selectedEtf) renderActiveEtfDetail();
+        else if (activeEtfOverlapParent === "upcoming" && activeEtfOverlapParentCode) renderUpcomingEtfDetail(activeEtfOverlapParentCode);
+        else if (activeEtfOverlapParent === "upcomingList") renderUpcomingEtfListPage();
         else renderActiveEtfRanking();
         window.scrollTo({ top: 0, behavior: "smooth" });
         updateBackButton();
         return;
       }
       if (document.querySelector("#activeEtfView.active") && activeEtfLevel === "upcoming") {
-        activeEtfLevel = "ranking";
-        renderActiveEtfRanking();
+        renderUpcomingEtfListPage();
         window.scrollTo({ top: 0, behavior: "smooth" });
         updateBackButton();
         return;
@@ -2071,6 +2074,9 @@
       document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === viewId));
       document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.view === viewId));
       document.querySelectorAll("[data-menu-view]").forEach(b => b.classList.toggle("active", b.dataset.menuView === viewId));
+      if (viewId === "activeEtfView") {
+        $("searchInput").value = "";
+      }
       const titleMap = {
         scanView: ["個股查詢", "輸入股票代號或名稱，顯示原 LINE bot 小卡與群組已開放的按鈕。"],
         activeEtfView: ["ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。"],
@@ -2381,6 +2387,7 @@
     function renderUpcomingEtfListPage() {
       activeEtfLevel = "upcomingList";
       selectedEtf = null;
+      selectedUpcomingEtfCode = "";
       setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
@@ -2401,6 +2408,7 @@
       if (!etf) return;
       activeEtfLevel = "upcoming";
       selectedEtf = null;
+      selectedUpcomingEtfCode = code;
       setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
@@ -2490,6 +2498,7 @@
     function renderActiveEtfRanking() {
       activeEtfLevel = "ranking";
       selectedEtf = null;
+      selectedUpcomingEtfCode = "";
       setActiveEtfNestedChrome(false);
       setUpcomingEntryVisible(true);
       setEtfTypeTabsVisible(true);
@@ -2657,6 +2666,7 @@
       try {
         const payload = await getJson(`${API_BASE}/etfs/${encodeURIComponent(code)}`);
         selectedEtf = { ...(payload.data || {}), ranking: payload.data?.ranking || etf };
+        selectedUpcomingEtfCode = "";
         const rank = selectedEtf.ranking || {};
         activeEtfTab = isActiveManagedEtf(rank) ? (activeEtfTab === "ranking" ? "added" : activeEtfTab) : "holdings";
         renderActiveEtfDetail();
@@ -2668,7 +2678,8 @@
     }
 
     async function loadEtfOverlap(stockId, stockName = "") {
-      activeEtfOverlapParent = selectedEtf ? "detail" : "ranking";
+      activeEtfOverlapParent = activeEtfLevel;
+      activeEtfOverlapParentCode = activeEtfLevel === "upcoming" ? selectedUpcomingEtfCode : (selectedEtf?.code || "");
       setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
