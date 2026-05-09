@@ -40,6 +40,15 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-10
 
+- ETF patch tasks v2 implementation for the user-provided spec and feature comparison preview.
+  - Web `index.html` now implements the requested v2 ETF UI pieces: ETF detail price change color, six hero metric pills with near-5-day net flow, richer compare table rows and winner marks, hand-picked overlap heatmap with five color bands and legend, monthly dividend calendar with ETF code-visible events and upcoming list, advanced filter dividend-frequency chips, stock reverse ETF flow with add/reduce bars, holding-trend rows with dual-color sparklines/status tags/sort toggle, and source-admin cards with retry/log actions.
+  - Web `index.html` also adds `etfToolRequestSeq` guards so slow ETF API responses cannot overwrite a newer page after the user navigates away.
+  - Backend `stock_scanner/web_api.py` now enriches ETF compare rows with net-purchase fields, expands stock reverse-flow rows with issuer/category/share delta/new/current-only fields, includes removed holdings in trend output, expands source status metadata, and exposes source retry/log endpoints for the web UI.
+  - Intentionally not changed: ranking-row redesign item 1, homepage fund-flow card item 2, and upcoming-ETF item 5 from the patch file, because the spec explicitly scoped v2 to T0 / 3 / 4 / A / B / D / E / F / G only.
+  - Boundary/overflow checks: local browser opened ETF compare, filter, heatmap, dividend calendar, stock ETF flow, holding trend, and source admin pages. Compare/heatmap remain inside horizontal-scroll containers; calendar/source cards collapse to one column under 720px; stock-flow and holding-trend rows reduce columns under 720px. No obvious page mix-up after adding the stale-request guard.
+  - Verification: web script parsed with Node `new Function(...)`; `git diff --check` passed in web and backend repos. Backend Python compile still could not run because this Windows environment reports `No installed Python found!`.
+  - Recommended next prompt: "請在手機版逐頁看 ETF 比較、進階篩選、熱力圖、配息行事曆、個股 ETF 動向、14 日趨勢、資料來源狀態；如果哪一頁覺得太擠或資料語意不對，截圖指出那一塊。"
+
 - ETF detail sixth metric clarification after user said the target is the detail page's sixth box, not the ranking row.
   - Web `index.html` now adds the ETF detail hero's sixth mini-pill as `5日淨申購`, reading `net_purchase_5d_text` first and falling back to today's `net_purchase_today_text` only when fewer rows are available.
   - Backend `stock_scanner/web_api.py` now has an env-configurable parser/cache for the official `sysItemFundDataAction.do` style payload with `net_purchase` rows. It writes `net_purchase_{code}.json` under the active ETF cache directory and returns `net_purchase_today_text`, `net_purchase_5d_text`, data date, source URL, and stale/error flags.
