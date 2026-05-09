@@ -1892,6 +1892,7 @@
     let activeEtfOverlapParent = "ranking";
     let activeEtfOverlapParentCode = "";
     let etfCompareCodes = ["00878", "00919", "00940"];
+    let etfStockFlowId = "2330";
     let etfFilterSettings = {
       preset: "highDividend",
       query: "",
@@ -3336,6 +3337,10 @@
       return String(value || "").trim().toUpperCase().replace(/[^0-9A-Z]/g, "").slice(0, 6);
     }
 
+    function normalizeStockFlowId(value) {
+      return String(value || "").trim().toUpperCase().replace(/[^0-9A-Z.]/g, "").slice(0, 12);
+    }
+
     function popularEtfCodes() {
       const preferred = ["0050", "0056", "006208", "00713", "00878", "00891", "00919", "00929", "00940"];
       const ranked = activeEtfs.slice(0, 12).map(row => row.code).filter(Boolean);
@@ -3366,6 +3371,22 @@
             ${popularEtfCodes().map(code => `<button class="tool-chip ${etfCompareCodes.includes(code) ? "active" : ""}" data-etf-compare-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
           </div>
           <div class="message">最多比較 6 檔；點已選代號可移除。</div>
+        </div>
+      `;
+    }
+
+    function stockFlowControlsHtml(stockId) {
+      const quickCodes = ["2330", "2454", "2317", "2308", "2412", "2881", "3008", "3661"];
+      return `
+        <div class="tool-controls">
+          <div class="tool-input-row">
+            <input id="etfStockFlowInput" inputmode="latin" value="${html(stockId)}" placeholder="輸入個股代號，例如 2330 / 2454">
+            <button data-etf-stock-flow-search type="button">查詢</button>
+          </div>
+          <div class="tool-chip-row">
+            ${quickCodes.map(code => `<button class="tool-chip ${stockId === code ? "active" : ""}" data-etf-stock-flow-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
+          </div>
+          <div class="message">會查已建立 ETF 持股快取；尚未快取的 ETF 不會納入。</div>
         </div>
       `;
     }
@@ -3561,19 +3582,22 @@
     }
 
     async function renderStockEtfFlowPage() {
-      setEtfToolShell("個股「被加碼/減碼」週報", "反向查詢 2330 被哪些 ETF 加碼或減碼。", "2330");
+      const stockId = normalizeStockFlowId(etfStockFlowId) || "2330";
+      etfStockFlowId = stockId;
+      setEtfToolShell("個股「被加碼/減碼」週報", `反向查詢 ${stockId} 被哪些 ETF 加碼或減碼。`, stockId);
       try {
-        const payload = await getJson(`${API_BASE}/etfs/stock-flow/2330`);
+        const payload = await getJson(`${API_BASE}/etfs/stock-flow/${encodeURIComponent(stockId)}`);
         const data = payload.data || {};
         const rows = data.rows || [];
         const increased = rows.filter(row => Number(row.weight_delta) > 0).length;
         const decreased = rows.filter(row => Number(row.weight_delta) < 0).length;
-        $("activeEtfBadge").textContent = data.stock_id || "2330";
+        $("activeEtfBadge").textContent = data.stock_id || stockId;
         $("activeEtfList").innerHTML = `
-          <div class="etf-hero"><h2>${html(data.stock_id || "2330")} ${html(data.stock_name || "")}</h2><p>${html(data.source || "")}</p><div class="etf-price-line"><strong>${rows.length} 檔 ETF</strong><span>${data.complete === false ? "快取逐步建立" : "完整"}</span></div></div>
+          ${stockFlowControlsHtml(data.stock_id || stockId)}
+          <div class="etf-hero"><h2>${html(data.stock_id || stockId)} ${html(data.stock_name || "")}</h2><p>${html(data.source || "")}</p><div class="etf-price-line"><strong>${rows.length} 檔 ETF</strong><span>${data.complete === false ? "快取逐步建立" : "完整"}</span></div></div>
           <div class="mini-pills"><div class="mini-pill tone-green"><small>加碼 ETF</small><strong>${increased} 檔</strong></div><div class="mini-pill tone-red"><small>減碼 ETF</small><strong>${decreased} 檔</strong></div><div class="mini-pill tone-blue"><small>已掃快取</small><strong>${data.scanned_count || 0}</strong></div></div>
           ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
-          ${rows.map(row => `<div class="change-row ${Number(row.weight_delta) < 0 ? "decreased" : "increased"}" data-etf-code="${html(row.code)}"><div class="change-main"><div class="change-title"><div class="code">${html(row.code)}</div><div class="name">${html(row.name || "")}</div></div><div class="change-tags"><span>權重 ${fmtPctValue(row.weight)}</span><span>前次 ${fmtPctValue(row.old_weight)}</span><span>${html(row.data_date || "")}</span></div></div><div class="delta ${Number(row.weight_delta) < 0 ? "tone-red" : "tone-green"}">${fmtPctValue(row.weight_delta)}<small>${fmtShareUnit(row.share_delta, row)}</small></div></div>`).join("") || `<div class="message">目前快取中沒有 2330 的 ETF 變動資料。</div>`}
+          ${rows.map(row => `<div class="change-row ${Number(row.weight_delta) < 0 ? "decreased" : "increased"}" data-etf-code="${html(row.code)}"><div class="change-main"><div class="change-title"><div class="code">${html(row.code)}</div><div class="name">${html(row.name || "")}</div></div><div class="change-tags"><span>權重 ${fmtPctValue(row.weight)}</span><span>前次 ${fmtPctValue(row.old_weight)}</span><span>${html(row.data_date || "")}</span></div></div><div class="delta ${Number(row.weight_delta) < 0 ? "tone-red" : "tone-green"}">${fmtPctValue(row.weight_delta)}<small>${fmtShareUnit(row.share_delta, row)}</small></div></div>`).join("") || `<div class="message">目前快取中沒有 ${html(stockId)} 的 ETF 變動資料。</div>`}
         `;
       } catch (error) {
         $("activeEtfList").innerHTML = etfToolError(error);
@@ -3831,6 +3855,13 @@
         const code = normalizeEtfCode(event.target.value || "");
         if (code) setCompareCodes([...etfCompareCodes, code]);
         await renderEtfComparePage();
+        return;
+      }
+      if (event.target?.id === "etfStockFlowInput") {
+        event.preventDefault();
+        const stockId = normalizeStockFlowId(event.target.value || "");
+        if (stockId) etfStockFlowId = stockId;
+        await renderStockEtfFlowPage();
       }
     });
     $("authButton").addEventListener("click", async () => {
@@ -3920,6 +3951,22 @@
         const code = normalizeEtfCode(input?.value || "");
         if (code) setCompareCodes([...etfCompareCodes, code]);
         await renderEtfComparePage();
+        return;
+      }
+
+      const stockFlowPick = event.target.closest("[data-etf-stock-flow-pick]");
+      if (stockFlowPick) {
+        etfStockFlowId = normalizeStockFlowId(stockFlowPick.dataset.etfStockFlowPick) || "2330";
+        await renderStockEtfFlowPage();
+        return;
+      }
+
+      const stockFlowSearch = event.target.closest("[data-etf-stock-flow-search]");
+      if (stockFlowSearch) {
+        const input = $("etfStockFlowInput");
+        const stockId = normalizeStockFlowId(input?.value || "");
+        if (stockId) etfStockFlowId = stockId;
+        await renderStockEtfFlowPage();
         return;
       }
 
