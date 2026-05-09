@@ -3408,6 +3408,46 @@
       `;
     }
 
+    function etfSourceStatusLabel(status) {
+      const labels = {
+        ok: "正常",
+        pending: "建立中",
+        missing: "缺資料",
+        partial: "部分資料",
+        error: "異常"
+      };
+      return labels[String(status || "").toLowerCase()] || "待確認";
+    }
+
+    function etfSourceBadgeClass(status) {
+      const value = String(status || "").toLowerCase();
+      if (value === "ok") return "green";
+      if (value === "pending" || value === "partial") return "amber";
+      return "red";
+    }
+
+    function etfSourceNameLabel(name) {
+      const labels = {
+        "TWSE ETF ranking": "證交所 ETF 清單",
+        "ETFInfo metrics": "ETFInfo 指標資料",
+        "MoneyDJ holdings": "MoneyDJ 持股資料",
+        "Official net purchase": "官方淨申購資料"
+      };
+      return labels[name] || name || "資料來源";
+    }
+
+    function etfSourceNoteLabel(note) {
+      const text = String(note || "");
+      const etfs = text.match(/^(\d+) ETFs$/);
+      if (etfs) return `${Number(etfs[1]).toLocaleString("zh-TW")} 檔 ETF`;
+      const metrics = text.match(/^(\d+) cached metric files$/);
+      if (metrics) return `${Number(metrics[1]).toLocaleString("zh-TW")} 份指標快取`;
+      const holdings = text.match(/^(\d+) cached holding files$/);
+      if (holdings) return `${Number(holdings[1]).toLocaleString("zh-TW")} 份持股快取`;
+      if (text === "waiting for stable public source") return "等待穩定公開來源";
+      return text;
+    }
+
     function applyEtfFilterPreset(preset) {
       const presets = {
         highDividend: { preset, minAsset: 300, minYield: 4, maxExpense: 1, completeOnly: true },
@@ -3642,14 +3682,14 @@
     }
 
     async function renderEtfSourceAdminPage() {
-      setEtfToolShell("ETF 資料來源管理", "ETF 自動更新與來源監控。", "API");
+      setEtfToolShell("ETF 資料來源狀態", "ETF 自動更新與來源監控。", "資料");
       try {
         const payload = await getJson(`${API_BASE}/etfs/source-status`);
         const data = payload.data || {};
-        $("activeEtfBadge").textContent = data.ranking?.status || "API";
+        $("activeEtfBadge").textContent = etfSourceStatusLabel(data.ranking?.status);
         $("activeEtfList").innerHTML = `
-          <div class="mini-pills"><div class="mini-pill tone-blue"><small>Ranking</small><strong>${data.ranking?.count || 0}</strong></div><div class="mini-pill tone-purple"><small>Metrics</small><strong>${data.metrics_cache_count || 0}</strong></div><div class="mini-pill tone-green"><small>Holdings</small><strong>${data.holding_cache_count || 0}</strong></div></div>
-          ${(data.sources || []).map(row => `<div class="status-row"><strong>${html(row.name)}</strong><div class="meta"><span>${html(row.note || "")}</span><span class="badge ${row.status === "ok" ? "green" : row.status === "pending" ? "amber" : "red"}">${html(row.status || "")}</span></div></div>`).join("")}
+          <div class="mini-pills"><div class="mini-pill tone-blue"><small>ETF 清單</small><strong>${data.ranking?.count || 0}</strong></div><div class="mini-pill tone-purple"><small>指標快取</small><strong>${data.metrics_cache_count || 0}</strong></div><div class="mini-pill tone-green"><small>持股快取</small><strong>${data.holding_cache_count || 0}</strong></div></div>
+          ${(data.sources || []).map(row => `<div class="status-row"><strong>${html(etfSourceNameLabel(row.name))}</strong><div class="meta"><span>${html(etfSourceNoteLabel(row.note))}</span><span class="badge ${etfSourceBadgeClass(row.status)}">${html(etfSourceStatusLabel(row.status))}</span></div></div>`).join("")}
         `;
       } catch (error) {
         $("activeEtfList").innerHTML = etfToolError(error);
