@@ -408,20 +408,20 @@
     }
 
     .card-title strong {
-      font-size: 18px;
+      font-size: 20px;
       line-height: 1.2;
     }
 
     .score {
       color: #facc15;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 800;
     }
 
     .signal-line {
       color: #c7d2fe;
       display: flex;
-      font-size: 12px;
+      font-size: 13px;
       gap: 8px;
       justify-content: space-between;
       line-height: 1.35;
@@ -452,14 +452,14 @@
     .info-row small {
       color: var(--muted);
       display: block;
-      font-size: 11px;
+      font-size: 12px;
     }
 
     .cell strong,
     .info-row strong {
       color: var(--ink);
       display: block;
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.25;
       margin-top: 2px;
       overflow-wrap: anywhere;
@@ -479,14 +479,14 @@
 
     .pill small {
       display: block;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
       margin-bottom: 2px;
     }
 
     .pill strong {
       display: block;
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.25;
       overflow-wrap: anywhere;
     }
@@ -503,7 +503,7 @@
 
     .card-button {
       color: var(--blue);
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 800;
       min-height: 38px;
       padding: 8px 4px;
@@ -533,7 +533,7 @@
 
     .flex-text {
       color: #344054;
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1.35;
       min-width: 0;
       overflow-wrap: normal;
@@ -546,10 +546,10 @@
     }
 
     .flex-text.lg,
-    .flex-text.xl { font-size: 16px; }
-    .flex-text.md { font-size: 14px; }
+    .flex-text.xl { font-size: 17px; }
+    .flex-text.md { font-size: 15px; }
     .flex-text.xs,
-    .flex-text.xxs { font-size: 11px; }
+    .flex-text.xxs { font-size: 12px; }
     .flex-text.bold { font-weight: 800; }
 
     .panel-head {
@@ -3056,10 +3056,11 @@
       const topSearch = $("topSearchWrap");
       const activeSearch = $("activeEtfSearchWrap");
       const activeHead = document.querySelector("#activeEtfView .panel-head");
-      if (topSearch) topSearch.style.display = "none";
-      if (activeSearch) activeSearch.style.display = nested ? "none" : "";
-      if (activeHead) activeHead.style.display = nested ? "none" : "";
-      setEtfHomeToolsVisible(!nested);
+      const isEtfView = Boolean(document.querySelector("#activeEtfView.active"));
+      if (topSearch) topSearch.style.display = isEtfView ? "none" : "";
+      if (activeSearch) activeSearch.style.display = isEtfView && nested ? "none" : "";
+      if (activeHead) activeHead.style.display = isEtfView && nested ? "none" : "";
+      setEtfHomeToolsVisible(isEtfView ? !nested : true);
     }
 
     function upcomingRowsHtml(rows) {

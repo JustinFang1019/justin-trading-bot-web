@@ -40,6 +40,13 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- Stock search visibility and font-size follow-up after user reported the stock-query search bar disappeared.
+  - Root cause: `setActiveEtfNestedChrome(false)` still hid `#topSearchWrap` when returning to `scanView`, so the ETF chrome accidentally hid the stock command search on the stock-query page.
+  - Web `index.html` now hides the top global stock-command search only while `activeEtfView` is active. ETF pages still keep their own ETF-specific search input.
+  - Stock-query typography was bumped one step larger for card titles, score, signal line, quote cells, info rows, entry/risk/RS pills, action buttons, and rendered LINE Flex text.
+  - Verification: `git diff --check` passed; script parsing via Node `new Function(...)` passed; local HTTP browser preview confirmed stock search visible on stock page, hidden on ETF page, and visible again after switching back.
+  - Recommended next prompt: "請在手機版重新整理個股查詢頁，確認搜尋欄和小卡字體大小是否順眼。"
+
 - LINE login diagnostics after user reported inability to log in.
   - Likely issue from current behavior: frontend showed only generic `登入失敗`, which corresponds more closely to backend `/auth/line` returning generic LINE id-token verification failure, not whitelist denial. Whitelist denial already maps to a separate `尚未在白名單` style message.
   - Web `index.html` now translates LINE login failures more clearly: expired token, LIFF/channel mismatch, id-token verify failure, and whitelist errors get distinct messages.
