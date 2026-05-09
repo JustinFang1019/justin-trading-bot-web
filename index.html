@@ -152,9 +152,31 @@
     .home-btn {
       align-items: center;
       display: flex;
-      font-size: 18px;
       justify-content: center;
       min-width: 44px;
+      position: relative;
+    }
+
+    .home-btn::before,
+    .home-btn::after {
+      background: var(--blue);
+      content: "";
+      display: block;
+      position: absolute;
+    }
+
+    .home-btn::before {
+      height: 17px;
+      transform: rotate(45deg);
+      width: 17px;
+      top: 10px;
+    }
+
+    .home-btn::after {
+      border-radius: 2px 2px 1px 1px;
+      height: 15px;
+      top: 19px;
+      width: 20px;
     }
 
     .back-btn:disabled {
@@ -1263,7 +1285,7 @@
           <span id="authStatus">LINE 登入檢查中</span>
           <button id="authButton" type="button">登入</button>
         </div>
-        <button class="home-btn" id="homeButton" type="button" aria-label="回主題首頁">⌂</button>
+        <button class="home-btn" id="homeButton" type="button" aria-label="回主題首頁"></button>
         <button class="back-btn" id="backButton" type="button" disabled>上一層</button>
       </div>
       <div class="filters">

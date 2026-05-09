@@ -332,3 +332,9 @@ Ask Codex:
   - Other tabs currently have no deeper home state, so the button reactivates the current tab and scrolls to top.
 - Preview artifacts created during discussion but not intended for production unless explicitly requested: `today-broadcast-preview.html`, `home-button-preview.png`.
 - Intentionally not changed: LINE command access rules, backend APIs, ETF data behavior, and original LINE bot card/strategy logic.
+
+## 2026-05-09 Solid Home Icon Tweak
+
+- User said the Home icon looked too simple and asked for a larger solid house.
+- Updated `index.html` on branch `codex/solid-home-icon`: the toolbar Home button now uses a larger solid blue CSS house mark instead of the text glyph `⌂`.
+- Behavior is unchanged from the previous Home button implementation.
