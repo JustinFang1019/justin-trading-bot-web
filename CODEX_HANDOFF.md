@@ -40,6 +40,16 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- User asked to formally connect ETF APIs so the production UI is usable, not just preview/mock.
+  - Backend repo used for Render/API work: `C:\Users\Siriu\Documents\New project\justin-trading-bot-main-deploy`.
+  - Backend changes in `stock_scanner/web_api.py`: added ETFInfo metrics cache for total expense ratio, trailing yield, premium/discount, NAV/market price, AUM, beneficiaries, dividend history; merged those metrics into `/api/web/etfs` and `/api/web/etfs/<code>`.
+  - New read-only ETF endpoints added: `/api/web/etfs/flow`, `/api/web/etfs/compare`, `/api/web/etfs/overlap-matrix`, `/api/web/etfs/dividends/calendar`, `/api/web/etfs/stock-flow/<stock_id>`, `/api/web/etfs/holding-trends/<code>`, `/api/web/etfs/source-status`.
+  - Frontend changes in `index.html`: removed ETF mock/fallback numbers and wired the ETF second-layer pages to the new endpoints. The home fund-flow summary now uses actual API fields already present in ranking rows instead of hard-coded sample values.
+  - Important data caveat: a stable public official net-subscription/net-purchase endpoint has not been found yet. The flow endpoint returns `complete:false` and uses available scale-delta/cache fields, so the UI remains honest while still useful.
+  - Verification: frontend script parsed successfully with Node `new Function(...)`; `git diff --check` passed in both web and backend repos. Python compile check could not run locally because Python is not installed/in PATH on this machine.
+  - Deployment note: this is now a backend/API change, so Render needs to deploy the bot API after the backend commit is pushed/merged to the deployed branch. The static GitHub Pages web push alone is not enough for these new endpoints.
+  - Recommended next prompt: "幫我看 Render 部署後的 `/api/web/etfs/compare`、`/api/web/etfs/flow` 回傳，再照實際資料修 ETF UI。"
+
 - ETF UI plan moved from preview into production `index.html` after user asked to implement every item from two spec previews and push live.
   - Spec sources read and treated as design reference: `C:\Users\Siriu\Downloads\justin-trading-bot-etf-ui-preview.html` and `C:\Users\Siriu\Downloads\justin-trading-bot-etf-extra-preview.html`.
   - Production ETF home now has an ETF fund-flow summary card, an eight-item feature grid (`ETF 比較`, `進階篩選`, `資金流向`, `持股重疊`, `配息行事曆`, `個股 ETF 動向`, `持股 14 日趨勢`, `資料來源狀態`), the existing upcoming ETF entry, and ETF ranking rows.
