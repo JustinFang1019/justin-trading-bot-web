@@ -3142,24 +3142,24 @@
       const outflowTotal = outflows.reduce((sum, row) => sum + row.flowValue, 0);
       const topIn = inflows[0];
       const topOut = outflows[0];
+      const hasFlowData = inflows.length || outflows.length;
       flow.innerHTML = `
         <section class="etf-flow-summary">
           <div>
             <div class="panel-title">ETF 資金流向</div>
-            <div class="panel-sub">以目前 API 可取得的規模變化 / 淨流資料呈現。</div>
+            <div class="panel-sub">以目前 API 可取得的規模變化 / 淨流資料呈現；非交易日會等待快取。</div>
           </div>
           <div class="etf-period-tabs">
             <button class="active" data-etf-tool="flow" type="button">今日</button>
-            <button data-etf-tool="flow" type="button">本週</button>
-            <button data-etf-tool="flow" type="button">近30日</button>
+            <button data-etf-tool="flow" type="button">詳情</button>
           </div>
           <div class="etf-flow-grid">
-            <div class="etf-flow-stat"><small>流入合計</small><strong>${fmtBillionSigned(inflowTotal, "待資料")}</strong></div>
-            <div class="etf-flow-stat"><small>流出合計</small><strong>${fmtBillionSigned(outflowTotal, "待資料")}</strong></div>
+            <div class="etf-flow-stat"><small>流入合計</small><strong>${hasFlowData ? fmtBillionSigned(inflowTotal, "待資料") : "待交易日快取"}</strong></div>
+            <div class="etf-flow-stat"><small>流出合計</small><strong>${hasFlowData ? fmtBillionSigned(outflowTotal, "待資料") : "待交易日快取"}</strong></div>
           </div>
           ${topIn ? `<div class="etf-flow-mini"><div><strong>${html(topIn.code)} ${html(topIn.name || "")}</strong><span>目前流入最高</span></div><b>${fmtBillionSigned(topIn.flowValue)}</b></div>` : ""}
           ${topOut ? `<div class="etf-flow-mini"><div><strong>${html(topOut.code)} ${html(topOut.name || "")}</strong><span>目前流出最高</span></div><b class="neg">${fmtBillionSigned(topOut.flowValue)}</b></div>` : ""}
-          ${flowRows.length ? "" : `<div class="message">目前尚無資金流向快照，Render API 建立快取後會顯示。</div>`}
+          ${hasFlowData ? "" : `<div class="message">目前尚無可判斷的流入/流出快照，點「詳情」可看原因與可先觀察清單。</div>`}
         </section>
       `;
     }
@@ -3448,6 +3448,36 @@
       return text;
     }
 
+    function etfFlowFieldLabel(field) {
+      const labels = {
+        net_flow_5d_billion: "近5日淨流",
+        asset_delta_billion: "規模變化"
+      };
+      return labels[field] || "可用快取";
+    }
+
+    function etfFlowSourceLabel(source) {
+      const labels = {
+        "TWSE ETF ranking + cached ETFInfo metrics": "證交所 ETF 清單 + ETFInfo 指標快取"
+      };
+      return labels[source] || source || "資料來源";
+    }
+
+    function etfFlowUnavailableHtml(data = {}) {
+      const watchRows = activeEtfs
+        .filter(row => Number.isFinite(Number(row.asset_size_billion)))
+        .slice()
+        .sort((a, b) => Number(b.asset_size_billion || 0) - Number(a.asset_size_billion || 0))
+        .slice(0, 8);
+      return `
+        <div class="message">
+          目前這個快照不能判斷真正的流入 / 流出。官方淨申購資料還在等待穩定公開來源；週末或還沒有前後交易日快照時，不能把 0 億當成真的沒有資金流。
+        </div>
+        <div class="section-title">可先觀察 <span>規模大且指標較完整的 ETF</span></div>
+        ${watchRows.map((row, index) => `<div class="etf-row" data-etf-code="${html(row.code)}"><div class="etf-line"><strong><span class="rank">#${index + 1}</span> ${html(row.code)} ${html(row.name || "")}</strong><span>${fmtBillion(row.asset_size_billion)}</span></div><div class="meta"><span>${html(row.category || "")}</span><span>${html(row.issuer || "")}</span><span>資料狀態 ${html(row.asset_delta_state === "non_trading_day" ? "非交易日" : row.asset_delta_state === "pending_previous" ? "等待前後快照" : "可觀察")}</span></div>${metricPillsHtml(row)}</div>`).join("") || `<div class="message">目前 ETF 清單尚未載入，請回 ETF 研究首頁重新整理。</div>`}
+      `;
+    }
+
     function applyEtfFilterPreset(preset) {
       const presets = {
         highDividend: { preset, minAsset: 300, minYield: 4, maxExpense: 1, completeOnly: true },
@@ -3527,33 +3557,38 @@
     }
 
     async function renderEtfFlowPage() {
-      setEtfToolShell("ETF 資金流向", "今日、本週、近 30 日流入流出排行。", "API");
+      setEtfToolShell("ETF 資金流向", "以可取得的淨流與規模變化判斷流入流出。", "資料");
       try {
         const payload = await getJson(`${API_BASE}/etfs/flow`);
         const data = payload.data || {};
-        $("activeEtfBadge").textContent = data.data_date || "API";
+        const inflows = data.inflows || [];
+        const outflows = data.outflows || [];
+        const hasFlowData = inflows.length || outflows.length;
+        $("activeEtfBadge").textContent = hasFlowData ? (data.data_date || "資料") : "等待快取";
         const flowRow = (row, index, tone) => `
           <div class="change-row ${tone === "red" ? "decreased" : "increased"}" data-etf-code="${html(row.code)}">
             <div class="change-main">
               <div class="change-title"><div class="code">${index + 1}</div><div class="name">${html(row.code)} ${html(row.name || "")}</div></div>
-              <div class="change-tags"><span>${html(row.category || "")}</span><span>${html(row.source_field || "")}</span><span>規模 ${fmtBillion(row.asset_size_billion)}</span></div>
+              <div class="change-tags"><span>${html(row.category || "")}</span><span>${html(etfFlowFieldLabel(row.source_field))}</span><span>規模 ${fmtBillion(row.asset_size_billion)}</span></div>
             </div>
             <div class="delta ${tone === "red" ? "tone-red" : "tone-green"}">${html(row.flow_text || fmtBillionSigned(row.flow_billion))}<small>${tone === "red" ? "流出" : "流入"}</small></div>
           </div>
         `;
         $("activeEtfList").innerHTML = `
           <div class="etf-flow-summary">
-            <div class="etf-period-tabs"><button class="active" type="button">近5日/規模變化</button><button type="button">本週</button><button type="button">近30日</button></div>
+            <div class="etf-period-tabs"><button class="active" type="button">近5日/規模變化</button><button type="button" disabled>本週</button><button type="button" disabled>近30日</button></div>
             <div class="etf-flow-grid">
-              <div class="etf-flow-stat"><small>流入合計</small><strong>${fmtBillionSigned(data.inflow_total_billion, "待資料")}</strong></div>
-              <div class="etf-flow-stat"><small>流出合計</small><strong>${fmtBillionSigned(data.outflow_total_billion, "待資料")}</strong></div>
+              <div class="etf-flow-stat"><small>流入合計</small><strong>${hasFlowData ? fmtBillionSigned(data.inflow_total_billion, "待資料") : "待交易日快取"}</strong></div>
+              <div class="etf-flow-stat"><small>流出合計</small><strong>${hasFlowData ? fmtBillionSigned(data.outflow_total_billion, "待資料") : "待交易日快取"}</strong></div>
             </div>
           </div>
           ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
-          <div class="section-title">流入 Top 10 <span>${html(data.source || "")}</span></div>
-          ${(data.inflows || []).map((row, index) => flowRow(row, index, "green")).join("") || `<div class="message">目前沒有流入資料。</div>`}
-          <div class="section-title">流出 Top 10 <span>排序由流出幅度大到小</span></div>
-          ${(data.outflows || []).map((row, index) => flowRow(row, index, "red")).join("") || `<div class="message">目前沒有流出資料。</div>`}
+          ${hasFlowData ? `
+            <div class="section-title">流入 Top 10 <span>${html(etfFlowSourceLabel(data.source))}</span></div>
+            ${inflows.map((row, index) => flowRow(row, index, "green")).join("") || `<div class="message">目前沒有流入資料。</div>`}
+            <div class="section-title">流出 Top 10 <span>排序由流出幅度大到小</span></div>
+            ${outflows.map((row, index) => flowRow(row, index, "red")).join("") || `<div class="message">目前沒有流出資料。</div>`}
+          ` : etfFlowUnavailableHtml(data)}
         `;
       } catch (error) {
         $("activeEtfList").innerHTML = etfToolError(error);

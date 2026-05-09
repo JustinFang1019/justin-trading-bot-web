@@ -46,7 +46,8 @@ It is not yet a real backend or LINE/LIFF app.
   - `個股「被加碼/減碼」週報` now has a stock-code search input and quick-pick chips, instead of being fixed to `2330`.
   - `ETF 持股 14 日趨勢` was clarified so it means "choose an ETF, then inspect that ETF's component-stock weight changes"; it now has an ETF-code input and quick-pick chips instead of silently using fixed `00919`.
   - `ETF 資料來源狀態` now translates backend/source health labels into Chinese (`ETF 清單`, `指標快取`, `持股快取`, `正常`, `建立中`, etc.) instead of surfacing raw English API names.
-  - Verification: frontend script parsed with Node `new Function(...)`; `git diff --check` passed. Local browser check via `http://127.0.0.1:8766/index.html` confirmed the compare input/chips, filter controls, stock-flow search/quick-pick controls, holding-trend ETF selector, and Chinese source-status labels render. Clicking `2454` in `個股 ETF 動向` updated the query to `2454 聯發科`; clicking `00878` in `ETF 持股 14 日趨勢` updated the page to `00878 成分股權重趨勢`.
+  - `ETF 資金流向` now handles empty/non-trading snapshots explicitly: it shows `待交易日快取` instead of misleading `0 億`, disables unsupported period tabs, explains why true flow is unavailable, and provides a fallback watch list from the ETF ranking.
+  - Verification: frontend script parsed with Node `new Function(...)`; `git diff --check` passed. Local browser check via `http://127.0.0.1:8766/index.html` confirmed the compare input/chips, filter controls, stock-flow search/quick-pick controls, holding-trend ETF selector, Chinese source-status labels, and flow empty-state/fallback list render. Clicking `2454` in `個股 ETF 動向` updated the query to `2454 聯發科`; clicking `00878` in `ETF 持股 14 日趨勢` updated the page to `00878 成分股權重趨勢`.
   - Recommended next prompt: "ETF 比較和進階篩選實機看起來怎樣？要不要再加自訂欄位排序或儲存常用比較組？"
 
 - User asked to formally connect ETF APIs so the production UI is usable, not just preview/mock.
