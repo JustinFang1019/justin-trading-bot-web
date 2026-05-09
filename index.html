@@ -118,7 +118,7 @@
     .controls {
       display: grid;
       gap: 8px;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) auto auto;
     }
 
     .search {
@@ -138,7 +138,8 @@
       width: 100%;
     }
 
-    .back-btn {
+    .back-btn,
+    .home-btn {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -146,6 +147,14 @@
       cursor: pointer;
       font-weight: 900;
       padding: 10px 12px;
+    }
+
+    .home-btn {
+      align-items: center;
+      display: flex;
+      font-size: 18px;
+      justify-content: center;
+      min-width: 44px;
     }
 
     .back-btn:disabled {
@@ -1254,6 +1263,7 @@
           <span id="authStatus">LINE 登入檢查中</span>
           <button id="authButton" type="button">登入</button>
         </div>
+        <button class="home-btn" id="homeButton" type="button" aria-label="回主題首頁">⌂</button>
         <button class="back-btn" id="backButton" type="button" disabled>上一層</button>
       </div>
       <div class="filters">
@@ -2070,6 +2080,33 @@
       }
     }
 
+    function activeViewId() {
+      return document.querySelector(".view.active")?.id || "scanView";
+    }
+
+    function goTopicHome() {
+      const viewId = activeViewId();
+      if (viewId === "activeEtfView") {
+        activeEtfSearch = "";
+        activeEtfFilter = "all";
+        $("activeEtfSearch").value = "";
+        document.querySelectorAll("[data-etf-filter]").forEach(button => {
+          button.classList.toggle("active", button.dataset.etfFilter === "all");
+        });
+        if (activeEtfs.length) renderActiveEtfRanking();
+        else loadActiveEtfs();
+      } else if (viewId === "scanView") {
+        commandHistory = [];
+        $("searchInput").value = "";
+        setPageForCommand("");
+        renderWebHelp();
+      } else {
+        activate(viewId);
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      updateBackButton();
+    }
+
     function updateBackButton() {
       const etfNested = Boolean(document.querySelector("#activeEtfView.active") && activeEtfLevel !== "ranking");
       $("backButton").textContent = "上一層";
@@ -2860,6 +2897,7 @@
       }
     });
     $("backButton").addEventListener("click", goBack);
+    $("homeButton").addEventListener("click", goTopicHome);
     $("menuButton").addEventListener("click", () => {
       $("drawerOverlay").classList.add("open");
       $("drawerOverlay").setAttribute("aria-hidden", "false");
