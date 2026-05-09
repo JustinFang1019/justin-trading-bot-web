@@ -735,11 +735,21 @@
 
     .upcoming-main strong {
       display: block;
-      font-size: 16px;
+      font-size: 17px;
       line-height: 1.25;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .upcoming-main .upcoming-code {
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .upcoming-main .upcoming-name {
+      color: var(--ink);
+      font-weight: 900;
     }
 
     .upcoming-main span {
@@ -798,9 +808,26 @@
     }
 
     .upcoming-detail-hero h2 {
-      font-size: 20px;
-      line-height: 1.25;
+      font-size: 19px;
+      line-height: 1.22;
       margin: 0;
+      word-break: keep-all;
+    }
+
+    .upcoming-detail-hero .upcoming-hero-code {
+      color: #fff;
+      display: block;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 3px;
+    }
+
+    .upcoming-detail-hero .upcoming-hero-name {
+      color: #fff;
+      display: block;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0;
     }
 
     .upcoming-detail-hero p {
@@ -2308,6 +2335,11 @@
       if (badge) badge.textContent = `${upcomingEtfs.length} 檔`;
     }
 
+    function setEtfTypeTabsVisible(visible) {
+      const tabs = $("etfTypeTabs");
+      if (tabs) tabs.style.display = visible ? "" : "none";
+    }
+
     function upcomingRowsHtml(rows) {
       return rows.map(etf => `
         <button class="upcoming-etf-row" data-upcoming-etf-code="${html(etf.code)}" type="button">
@@ -2316,7 +2348,7 @@
             <span>${html(etf.listingDate)}</span>
           </div>
           <div class="upcoming-main">
-            <strong>${html(etf.code)} ${html(etf.name)}</strong>
+            <strong><span class="upcoming-code">${html(etf.code)}</span> <span class="upcoming-name">${html(etf.name)}</span></strong>
             <span>${html(etf.issuer)}・募集 ${html(etf.offeringPeriod)}</span>
             <div class="upcoming-tags">
               ${(etf.tags || []).map((tag, index) => `<span class="upcoming-tag ${index === 0 ? "green" : index === 1 ? "purple" : "amber"}">${html(tag)}</span>`).join("")}
@@ -2331,6 +2363,7 @@
       activeEtfLevel = "upcomingList";
       selectedEtf = null;
       setUpcomingEntryVisible(false);
+      setEtfTypeTabsVisible(false);
       const rows = visibleUpcomingEtfs();
       setPageHeader("ETF 研究", "即將上市 ETF");
       $("activeEtfTitle").textContent = "即將上市 ETF";
@@ -2349,6 +2382,7 @@
       activeEtfLevel = "upcoming";
       selectedEtf = null;
       setUpcomingEntryVisible(false);
+      setEtfTypeTabsVisible(false);
       setPageHeader("ETF 研究", `${etf.code} 即將上市 ETF`);
       $("activeEtfTitle").textContent = `${etf.code} 即將上市`;
       $("activeEtfSub").textContent = `${etf.name} · ${etf.issuer}`;
@@ -2356,7 +2390,7 @@
       $("activeEtfList").innerHTML = `
         <div class="upcoming-detail-card">
           <div class="upcoming-detail-hero">
-            <h2>${html(etf.code)} ${html(etf.name)}</h2>
+            <h2><span class="upcoming-hero-code">${html(etf.code)}</span><span class="upcoming-hero-name">${html(etf.name)}</span></h2>
             <p>${html(etf.issuer)}・${html(etf.type)}・${html(etf.market)}</p>
           </div>
           <div class="mini-pills">
@@ -2436,6 +2470,7 @@
       activeEtfLevel = "ranking";
       selectedEtf = null;
       setUpcomingEntryVisible(true);
+      setEtfTypeTabsVisible(true);
       setPageHeader("ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。");
       $("activeEtfTitle").textContent = "ETF 研究";
       $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，全部 ETF 依規模排序；可輸入 ETF 或個股代號。` : "盤後每日更新，Web 只讀快照。";
@@ -2501,6 +2536,8 @@
         return;
       }
       activeEtfLevel = "detail";
+      setUpcomingEntryVisible(false);
+      setEtfTypeTabsVisible(false);
       setPageHeader("ETF 研究", `${selectedEtf.code} 持股變化`);
       $("activeEtfTitle").textContent = `${selectedEtf.code} 持股變化`;
       $("activeEtfSub").textContent = `${selectedEtf.name || selectedEtf.ranking?.name || ""} · ${selectedEtf.data_date || activeEtfPayload?.data_date || ""}`;
@@ -2540,6 +2577,8 @@
 
     function renderEtfOverlap(data = {}) {
       activeEtfLevel = "overlap";
+      setUpcomingEntryVisible(false);
+      setEtfTypeTabsVisible(false);
       setPageHeader("ETF 研究", "共同持有 ETF");
       $("activeEtfTitle").textContent = `${data.stock_id || ""} ${data.stock_name || ""}`;
       $("activeEtfSub").textContent = "共同持有這檔個股的 ETF，依權重由大到小排序。";
