@@ -1128,6 +1128,14 @@
       line-height: 1.1;
     }
 
+    .etf-price-line small {
+      color: var(--muted);
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
     .etf-price-line span {
       color: var(--green);
       font-size: 12px;
@@ -1589,8 +1597,9 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       color: var(--muted);
-      line-height: 1.6;
-      padding: 16px;
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 10px;
       text-align: center;
     }
 
@@ -1984,7 +1993,6 @@
     let etfStockFlowId = "2330";
     let etfHoldingTrendCode = "00919";
     let etfFlowPeriod = "1m";
-    let etfFlowLastPayload = null;
     let etfFilterSettings = {
       preset: "highDividend",
       query: "",
@@ -2722,6 +2730,8 @@
       document.querySelectorAll("[data-menu-view]").forEach(b => b.classList.toggle("active", b.dataset.menuView === viewId));
       if (viewId === "activeEtfView") {
         $("searchInput").value = "";
+      } else {
+        $("topSearchWrap").style.display = "";
       }
       const titleMap = {
         scanView: ["個股查詢", "未登入可使用說明小卡上的示範指令；其它個股請加入 LINE bot。"],
@@ -3032,7 +3042,7 @@
       const topSearch = $("topSearchWrap");
       const activeSearch = $("activeEtfSearchWrap");
       const activeHead = document.querySelector("#activeEtfView .panel-head");
-      if (topSearch) topSearch.style.display = nested ? "none" : "";
+      if (topSearch) topSearch.style.display = "none";
       if (activeSearch) activeSearch.style.display = nested ? "none" : "";
       if (activeHead) activeHead.style.display = nested ? "none" : "";
       setEtfHomeToolsVisible(!nested);
@@ -3157,10 +3167,10 @@
 
     function etfDecisionMetrics(etf = {}) {
       return {
-        flow5d: firstValue(etf.net_flow_5d_text, etf.net_flow_5d, etf.net_flow_5d_billion != null ? fmtBillionSigned(etf.net_flow_5d_billion) : "", etf.asset_delta_billion != null ? fmtBillionSigned(etf.asset_delta_billion) : "", "查資金流"),
-        yield12m: firstValue(etf.yield_12m_text, etf.yield_12m != null ? fmtPctValue(etf.yield_12m) : "", "待資料"),
-        expense: firstValue(etf.expense_ratio_text, etf.expense_ratio != null ? fmtPctValue(etf.expense_ratio) : "", "待資料"),
-        premium: firstValue(etf.nav_premium_text, etf.nav_premium != null ? fmtPctValue(etf.nav_premium) : "", "待資料")
+        flow5d: firstValue(etf.net_flow_5d_text, etf.net_flow_5d, etf.net_flow_5d_billion != null ? fmtBillionSigned(etf.net_flow_5d_billion) : "", etf.asset_delta_billion != null ? fmtBillionSigned(etf.asset_delta_billion) : "", "看詳情"),
+        yield12m: firstValue(etf.yield_12m_text, etf.yield_12m != null ? fmtPctValue(etf.yield_12m) : "", "未公布"),
+        expense: firstValue(etf.expense_ratio_text, etf.expense_ratio != null ? fmtPctValue(etf.expense_ratio) : "", "未公布"),
+        premium: firstValue(etf.nav_premium_text, etf.nav_premium != null ? fmtPctValue(etf.nav_premium) : "", "未公布")
       };
     }
 
@@ -3188,7 +3198,6 @@
       const m = etfDecisionMetrics(etf);
       return `
         <div class="metric-pills">
-          <div class="mini-pill tone-green"><small>資金/規模</small><strong>${html(m.flow5d)}</strong></div>
           <div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${html(m.yield12m)}</strong></div>
           <div class="mini-pill tone-blue"><small>費用率/經保費</small><strong>${html(m.expense)}</strong></div>
           <div class="mini-pill tone-amber"><small>折溢價</small><strong>${html(m.premium)}</strong></div>
@@ -3198,37 +3207,6 @@
 
     function findEtf(code) {
       return activeEtfs.find(etf => String(etf.code || "").toUpperCase() === String(code || "").toUpperCase()) || { code };
-    }
-
-    function renderActiveEtfFlowSummary() {
-      const flow = $("activeEtfFlowSummary");
-      if (!flow) return;
-      const data = etfFlowLastPayload;
-      const inflows = data?.inflows || [];
-      const outflows = data?.outflows || [];
-      const inflowTotal = inflows.reduce((sum, row) => sum + Number(row.flow_billion || 0), 0);
-      const outflowTotal = outflows.reduce((sum, row) => sum + Number(row.flow_billion || 0), 0);
-      const topIn = inflows[0];
-      const topOut = outflows[0];
-      const hasFlowData = inflows.length || outflows.length;
-      flow.innerHTML = `
-        <section class="etf-flow-summary">
-          <div>
-            <div class="panel-title">ETF 資金流向</div>
-            <div class="panel-sub">${data ? `資料期 ${html(data.data_date || "待資料")} · 月申購/贖回，非盤中買賣超。` : "月申購/贖回屬低頻資料，進入詳情時讀取。"}</div>
-          </div>
-          <div class="etf-period-tabs">
-            <button data-etf-tool="flow" type="button">詳情</button>
-          </div>
-          <div class="etf-flow-grid">
-            <div class="etf-flow-stat"><small>流入合計</small><strong>${hasFlowData ? fmtBillionSigned(data.inflow_total_billion ?? inflowTotal, "待資料") : "待資料"}</strong></div>
-            <div class="etf-flow-stat"><small>流出合計</small><strong>${hasFlowData ? fmtBillionSigned(data.outflow_total_billion ?? outflowTotal, "待資料") : "待資料"}</strong></div>
-          </div>
-          ${topIn ? `<div class="etf-flow-mini"><div><strong>${html(topIn.code)} ${html(topIn.name || "")}</strong><span>${html(topIn.flow_period || "淨申贖流入最高")}</span></div><b>${html(topIn.flow_text || fmtBillionSigned(topIn.flow_billion))}</b></div>` : ""}
-          ${topOut ? `<div class="etf-flow-mini"><div><strong>${html(topOut.code)} ${html(topOut.name || "")}</strong><span>${html(topOut.flow_period || "淨申贖流出最高")}</span></div><b class="neg">${html(topOut.flow_text || fmtBillionSigned(topOut.flow_billion))}</b></div>` : ""}
-          ${hasFlowData ? "" : `<div class="message">為了加快 ETF 首頁，資金流向不在首頁預抓；點「詳情」再讀取近月申贖。</div>`}
-        </section>
-      `;
     }
 
     function renderActiveEtfRanking() {
@@ -3243,7 +3221,8 @@
       $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，全部 ETF 依規模排序；可輸入 ETF 或個股代號。` : "盤後每日更新，Web 只讀快照。";
       const rows = visibleActiveEtfs();
       $("activeEtfBadge").textContent = `${rows.length || 0}/${activeEtfs.length || 0} 檔`;
-      renderActiveEtfFlowSummary();
+      const flow = $("activeEtfFlowSummary");
+      if (flow) flow.innerHTML = "";
       $("activeEtfList").innerHTML = rows.length ? rows.map((etf, index) => {
         return `
           <div class="etf-row" data-etf-code="${html(etf.code)}">
@@ -3326,13 +3305,12 @@
         <div class="etf-hero">
           <h2>${html(selectedEtf.code || rank.code || "")} ${html(heroName)}</h2>
           <p>${html(heroSub || "ETF 持股明細")}・${html(selectedEtf.data_date || activeEtfPayload?.data_date || "")}</p>
-          <div class="etf-price-line"><strong>${fmtNumber(rank.close_price)}</strong><span>${fmtSignedPct(rank.change_rate)}</span></div>
+          <div class="etf-price-line"><div><small>收盤價</small><strong>${fmtNumber(rank.close_price)}</strong></div><span>${fmtSignedPct(rank.change_rate)}</span></div>
         </div>
         <div class="mini-pills">
           <div class="mini-pill tone-blue"><small>費用率/經保費</small><strong>${html(heroMetrics.expense)}</strong></div>
           <div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${html(heroMetrics.yield12m)}</strong></div>
           <div class="mini-pill tone-amber"><small>折溢價</small><strong>${html(heroMetrics.premium)}</strong></div>
-          <div class="mini-pill tone-green"><small>資金/規模</small><strong>${html(heroMetrics.flow5d)}</strong></div>
           <div class="mini-pill tone-blue"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
           <div class="mini-pill tone-purple"><small>受益人</small><strong>${fmtHolders(rank.holders)}</strong></div>
         </div>
@@ -3361,11 +3339,17 @@
       $("activeEtfSub").textContent = "共同持有這檔個股的 ETF，依權重由大到小排序。";
       $("activeEtfBadge").textContent = `${(data.etfs || []).length} 檔`;
       const warning = data.complete === false ? `<div class="message">${html(data.warning || "共同持有清單目前來自已快取 ETF，尚非完整全市場。")}</div>` : "";
+      const top = (data.etfs || [])[0] || {};
       $("activeEtfList").innerHTML = `
+        <div class="etf-hero">
+          <h2>${html(data.stock_id || "")} ${html(data.stock_name || "")}</h2>
+          <p>共同持有 ETF，依目前持股權重排序。</p>
+          <div class="etf-price-line"><div><small>最高 ETF 權重</small><strong>${top.weight ?? "-"}%</strong></div><span>${html(top.code || "")}</span></div>
+        </div>
         <div class="mini-pills">
           <div class="mini-pill tone-purple"><small>共同 ETF</small><strong>${(data.etfs || []).length} 檔</strong></div>
-          <div class="mini-pill tone-amber"><small>最高權重</small><strong>${(data.etfs || [])[0]?.weight ?? "-"}%</strong></div>
-          <div class="mini-pill tone-green"><small>已掃快取</small><strong>${data.scanned_cached_etf_count || 0}/${data.ranking_count || 0}</strong></div>
+          <div class="mini-pill tone-amber"><small>最高權重</small><strong>${top.weight ?? "-"}%</strong></div>
+          <div class="mini-pill tone-green"><small>已掃資料</small><strong>${data.scanned_cached_etf_count || 0}/${data.ranking_count || 0}</strong></div>
         </div>
         ${warning}
         ${(data.etfs || []).map(row => `
@@ -3741,8 +3725,8 @@
           <div class="etf-flow-summary">
             <div class="etf-period-tabs"><button class="${etfFlowPeriod === "1m" ? "active" : ""}" data-etf-flow-period="1m" type="button">近1月</button><button class="${etfFlowPeriod === "3m" ? "active" : ""}" data-etf-flow-period="3m" type="button">近3月</button><button class="${etfFlowPeriod === "12m" ? "active" : ""}" data-etf-flow-period="12m" type="button">近12月</button></div>
             <div class="etf-flow-grid">
-              <div class="etf-flow-stat"><small>流入合計</small><strong>${hasFlowData ? fmtBillionSigned(data.inflow_total_billion, "待資料") : "待資料"}</strong></div>
-              <div class="etf-flow-stat"><small>流出合計</small><strong>${hasFlowData ? fmtBillionSigned(data.outflow_total_billion, "待資料") : "待資料"}</strong></div>
+              <div class="etf-flow-stat"><small>流入合計</small><strong>${hasFlowData ? fmtBillionSigned(data.inflow_total_billion, "無申贖資料") : "無申贖資料"}</strong></div>
+              <div class="etf-flow-stat"><small>流出合計</small><strong>${hasFlowData ? fmtBillionSigned(data.outflow_total_billion, "無申贖資料") : "無申贖資料"}</strong></div>
             </div>
           </div>
           <div class="upcoming-note">這裡是基金月申購/贖回，不是盤中即時買賣超；盤後同一個資料期通常不會變動。</div>
@@ -3777,7 +3761,6 @@
             <div class="label">費用率/經保費</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).expense)}</div>`).join("")}
             <div class="label">近12月殖利率</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).yield12m)}</div>`).join("")}
             <div class="label">折溢價</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).premium)}</div>`).join("")}
-            <div class="label">資金/規模</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).flow5d)}</div>`).join("")}
             <div class="label">持股檔數</div>${rows.map(row => `<div>${row.holding_count || 0}</div>`).join("")}
           </div></div>
           <div class="section-title">持股重疊 <span>sum(min(weightA, weightB))</span></div>

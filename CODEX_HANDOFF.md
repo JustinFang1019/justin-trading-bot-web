@@ -40,6 +40,17 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- ETF UI clarity cleanup after user screenshot feedback.
+  - Web `index.html` now hides the global stock-command search bar on ETF pages, leaving only the ETF-specific search input.
+  - Removed the ETF home fund-flow card entirely because it was not intraday and duplicated the dedicated detail page. Fund flow remains available from the feature grid/detail page.
+  - ETF detail hero now labels the large price as `收盤價`, so it is clear that the big number is a price.
+  - Removed the misleading `資金/規模` metric pill/table row from ETF list/detail/compare; fund flow is handled in its own page.
+  - Changed missing metric display from `待資料` to `未公布`, which better reflects missing public disclosures such as young ETFs without 12-month yield or total expense ratio.
+  - Reduced generic note/message font size so explanatory text no longer dominates the UI.
+  - Common-holding pages now include a top stock info card with stock id/name and highest ETF weight before the ETF list.
+  - Verification: web script parsed successfully with Node `new Function(...)`; local browser preview confirmed no global stock search on ETF page, no ETF home fund-flow card, detail page shows `收盤價`, no `資金/規模` pill, and common-holding page has the new stock info card.
+  - Recommended next prompt: "再看手機版 ETF 明細與共同持有頁，確認說明文字大小和欄位語意是否順眼。"
+
 - ETF API speed fix after user reported slow ETF loading.
   - Backend `stock_scanner/web_api.py` bumped `ACTIVE_ETF_CACHE_VERSION` to 8 and changed ETF ranking enrichment to fast mode by default.
   - `/api/web/etfs` now merges only already-cached ETFInfo metrics from disk and no longer blocks the ETF home list on fetching many ETFInfo detail pages. Missing metrics are fetched lazily by ETF detail/compare/calendar flows instead.
