@@ -48,6 +48,8 @@ It is not yet a real backend or LINE/LIFF app.
   - Important data caveat: a stable public official net-subscription/net-purchase endpoint has not been found yet. The flow endpoint returns `complete:false` and uses available scale-delta/cache fields, so the UI remains honest while still useful.
   - Verification: frontend script parsed successfully with Node `new Function(...)`; `git diff --check` passed in both web and backend repos. Python compile check could not run locally because Python is not installed/in PATH on this machine.
   - Deployment note: this is now a backend/API change, so Render needs to deploy the bot API after the backend commit is pushed/merged to the deployed branch. The static GitHub Pages web push alone is not enough for these new endpoints.
+  - Post-push fix: Render validation showed `/api/web/etfs/flow`, `/compare`, and `/source-status` were initially being captured by the older `/api/web/etfs/<code>` route. Backend commit `d51a46e` added reserved-route dispatch so fixed ETF tool endpoints return their real payloads.
+  - Live validation after Render deploy: `/api/web/etfs/source-status` returned ranking 225 ETFs, 9 ETFInfo metric caches, 13 MoneyDJ holding caches; `/api/web/etfs/compare?codes=00878,00919,00940` returned expense/yield/premium/AUM/overlap data; `/api/web/etfs/flow` returned `complete:false` with empty flow rows on the weekend/non-trading snapshot.
   - Recommended next prompt: "幫我看 Render 部署後的 `/api/web/etfs/compare`、`/api/web/etfs/flow` 回傳，再照實際資料修 ETF UI。"
 
 - ETF UI plan moved from preview into production `index.html` after user asked to implement every item from two spec previews and push live.
