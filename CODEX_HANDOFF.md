@@ -278,6 +278,7 @@ Important implementation notes:
 - The auth panel is placed before the `上一層` button, so the hierarchy button stays on the right side. The `上一層` label remains the standard wording for returning one app layer, not browser history.
 - Source links (`TWSE`, `MoneyDJ`, `ETFInfo`) were toned down to white buttons with a thin border so they read as auxiliary references instead of primary actions.
 - ETF holding/change rows now make the stock name beside the stock code darker and heavier. Badges such as `3/3 檔` must stay on one line.
+- Preview convention: when the user says `預覽`, use the existing local HTML preview style and size, especially `C:/Users/Siriu/Documents/justin-trading-bot-web/active-etf-detail-preview.html`. Keep it as a narrow mobile mockup around 430px wide, with compact font sizes, white cards, 8px radius, and the Codex in-app browser on the right. Do not switch to a wide desktop mockup unless explicitly requested.
 
 ## Next Prompt Suggestion
 
