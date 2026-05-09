@@ -612,10 +612,55 @@
     }
 
     .upcoming-etf-section {
-      background: #f8fafc;
-      border: 1px solid var(--line);
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
       border-radius: 8px;
       padding: 10px;
+    }
+
+    .upcoming-entry {
+      align-items: center;
+      appearance: none;
+      background: #ffffff;
+      border: 1px solid #93c5fd;
+      border-radius: 8px;
+      color: var(--ink);
+      cursor: pointer;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      min-height: 54px;
+      padding: 10px 12px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .upcoming-entry:hover {
+      border-color: var(--blue);
+      box-shadow: 0 10px 22px rgba(29, 78, 216, .16);
+    }
+
+    .upcoming-entry strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1.25;
+    }
+
+    .upcoming-entry span {
+      color: #475467;
+      display: block;
+      font-size: 12px;
+      line-height: 1.35;
+      margin-top: 2px;
+    }
+
+    .upcoming-entry b {
+      background: var(--blue);
+      border-radius: 999px;
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 9px;
+      white-space: nowrap;
     }
 
     .upcoming-etf-head {
@@ -1250,11 +1295,10 @@
               <input id="activeEtfSearch" placeholder="搜尋 ETF 或個股代號，例如 00988A / 2330 / AVGO.US">
             </label>
             <section class="upcoming-etf-section" id="upcomingEtfSection">
-              <div class="upcoming-etf-head">
-                <strong>即將上市 ETF</strong>
-                <span>預購是先登記，募集是正式申購期間</span>
-              </div>
-              <div class="upcoming-etf-list" id="upcomingEtfList"></div>
+              <button class="upcoming-entry" data-upcoming-list type="button">
+                <span><strong>即將上市 ETF</strong><span>查看預購、募集、掛牌與資料來源</span></span>
+                <b id="upcomingEtfBadge">3 檔</b>
+              </button>
             </section>
             <div class="filters etf-type-tabs" id="etfTypeTabs">
               <button class="active" data-etf-filter="all">全部</button>
@@ -1941,6 +1985,13 @@
         updateBackButton();
         return;
       }
+      if (document.querySelector("#activeEtfView.active") && activeEtfLevel === "upcomingList") {
+        activeEtfLevel = "ranking";
+        renderActiveEtfRanking();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        updateBackButton();
+        return;
+      }
       if (document.querySelector("#activeEtfView.active") && selectedEtf) {
         selectedEtf = null;
         activeEtfLevel = "ranking";
@@ -2250,11 +2301,15 @@
       return upcomingEtfs.find(etf => String(etf.code).toUpperCase() === q || String(etf.name || "").includes(query));
     }
 
-    function renderUpcomingEtfs() {
-      const list = $("upcomingEtfList");
-      if (!list) return;
-      const rows = visibleUpcomingEtfs();
-      list.innerHTML = rows.map(etf => `
+    function setUpcomingEntryVisible(visible) {
+      const section = $("upcomingEtfSection");
+      if (section) section.style.display = visible ? "" : "none";
+      const badge = $("upcomingEtfBadge");
+      if (badge) badge.textContent = `${upcomingEtfs.length} 檔`;
+    }
+
+    function upcomingRowsHtml(rows) {
+      return rows.map(etf => `
         <button class="upcoming-etf-row" data-upcoming-etf-code="${html(etf.code)}" type="button">
           <div class="upcoming-date">
             <small>掛牌</small>
@@ -2269,7 +2324,23 @@
           </div>
           <div class="upcoming-state">${html(etf.status)}</div>
         </button>
-      `).join("") || `<div class="message">目前沒有符合搜尋的即將上市 ETF。</div>`;
+      `).join("");
+    }
+
+    function renderUpcomingEtfListPage() {
+      activeEtfLevel = "upcomingList";
+      selectedEtf = null;
+      setUpcomingEntryVisible(false);
+      const rows = visibleUpcomingEtfs();
+      setPageHeader("ETF 研究", "即將上市 ETF");
+      $("activeEtfTitle").textContent = "即將上市 ETF";
+      $("activeEtfSub").textContent = "預購是先登記，募集是正式申購期間。點 ETF 可看完整資料。";
+      $("activeEtfBadge").textContent = `${rows.length}/${upcomingEtfs.length} 檔`;
+      $("activeEtfList").innerHTML = `
+        <div class="upcoming-note">這裡只列未上市或即將掛牌 ETF；已上市 ETF 排名請回上一層。</div>
+        <div class="upcoming-etf-list">${rows.length ? upcomingRowsHtml(rows) : `<div class="message">目前沒有符合搜尋的即將上市 ETF。</div>`}</div>
+      `;
+      updateBackButton();
     }
 
     function renderUpcomingEtfDetail(code) {
@@ -2277,6 +2348,7 @@
       if (!etf) return;
       activeEtfLevel = "upcoming";
       selectedEtf = null;
+      setUpcomingEntryVisible(false);
       setPageHeader("ETF 研究", `${etf.code} 即將上市 ETF`);
       $("activeEtfTitle").textContent = `${etf.code} 即將上市`;
       $("activeEtfSub").textContent = `${etf.name} · ${etf.issuer}`;
@@ -2363,7 +2435,7 @@
     function renderActiveEtfRanking() {
       activeEtfLevel = "ranking";
       selectedEtf = null;
-      renderUpcomingEtfs();
+      setUpcomingEntryVisible(true);
       setPageHeader("ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。");
       $("activeEtfTitle").textContent = "ETF 研究";
       $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，全部 ETF 依規模排序；可輸入 ETF 或個股代號。` : "盤後每日更新，Web 只讀快照。";
@@ -2491,7 +2563,7 @@
     }
 
     async function loadActiveEtfs() {
-      renderUpcomingEtfs();
+      setUpcomingEntryVisible(true);
       $("activeEtfList").innerHTML = `<div class="message">正在讀取 ETF 快照...</div>`;
       try {
         const payload = await getJson(`${API_BASE}/etfs`);
@@ -2503,7 +2575,7 @@
       } catch (error) {
         $("activeEtfBadge").textContent = "失敗";
         $("activeEtfList").innerHTML = `<div class="message">無法讀取 ETF：${html(error.message)}</div>`;
-        renderUpcomingEtfs();
+        setUpcomingEntryVisible(true);
       }
     }
 
@@ -2728,6 +2800,12 @@
       if (etfTab) {
         activeEtfTab = etfTab.dataset.etfTab;
         renderActiveEtfDetail();
+        return;
+      }
+
+      const upcomingList = event.target.closest("[data-upcoming-list]");
+      if (upcomingList) {
+        renderUpcomingEtfListPage();
         return;
       }
 
