@@ -311,3 +311,13 @@ Ask Codex:
 - Intentionally not changed: original LINE bot strategy logic, backend command behavior, ETF data sources, and public/auth access rules.
 - Verification: `git diff --check` passed with only the existing Windows LF/CRLF warning; inline scripts in `index.html` parsed successfully through the Node REPL.
 - Next prompt suggestion: `請先讀 CODEX_HANDOFF.md，檢查 ETF 研究裡「即將上市 ETF 詳情 → 個股共同持有 → 上一層」是否回到即將上市詳情，並確認切換功能時搜尋欄不會殘留上一個主題的指令。`
+
+## 2026-05-09 Demo Stock Access Gate
+
+- User requested `個股查詢` become a trial surface: only the help-card `2330` example should be publicly usable; trying other stocks should show a LINE bot join prompt.
+- Implemented in `index.html` on branch `codex/demo-stock-gate`.
+- Clarified follow-up: unauthenticated users should be able to use the commands shown on the Web help card, and those stock examples should all be based on `2330`.
+- Public Web trial commands are now limited to `2330`, `台積電`, `即時 2330`, `回測 2330`, `權證 2330`, `RS排名`, plus `說明/help` and `教學`. Other stock ids/names and copied strategy commands render a join-LINE-bot prompt instead of calling `/api/web/command` or auto-triggering LIFF login.
+- Updated the Web help card and search/header copy so the UI says help-card demo commands are available and other stock features belong in LINE bot. User explicitly confirmed `RS排名` can stay in the unauthenticated help-card list.
+- Intentionally not changed: backend `/api/web/command`, LIFF session endpoints, ETF research, tutorial command behavior, and original LINE bot strategy/card logic.
+- Verification to run before push/merge: `git diff --check`, inline script parse through Node REPL, and if possible manual GitHub Pages/mobile check after deploy.
