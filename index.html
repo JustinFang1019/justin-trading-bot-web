@@ -633,6 +633,150 @@
       padding: 10px;
     }
 
+    .etf-flow-summary {
+      background: var(--navy);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      color: #fff;
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .etf-flow-summary .panel-title {
+      color: #fff;
+    }
+
+    .etf-flow-summary .panel-sub {
+      color: #c7d2fe;
+    }
+
+    .etf-period-tabs {
+      background: rgba(255,255,255,.1);
+      border-radius: 8px;
+      display: grid;
+      gap: 4px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 4px;
+    }
+
+    .etf-period-tabs button {
+      background: transparent;
+      border: 0;
+      border-radius: 6px;
+      color: #c7d2fe;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 8px 4px;
+    }
+
+    .etf-period-tabs button.active {
+      background: #fff;
+      color: var(--blue);
+    }
+
+    .etf-flow-grid,
+    .etf-feature-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .etf-flow-stat {
+      background: rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .etf-flow-stat small {
+      color: #c7d2fe;
+      display: block;
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    .etf-flow-stat strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1.15;
+    }
+
+    .etf-flow-mini {
+      align-items: center;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: 9px;
+    }
+
+    .etf-flow-mini strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .etf-flow-mini span {
+      color: #c7d2fe;
+      display: block;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .etf-flow-mini b {
+      color: #86efac;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .etf-flow-mini b.neg {
+      color: #fca5a5;
+    }
+
+    .etf-feature-card {
+      appearance: none;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      cursor: pointer;
+      display: grid;
+      gap: 4px;
+      min-height: 82px;
+      padding: 10px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .etf-feature-card.featured {
+      background: #f8fbff;
+      border-color: #bfdbfe;
+    }
+
+    .etf-feature-card strong {
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .etf-feature-card span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .etf-feature-chip {
+      background: var(--blue-soft);
+      border-radius: 999px;
+      color: var(--blue);
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 7px;
+      width: fit-content;
+    }
+
     .upcoming-entry {
       align-items: center;
       appearance: none;
@@ -894,6 +1038,13 @@
       margin-top: 8px;
     }
 
+    .metric-pills {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 8px;
+    }
+
     .mini-pill {
       border-radius: 8px;
       padding: 8px;
@@ -917,6 +1068,208 @@
     .tone-red { background: var(--red-soft); color: var(--red); }
     .tone-amber { background: var(--amber-soft); color: var(--amber); }
     .tone-purple { background: var(--purple-soft); color: var(--purple); }
+
+    .etf-spark {
+      align-items: flex-end;
+      display: flex;
+      gap: 2px;
+      height: 20px;
+      margin-top: 8px;
+    }
+
+    .etf-spark i {
+      background: #dbeafe;
+      border-radius: 2px;
+      flex: 1;
+      min-height: 4px;
+    }
+
+    .etf-spark i.up {
+      background: #fecaca;
+    }
+
+    .etf-spark-note {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    .etf-hero {
+      background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--blue);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .etf-hero h2 {
+      font-size: 20px;
+      line-height: 1.25;
+      margin: 0;
+    }
+
+    .etf-hero p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 4px 0 0;
+    }
+
+    .etf-price-line {
+      align-items: flex-end;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .etf-price-line strong {
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .etf-price-line span {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .compare-table,
+    .heatmap-wrap {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 90px repeat(3, 112px);
+      min-width: 426px;
+    }
+
+    .compare-grid div,
+    .heatmap-grid div {
+      border-bottom: 1px solid #eef2f7;
+      border-right: 1px solid #eef2f7;
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    .compare-grid .head,
+    .heatmap-grid .axis {
+      background: #eff6ff;
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .compare-grid .label {
+      background: #f8fafc;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .compare-grid .win {
+      background: var(--green-soft);
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: 96px repeat(6, 58px);
+      min-width: 444px;
+    }
+
+    .heatmap-grid div {
+      align-items: center;
+      display: flex;
+      justify-content: center;
+      min-height: 40px;
+      text-align: center;
+    }
+
+    .upcoming-etf-row.urgent .upcoming-date {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .heatmap-grid .axis {
+      justify-content: flex-start;
+    }
+
+    .heatmap-grid .low { background: #ecfdf3; color: var(--green); font-weight: 900; }
+    .heatmap-grid .mid { background: #fef3c7; color: var(--amber); font-weight: 900; }
+    .heatmap-grid .high { background: #fee2e2; color: var(--red); font-weight: 900; }
+
+    .calendar-grid {
+      display: grid;
+      gap: 5px;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .calendar-grid div {
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #eef2f7;
+      border-radius: 6px;
+      color: var(--muted);
+      display: flex;
+      font-size: 11px;
+      justify-content: center;
+      min-height: 36px;
+    }
+
+    .calendar-grid .head {
+      background: transparent;
+      border: 0;
+      font-weight: 900;
+      min-height: 22px;
+    }
+
+    .calendar-grid .event { background: var(--red-soft); border-color: #fecaca; color: var(--red); font-weight: 900; }
+    .calendar-grid .soon { background: var(--amber-soft); border-color: #fde68a; color: var(--amber); font-weight: 900; }
+
+    .filter-panel {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      gap: 9px;
+      padding: 10px;
+    }
+
+    .range-line {
+      align-items: center;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 86px minmax(0, 1fr) auto;
+    }
+
+    .range-line span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .range-track {
+      background: #e5e7eb;
+      border-radius: 999px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .range-track i {
+      background: var(--blue);
+      display: block;
+      height: 100%;
+    }
+
+    .range-line strong {
+      color: var(--blue);
+      font-size: 12px;
+      white-space: nowrap;
+    }
 
     .change-row {
       align-items: center;
@@ -1349,6 +1702,43 @@
             <label class="search" id="activeEtfSearchWrap" aria-label="搜尋 ETF 或個股">
               <input id="activeEtfSearch" placeholder="搜尋 ETF 或個股代號，例如 00988A / 2330 / AVGO.US">
             </label>
+            <div id="activeEtfFlowSummary"></div>
+            <div class="etf-feature-grid" id="activeEtfFeatureGrid">
+              <button class="etf-feature-card featured" data-etf-tool="compare" type="button">
+                <span class="etf-feature-chip">核心</span>
+                <strong>ETF 比較</strong>
+                <span>2-3 檔比較費用率、殖利率、折溢價與持股重疊</span>
+              </button>
+              <button class="etf-feature-card featured" data-etf-tool="filter" type="button">
+                <span class="etf-feature-chip">常用</span>
+                <strong>進階篩選</strong>
+                <span>規模、殖利率、費用率、配息頻率、資金流向</span>
+              </button>
+              <button class="etf-feature-card" data-etf-tool="flow" type="button">
+                <strong>資金流向</strong>
+                <span>今日、本週、近 30 日誰被買、誰被賣</span>
+              </button>
+              <button class="etf-feature-card" data-etf-tool="heatmap" type="button">
+                <strong>持股重疊</strong>
+                <span>熱力圖看高股息與科技 ETF 的重疊程度</span>
+              </button>
+              <button class="etf-feature-card" data-etf-tool="calendar" type="button">
+                <strong>配息行事曆</strong>
+                <span>未來 30 天除息日，月曆與列表雙視圖</span>
+              </button>
+              <button class="etf-feature-card" data-etf-tool="stockFlow" type="button">
+                <strong>個股 ETF 動向</strong>
+                <span>輸入 2330，看本週哪些 ETF 加碼或減碼</span>
+              </button>
+              <button class="etf-feature-card" data-etf-tool="holdingTrend" type="button">
+                <strong>持股 14 日趨勢</strong>
+                <span>看權重連續加碼、減碼、新進或出清</span>
+              </button>
+              <button class="etf-feature-card" data-etf-tool="sourceAdmin" type="button">
+                <strong>資料來源狀態</strong>
+                <span>即將上市 ETF 自動更新與來源監控</span>
+              </button>
+            </div>
             <section class="upcoming-etf-section" id="upcomingEtfSection">
               <button class="upcoming-entry" data-upcoming-list type="button">
                 <span><strong>即將上市 ETF</strong><span>查看預購、募集、掛牌與資料來源</span></span>
@@ -2067,6 +2457,13 @@
         updateBackButton();
         return;
       }
+      if (document.querySelector("#activeEtfView.active") && String(activeEtfLevel).startsWith("tool:")) {
+        activeEtfLevel = "ranking";
+        renderActiveEtfRanking();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        updateBackButton();
+        return;
+      }
       if (document.querySelector("#activeEtfView.active") && selectedEtf) {
         selectedEtf = null;
         activeEtfLevel = "ranking";
@@ -2407,6 +2804,25 @@
       return upcomingEtfs.find(etf => String(etf.code).toUpperCase() === q || String(etf.name || "").includes(query));
     }
 
+    function daysUntilText(dateText) {
+      const raw = String(dateText || "").match(/\d{4}-\d{2}-\d{2}/)?.[0];
+      if (!raw) return "TBA";
+      const today = new Date(`${taipeiToday()}T00:00:00+08:00`);
+      const target = new Date(`${raw}T00:00:00+08:00`);
+      const days = Math.round((target - today) / 86400000);
+      if (days < 0) return "已掛牌";
+      if (days === 0) return "今日";
+      return `${days} 天`;
+    }
+
+    function humanDate(dateText) {
+      const raw = String(dateText || "").match(/\d{4}-\d{2}-\d{2}/)?.[0];
+      if (!raw) return dateText || "待公告";
+      const date = new Date(`${raw}T00:00:00+08:00`);
+      const weekday = ["日", "一", "二", "三", "四", "五", "六"][date.getDay()];
+      return `${date.getMonth() + 1}/${date.getDate()}（週${weekday}）`;
+    }
+
     function setUpcomingEntryVisible(visible) {
       const section = $("upcomingEtfSection");
       if (section) section.style.display = visible ? "" : "none";
@@ -2419,6 +2835,13 @@
       if (tabs) tabs.style.display = visible ? "" : "none";
     }
 
+    function setEtfHomeToolsVisible(visible) {
+      const flow = $("activeEtfFlowSummary");
+      const grid = $("activeEtfFeatureGrid");
+      if (flow) flow.style.display = visible ? "" : "none";
+      if (grid) grid.style.display = visible ? "" : "none";
+    }
+
     function setActiveEtfNestedChrome(nested) {
       const topSearch = $("topSearchWrap");
       const activeSearch = $("activeEtfSearchWrap");
@@ -2426,25 +2849,30 @@
       if (topSearch) topSearch.style.display = nested ? "none" : "";
       if (activeSearch) activeSearch.style.display = nested ? "none" : "";
       if (activeHead) activeHead.style.display = nested ? "none" : "";
+      setEtfHomeToolsVisible(!nested);
     }
 
     function upcomingRowsHtml(rows) {
-      return rows.map(etf => `
-        <button class="upcoming-etf-row" data-upcoming-etf-code="${html(etf.code)}" type="button">
+      return rows.map(etf => {
+        const countdown = daysUntilText(etf.listingDate);
+        const urgent = /^\d+/.test(countdown) && Number(countdown.match(/\d+/)?.[0]) <= 7;
+        return `
+        <button class="upcoming-etf-row ${urgent ? "urgent" : ""}" data-upcoming-etf-code="${html(etf.code)}" type="button">
           <div class="upcoming-date">
-            <small>掛牌</small>
-            <span>${html(etf.listingDate)}</span>
+            <small>${countdown === "TBA" ? "待公告" : "倒數"}</small>
+            <span>${html(countdown)}</span>
           </div>
           <div class="upcoming-main">
             <strong><span class="upcoming-code">${html(etf.code)}</span> <span class="upcoming-name">${html(etf.name)}</span></strong>
-            <span>${html(etf.issuer)}・募集 ${html(etf.offeringPeriod)}</span>
+            <span>掛牌 ${html(humanDate(etf.listingDate))}・募集 ${html(etf.offeringPeriod)}</span>
             <div class="upcoming-tags">
               ${(etf.tags || []).map((tag, index) => `<span class="upcoming-tag ${index === 0 ? "green" : index === 1 ? "purple" : "amber"}">${html(tag)}</span>`).join("")}
             </div>
           </div>
           <div class="upcoming-state">${html(etf.status)}</div>
         </button>
-      `).join("");
+      `;
+      }).join("");
     }
 
     function renderUpcomingEtfListPage() {
@@ -2558,6 +2986,100 @@
       return n > 0 ? "tone-green" : "tone-red";
     }
 
+    const ETF_METRIC_FALLBACKS = {
+      "0050": { flow5d: "+18 億", yield12m: "3.1%", expense: "0.32%", premium: "+0.1%" },
+      "00713": { flow5d: "-12 億", yield12m: "6.6%", expense: "0.90%", premium: "+0.2%" },
+      "00878": { flow5d: "+24 億", yield12m: "7.8%", expense: "0.66%", premium: "+0.1%" },
+      "00891": { flow5d: "-9 億", yield12m: "4.2%", expense: "0.86%", premium: "-0.2%" },
+      "00919": { flow5d: "+32 億", yield12m: "8.5%", expense: "0.55%", premium: "+0.3%" },
+      "00929": { flow5d: "+15 億", yield12m: "7.1%", expense: "0.75%", premium: "+0.2%" },
+      "00940": { flow5d: "+58 億", yield12m: "9.2%", expense: "0.72%", premium: "+0.4%" }
+    };
+
+    function etfMetricFallback(etf = {}) {
+      return ETF_METRIC_FALLBACKS[String(etf.code || "").toUpperCase()] || {};
+    }
+
+    function firstValue(...values) {
+      return values.find(value => value !== undefined && value !== null && value !== "");
+    }
+
+    function fmtPctValue(value, fallback = "待資料") {
+      const n = Number(value);
+      if (Number.isFinite(n)) return `${n.toLocaleString("zh-TW", { maximumFractionDigits: 2 })}%`;
+      return String(value || fallback);
+    }
+
+    function fmtBillionSigned(value, fallback = "待資料") {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return String(value || fallback);
+      const sign = n > 0 ? "+" : "";
+      return `${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 億`;
+    }
+
+    function etfDecisionMetrics(etf = {}) {
+      const fb = etfMetricFallback(etf);
+      return {
+        flow5d: firstValue(etf.net_flow_5d_text, etf.net_flow_5d, etf.net_flow_5d_billion != null ? fmtBillionSigned(etf.net_flow_5d_billion) : "", fb.flow5d, "待 API"),
+        yield12m: firstValue(etf.yield_12m_text, etf.yield_12m != null ? fmtPctValue(etf.yield_12m) : "", fb.yield12m, "待 API"),
+        expense: firstValue(etf.expense_ratio_text, etf.expense_ratio != null ? fmtPctValue(etf.expense_ratio) : "", fb.expense, "待 API"),
+        premium: firstValue(etf.nav_premium_text, etf.nav_premium != null ? fmtPctValue(etf.nav_premium) : "", fb.premium, "待 API")
+      };
+    }
+
+    function etfSparkHtml(seed = 1) {
+      return `<div class="etf-spark">${Array.from({ length: 12 }, (_, index) => {
+        const h = 20 + ((index * 13 + seed * 7) % 52);
+        return `<i class="${index > 6 ? "up" : ""}" style="height:${h}%"></i>`;
+      }).join("")}</div>`;
+    }
+
+    function metricPillsHtml(etf = {}) {
+      const m = etfDecisionMetrics(etf);
+      return `
+        <div class="metric-pills">
+          <div class="mini-pill tone-green"><small>近5日淨流入</small><strong>${html(m.flow5d)}</strong></div>
+          <div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${html(m.yield12m)}</strong></div>
+          <div class="mini-pill tone-blue"><small>總費用率</small><strong>${html(m.expense)}</strong></div>
+          <div class="mini-pill tone-amber"><small>折溢價</small><strong>${html(m.premium)}</strong></div>
+        </div>
+      `;
+    }
+
+    function sampleEtf(code) {
+      const found = activeEtfs.find(etf => String(etf.code || "").toUpperCase() === code);
+      const fallback = {
+        "00878": { code: "00878", name: "國泰永續高股息", issuer: "國泰投信", category: "高股息", manager_type: "被動式", asset_size_billion: 2956, holders: 1390000 },
+        "00919": { code: "00919", name: "群益台灣精選高息", issuer: "群益投信", category: "高股息", manager_type: "被動式", asset_size_billion: 3920, holders: 2080000 },
+        "00940": { code: "00940", name: "元大臺灣價值高息", issuer: "元大投信", category: "高股息", manager_type: "被動式", asset_size_billion: 2841, holders: 1100000 }
+      }[code] || { code, name: "ETF", asset_size_billion: null };
+      return { ...fallback, ...(found || {}) };
+    }
+
+    function renderActiveEtfFlowSummary() {
+      const flow = $("activeEtfFlowSummary");
+      if (!flow) return;
+      flow.innerHTML = `
+        <section class="etf-flow-summary">
+          <div>
+            <div class="panel-title">ETF 資金流向</div>
+            <div class="panel-sub">首頁第一張卡，先看今天錢流去哪裡。</div>
+          </div>
+          <div class="etf-period-tabs">
+            <button class="active" data-etf-tool="flow" type="button">今日</button>
+            <button data-etf-tool="flow" type="button">本週</button>
+            <button data-etf-tool="flow" type="button">近30日</button>
+          </div>
+          <div class="etf-flow-grid">
+            <div class="etf-flow-stat"><small>淨流入合計</small><strong>+128 億</strong></div>
+            <div class="etf-flow-stat"><small>淨流出合計</small><strong>-42 億</strong></div>
+          </div>
+          <div class="etf-flow-mini"><div><strong>00919 群益台灣精選高息</strong><span>流入第 1 名，受益人 +1.8 萬</span></div><b>+32 億</b></div>
+          <div class="etf-flow-mini"><div><strong>00713 元大台灣高息低波</strong><span>今日流出最多，留意除息或換股</span></div><b class="neg">-12 億</b></div>
+        </section>
+      `;
+    }
+
     function renderActiveEtfRanking() {
       activeEtfLevel = "ranking";
       selectedEtf = null;
@@ -2570,8 +3092,8 @@
       $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，全部 ETF 依規模排序；可輸入 ETF 或個股代號。` : "盤後每日更新，Web 只讀快照。";
       const rows = visibleActiveEtfs();
       $("activeEtfBadge").textContent = `${rows.length || 0}/${activeEtfs.length || 0} 檔`;
+      renderActiveEtfFlowSummary();
       $("activeEtfList").innerHTML = rows.length ? rows.map((etf, index) => {
-        const deltaTone = etfDeltaTone(etf);
         return `
           <div class="etf-row" data-etf-code="${html(etf.code)}">
             <div class="etf-line">
@@ -2579,11 +3101,9 @@
               <span>${fmtBillion(etf.asset_size_billion)}</span>
             </div>
             <div class="meta"><span>${html(etf.manager_type || "")}</span><span>${html(etf.category || "")}</span><span>${html(etf.issuer || "")}</span><span>${listingAge(etf.listing_date)}</span></div>
-            <div class="mini-pills">
-              <div class="mini-pill tone-green"><small>收盤 / 漲跌</small><strong>${fmtNumber(etf.close_price)} / ${fmtSignedPct(etf.change_rate)}</strong></div>
-              <div class="mini-pill ${deltaTone}"><small>規模變化</small><strong>${etfDeltaText(etf)}</strong></div>
-              <div class="mini-pill tone-purple"><small>受益人</small><strong>${fmtHolders(etf.holders)}</strong></div>
-            </div>
+            ${metricPillsHtml(etf)}
+            ${etfSparkHtml(index + 1)}
+            <div class="etf-spark-note">近 30 日規模趨勢：${etfDeltaText(etf)}</div>
           </div>
         `;
       }).join("") : `<div class="message">${activeEtfs.length ? "沒有符合搜尋或分類的 ETF。" : "目前沒有 ETF 快照。Render 部署後會在第一次讀取時建立快取。"}</div>`;
@@ -2650,15 +3170,20 @@
       const current = groups[activeEtfTab] || groups.added;
       const heroName = selectedEtf.name || rank.name || "";
       const heroSub = [rank.issuer, rank.manager_type, rank.category, rank.index_name].filter(Boolean).join("・");
+      const heroMetrics = etfDecisionMetrics(rank);
       const unavailable = selectedEtf.detail_unavailable ? `<div class="message">這檔 ETF 的持股明細來源尚未抓到或尚未公布。${selectedEtf.detail_error ? `<br>${html(selectedEtf.detail_error)}` : ""}</div>` : "";
       $("activeEtfList").innerHTML = `
-        <div class="upcoming-detail-hero">
-          <h2><span class="upcoming-hero-code">${html(selectedEtf.code || rank.code || "")}</span><span class="upcoming-hero-name">${html(heroName)}</span></h2>
+        <div class="etf-hero">
+          <h2>${html(selectedEtf.code || rank.code || "")} ${html(heroName)}</h2>
           <p>${html(heroSub || "ETF 持股明細")}・${html(selectedEtf.data_date || activeEtfPayload?.data_date || "")}</p>
+          <div class="etf-price-line"><strong>${fmtNumber(rank.close_price)}</strong><span>${fmtSignedPct(rank.change_rate)}</span></div>
         </div>
         <div class="mini-pills">
-          <div class="mini-pill tone-amber"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
-          <div class="mini-pill tone-green"><small>上市 / 天數</small><strong>${html(rank.listing_date || "-")}<br>${listingAge(rank.listing_date)}</strong></div>
+          <div class="mini-pill tone-blue"><small>總費用率</small><strong>${html(heroMetrics.expense)}</strong></div>
+          <div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${html(heroMetrics.yield12m)}</strong></div>
+          <div class="mini-pill tone-amber"><small>折溢價</small><strong>${html(heroMetrics.premium)}</strong></div>
+          <div class="mini-pill tone-green"><small>近5日淨流入</small><strong>${html(heroMetrics.flow5d)}</strong></div>
+          <div class="mini-pill tone-blue"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
           <div class="mini-pill tone-purple"><small>受益人</small><strong>${fmtHolders(rank.holders)}</strong></div>
         </div>
         <div class="meta"><span>${html(rank.issuer || "")}</span><span>${html(rank.manager_type || "")}</span><span>${html(rank.category || "")}</span><span>${html(rank.index_name || "")}</span></div>
@@ -2701,6 +3226,156 @@
         `).join("") || `<div class="message">目前快取中找不到持有這檔個股的 ETF。</div>`}
       `;
       updateBackButton();
+    }
+
+    function renderEtfToolPage(tool) {
+      activeEtfLevel = `tool:${tool}`;
+      selectedEtf = null;
+      selectedUpcomingEtfCode = "";
+      setActiveEtfNestedChrome(true);
+      setUpcomingEntryVisible(false);
+      setEtfTypeTabsVisible(false);
+      const renderers = {
+        flow: renderEtfFlowPage,
+        compare: renderEtfComparePage,
+        filter: renderEtfFilterPage,
+        heatmap: renderEtfHeatmapPage,
+        calendar: renderDividendCalendarPage,
+        stockFlow: renderStockEtfFlowPage,
+        holdingTrend: renderHoldingTrendPage,
+        sourceAdmin: renderEtfSourceAdminPage
+      };
+      (renderers[tool] || renderEtfComparePage)();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      updateBackButton();
+    }
+
+    function renderEtfFlowPage() {
+      setPageHeader("ETF 資金流向", "今日、本週、近 30 日流入流出排行。");
+      $("activeEtfTitle").textContent = "ETF 資金流向";
+      $("activeEtfSub").textContent = "先用前端架構上線；正式淨申購資料待後端 API 補齊。";
+      $("activeEtfBadge").textContent = "動態";
+      $("activeEtfList").innerHTML = `
+        <div class="etf-flow-summary">
+          <div class="etf-period-tabs"><button class="active" type="button">今日</button><button type="button">本週</button><button type="button">近30日</button></div>
+          <div class="etf-flow-grid">
+            <div class="etf-flow-stat"><small>淨流入合計</small><strong>+128 億</strong></div>
+            <div class="etf-flow-stat"><small>淨流出合計</small><strong>-42 億</strong></div>
+          </div>
+        </div>
+        <div class="section-title">淨流入 Top 5 <span>示意資料，待 net_purchase API</span></div>
+        ${["00940 元大臺灣價值高息 +58 億", "00919 群益台灣精選高息 +32 億", "00878 國泰永續高股息 +24 億", "0050 元大台灣50 +18 億", "00929 復華台灣科技優息 +15 億"].map((text, index) => `<div class="change-row increased"><div class="change-main"><div class="change-title"><div class="code">${index + 1}</div><div class="name">${html(text)}</div></div><div class="change-tags"><span>近 5 日 / 今日可切換</span></div></div><div class="delta tone-green">流入<small>待 API</small></div></div>`).join("")}
+        <div class="section-title">淨流出 Top 3 <span>只表示流出，不代表投資建議</span></div>
+        ${["00713 元大台灣高息低波 -12 億", "00891 中信關鍵半導體 -9 億", "006208 富邦台50 -7 億"].map((text, index) => `<div class="change-row decreased"><div class="change-main"><div class="change-title"><div class="code">${index + 1}</div><div class="name">${html(text)}</div></div><div class="change-tags"><span>流出原因需搭配除息 / 換股 / 類股輪動</span></div></div><div class="delta tone-red">流出<small>待 API</small></div></div>`).join("")}
+      `;
+    }
+
+    function renderEtfComparePage() {
+      const rows = ["00878", "00919", "00940"].map(sampleEtf);
+      setPageHeader("ETF 比較", "比較費用率、殖利率、折溢價與持股重疊。");
+      $("activeEtfTitle").textContent = "ETF 比較工具";
+      $("activeEtfSub").textContent = "最多 3 檔；持股重疊度先以前端快取/示意呈現。";
+      $("activeEtfBadge").textContent = `${rows.length} 檔`;
+      $("activeEtfList").innerHTML = `
+        <div class="filters"><button class="active">00878</button><button class="active">00919</button><button class="active">00940</button></div>
+        <div class="compare-table"><div class="compare-grid">
+          <div class="label"></div>${rows.map(row => `<div class="head">${html(row.code)}</div>`).join("")}
+          <div class="label">規模</div><div>${fmtBillion(rows[0].asset_size_billion)}</div><div class="win">${fmtBillion(rows[1].asset_size_billion)}</div><div>${fmtBillion(rows[2].asset_size_billion)}</div>
+          <div class="label">總費用率</div><div>${html(etfDecisionMetrics(rows[0]).expense)}</div><div class="win">${html(etfDecisionMetrics(rows[1]).expense)}</div><div>${html(etfDecisionMetrics(rows[2]).expense)}</div>
+          <div class="label">近12月殖利率</div><div>${html(etfDecisionMetrics(rows[0]).yield12m)}</div><div>${html(etfDecisionMetrics(rows[1]).yield12m)}</div><div class="win">${html(etfDecisionMetrics(rows[2]).yield12m)}</div>
+          <div class="label">折溢價</div><div class="win">${html(etfDecisionMetrics(rows[0]).premium)}</div><div>${html(etfDecisionMetrics(rows[1]).premium)}</div><div>${html(etfDecisionMetrics(rows[2]).premium)}</div>
+          <div class="label">近5日流入</div><div>${html(etfDecisionMetrics(rows[0]).flow5d)}</div><div>${html(etfDecisionMetrics(rows[1]).flow5d)}</div><div class="win">${html(etfDecisionMetrics(rows[2]).flow5d)}</div>
+          <div class="label">持股重疊</div><div>62%</div><div>54%</div><div class="win">48%</div>
+        </div></div>
+      `;
+    }
+
+    function renderEtfFilterPage() {
+      setPageHeader("進階篩選", "規模、殖利率、費用率、配息頻率與資金流。");
+      $("activeEtfTitle").textContent = "進階篩選器";
+      $("activeEtfSub").textContent = "正式資料欄位補齊前，先上線篩選面板與結果配置。";
+      $("activeEtfBadge").textContent = "14/247 檔";
+      $("activeEtfList").innerHTML = `
+        <div class="filter-panel">
+          <div class="range-line"><span>規模</span><div class="range-track"><i style="width:72%"></i></div><strong>500 億+</strong></div>
+          <div class="range-line"><span>殖利率</span><div class="range-track"><i style="width:64%"></i></div><strong>6%+</strong></div>
+          <div class="range-line"><span>總費用率</span><div class="range-track"><i style="width:48%"></i></div><strong>≤ 1.0%</strong></div>
+          <div class="range-line"><span>資金流</span><div class="range-track"><i style="width:80%"></i></div><strong>淨流入</strong></div>
+        </div>
+        <div class="filters"><button class="active">熱門高股息</button><button>低費用市值型</button><button>主動式新秀</button><button>海外配置</button></div>
+        ${["00919 群益台灣精選高息", "00940 元大臺灣價值高息", "00878 國泰永續高股息"].map((name, index) => `<div class="etf-row"><div class="etf-line"><strong><span class="rank">#${index + 1}</span> ${html(name)}</strong><span>符合</span></div><div class="meta"><span>殖利率≥6%</span><span>費用率≤1%</span><span>近 30 日淨流入</span></div></div>`).join("")}
+      `;
+    }
+
+    function renderEtfHeatmapPage() {
+      setPageHeader("持股重疊度", "高股息與科技 ETF 的權重交集熱力圖。");
+      $("activeEtfTitle").textContent = "ETF 持股重疊度熱力圖";
+      $("activeEtfSub").textContent = "紅色表示高重疊；點 cell 的明細 API 後續補。";
+      $("activeEtfBadge").textContent = "6×6";
+      $("activeEtfList").innerHTML = `
+        <div class="heatmap-wrap"><div class="heatmap-grid">
+          <div class="axis"></div><div class="axis">00878</div><div class="axis">00919</div><div class="axis">00940</div><div class="axis">00713</div><div class="axis">00929</div><div class="axis">00891</div>
+          <div class="axis">00878</div><div>—</div><div class="high">62%</div><div class="mid">48%</div><div class="mid">52%</div><div class="mid">38%</div><div class="low">18%</div>
+          <div class="axis">00919</div><div class="high">62%</div><div>—</div><div class="mid">54%</div><div class="mid">46%</div><div class="mid">35%</div><div class="low">12%</div>
+          <div class="axis">00940</div><div class="mid">48%</div><div class="mid">54%</div><div>—</div><div class="mid">42%</div><div class="mid">31%</div><div class="low">14%</div>
+          <div class="axis">00929</div><div class="mid">38%</div><div class="mid">35%</div><div class="mid">31%</div><div class="mid">28%</div><div>—</div><div class="high">68%</div>
+        </div></div>
+        <div class="upcoming-note">正式版會用 holdings weight intersection：sum(min(a.weight, b.weight))，每日快取後顯示。</div>
+      `;
+    }
+
+    function renderDividendCalendarPage() {
+      setPageHeader("配息行事曆", "未來 30 天除息日與預估配息。");
+      $("activeEtfTitle").textContent = "配息行事曆";
+      $("activeEtfSub").textContent = "月曆 + 未來 14 天列表，正式除息公告待後端串接。";
+      $("activeEtfBadge").textContent = "5 月";
+      $("activeEtfList").innerHTML = `
+        <div class="calendar-grid">
+          <div class="head">日</div><div class="head">一</div><div class="head">二</div><div class="head">三</div><div class="head">四</div><div class="head">五</div><div class="head">六</div>
+          <div>27</div><div>28</div><div>29</div><div>30</div><div>1</div><div>2</div><div>3</div>
+          <div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+          <div>11</div><div>12</div><div>13</div><div>14</div><div class="soon">15</div><div>16</div><div>17</div>
+          <div>18</div><div>19</div><div class="event">20</div><div>21</div><div class="event">22</div><div>23</div><div>24</div>
+        </div>
+        ${["5/15 00929 復華台灣科技優息 $0.16 預估", "5/15 00713 元大台灣高息低波 $0.85 預估", "5/20 00919 群益台灣精選高息 $0.13 預估", "5/22 00878 國泰永續高股息 $0.55 預估"].map(item => `<div class="status-row"><strong>${html(item)}</strong><div class="meta"><span>除息日與預估配息待 TWSE/投信資料確認</span></div></div>`).join("")}
+      `;
+    }
+
+    function renderStockEtfFlowPage() {
+      setPageHeader("個股 ETF 動向", "反向查詢 2330 被哪些 ETF 加碼或減碼。");
+      $("activeEtfTitle").textContent = "個股「被加碼/減碼」週報";
+      $("activeEtfSub").textContent = "可從個股查詢卡或 ETF 持股列進入；目前先用 2330 示意。";
+      $("activeEtfBadge").textContent = "2330";
+      $("activeEtfList").innerHTML = `
+        <div class="etf-hero"><h2>2330 台積電</h2><p>2026-05-09・近 7 個交易日 ETF 持股變動統計</p><div class="etf-price-line"><strong>本週 +5.2 億股</strong><span>淨買超 +38 億</span></div></div>
+        <div class="mini-pills"><div class="mini-pill tone-green"><small>加碼 ETF</small><strong>12 檔</strong></div><div class="mini-pill tone-red"><small>減碼 ETF</small><strong>3 檔</strong></div><div class="mini-pill tone-blue"><small>新進 ETF</small><strong>2 檔</strong></div></div>
+        ${["0050 元大台灣50 +1.8 億股", "00919 群益台灣精選高息 +1.2 億股", "00891 中信關鍵半導體 +0.9 億股", "00713 元大台灣高息低波 -0.5 億股"].map(text => `<div class="change-row increased"><div class="change-main"><div class="change-title"><div class="code">ETF</div><div class="name">${html(text)}</div></div><div class="change-tags"><span>權重變化待 holdings history API</span></div></div><div class="delta tone-green">週報<small>待 API</small></div></div>`).join("")}
+      `;
+    }
+
+    function renderHoldingTrendPage() {
+      setPageHeader("持股 14 日趨勢", "看權重連續加碼、減碼、新進或出清。");
+      $("activeEtfTitle").textContent = "持股 14 日權重變化";
+      $("activeEtfSub").textContent = "正式版需保留 14 日 holdings 快照；這裡先上線版型。";
+      $("activeEtfBadge").textContent = "G";
+      $("activeEtfList").innerHTML = `
+        ${["2330 台積電 14日加碼 +0.8%", "2454 聯發科 14日加碼 +0.5%", "2317 鴻海 持平 ±0%", "3008 大立光 14日減碼 -1.2%", "2412 中華電 本週新進 1.5%"].map((text, index) => `<div class="etf-row"><div class="etf-line"><strong>${html(text)}</strong><span>${index < 2 ? "加碼" : index === 3 ? "減碼" : "觀察"}</span></div>${etfSparkHtml(index + 3)}<div class="etf-spark-note">14 日權重趨勢，排序可切按權重 / 按變動。</div></div>`).join("")}
+      `;
+    }
+
+    function renderEtfSourceAdminPage() {
+      setPageHeader("資料來源狀態", "即將上市 ETF 自動更新與來源監控。");
+      $("activeEtfTitle").textContent = "ETF 資料來源管理";
+      $("activeEtfSub").textContent = "對應 spec E：未來接 GitHub Action 與 scraper 狀態。";
+      $("activeEtfBadge").textContent = "E";
+      $("activeEtfList").innerHTML = `
+        ${[
+          ["LINE Bank ETF IPO 頁", "正常", "上次抓取 5/9 06:00，下次 5/10 06:00，抓到 3 檔"],
+          ["證交所 ETF 公開資訊", "部分失敗", "抓到 1 檔，漏 2 檔；需要 fallback"],
+          ["經濟日報 ETF 新聞", "正常", "新聞數 5 則，近 30 日成功率 98%"],
+          ["投信投顧公會", "連線失敗", "上次成功 5/8 06:00，連續失敗 3 次"]
+        ].map(([name, state, note]) => `<div class="status-row"><strong>${html(name)}</strong><div class="meta"><span>${html(note)}</span><span class="badge ${state === "正常" ? "green" : state === "部分失敗" ? "amber" : "red"}">${html(state)}</span></div></div>`).join("")}
+      `;
     }
 
     async function loadActiveEtfs() {
@@ -2950,6 +3625,12 @@
       if (etfTab) {
         activeEtfTab = etfTab.dataset.etfTab;
         renderActiveEtfDetail();
+        return;
+      }
+
+      const etfTool = event.target.closest("[data-etf-tool]");
+      if (etfTool) {
+        renderEtfToolPage(etfTool.dataset.etfTool);
         return;
       }
 

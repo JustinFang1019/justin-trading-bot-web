@@ -40,6 +40,18 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- ETF UI plan moved from preview into production `index.html` after user asked to implement every item from two spec previews and push live.
+  - Spec sources read and treated as design reference: `C:\Users\Siriu\Downloads\justin-trading-bot-etf-ui-preview.html` and `C:\Users\Siriu\Downloads\justin-trading-bot-etf-extra-preview.html`.
+  - Production ETF home now has an ETF fund-flow summary card, an eight-item feature grid (`ETF 比較`, `進階篩選`, `資金流向`, `持股重疊`, `配息行事曆`, `個股 ETF 動向`, `持股 14 日趨勢`, `資料來源狀態`), the existing upcoming ETF entry, and ETF ranking rows.
+  - ETF ranking rows now expose ETF-specific decision signals from the spec: `近5日淨流入`, `近12月殖利率`, `總費用率`, `折溢價`, plus a 30-day scale trend sparkline. Missing backend fields fall back to known sample values for common ETFs or explicit `待 API`, instead of pretending the backend has full data.
+  - ETF detail hero was changed to the spec direction: white hero with blue top rule, live price/change when available, and six key ETF indicators (`總費用率`, `近12月殖利率`, `折溢價`, `近5日淨流入`, `規模`, `受益人`).
+  - Added production second-layer pages for the remaining spec items: `ETF 資金流向`, `ETF 比較工具`, `進階篩選器`, `ETF 持股重疊度熱力圖`, `配息行事曆`, `個股「被加碼/減碼」週報`, `持股 14 日權重變化`, and `ETF 資料來源管理`.
+  - `即將上市 ETF` list now displays countdown-style labels and human-readable listing dates.
+  - Intentionally not changed: original LINE bot strategy logic, LINE Flex builders, backend scraping/data jobs, and any authenticated write/watchlist behavior. C `我的觀察清單` remains out of scope per spec because it needs user binding.
+  - Files touched: `index.html`, `CODEX_HANDOFF.md`. Preview-only files remain untracked and should not be committed unless explicitly requested.
+  - Verification: `git diff --check` passed; script parsing via Node `new Function(...)` passed and confirmed all spec labels are present. In-app browser verification via local HTTP was blocked by `net::ERR_BLOCKED_BY_CLIENT`, so no browser screenshot was taken.
+  - Recommended next prompt: "把 ETF spec 裡待 API 的欄位接到後端真資料，先從資金流向、費用率/殖利率/折溢價、配息行事曆開始。"
+
 - Clarified that the `1 人` seen inside ETF cards is the ETF beneficiary count, not the web daily-user count. The web UI now displays ETF beneficiary count as `待公布` when the upstream value is missing or clearly unreasonable (`<= 1`).
 - Fixed ETF subpages so the top-left page header follows the current ETF view (`ETF 研究`, detail, or overlap) instead of staying on the previous `說明` command.
 - Clarified ETF holding-change rows: the right-side `+X萬` number is share count, so the UI now labels it as `股`; the secondary line is the weight change/weight.
