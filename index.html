@@ -118,7 +118,7 @@
     .controls {
       display: grid;
       gap: 8px;
-      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) auto;
     }
 
     .search {
@@ -569,6 +569,7 @@
       font-size: 12px;
       font-weight: 800;
       padding: 5px 8px;
+      white-space: nowrap;
     }
 
     .badge.green { background: var(--green-soft); color: var(--green); }
@@ -958,8 +959,9 @@
     }
 
     .change-row .name {
-      color: var(--muted);
-      font-size: 13px;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 800;
       line-height: 1.35;
     }
 
@@ -1063,13 +1065,20 @@
 
     .suggestions button,
     .copy-command {
-      background: var(--blue);
-      border: 1px solid var(--blue);
+      background: #fff;
+      border: 1px solid #d7e3f4;
       border-radius: 8px;
-      color: #fff;
+      color: var(--blue);
       cursor: pointer;
+      font-size: 13px;
       font-weight: 800;
-      padding: 8px 10px;
+      padding: 7px 10px;
+    }
+
+    .copy-command {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
     }
 
     .command-text {
@@ -1237,15 +1246,15 @@
     </header>
 
     <div class="toolbar">
-      <label class="search" aria-label="搜尋股票">
+      <label class="search" id="topSearchWrap" aria-label="搜尋股票">
         <input id="searchInput" placeholder="搜尋代號或名稱">
       </label>
       <div class="controls">
-        <button class="back-btn" id="backButton" type="button" disabled>上一層</button>
         <div class="auth-panel">
           <span id="authStatus">LINE 登入檢查中</span>
           <button id="authButton" type="button">登入</button>
         </div>
+        <button class="back-btn" id="backButton" type="button" disabled>上一層</button>
       </div>
       <div class="filters">
         <button class="active" data-filter="all">全部</button>
@@ -1318,7 +1327,7 @@
         </div>
         <div class="panel-body">
           <div class="etf-tools">
-            <label class="search" aria-label="搜尋 ETF 或個股">
+            <label class="search" id="activeEtfSearchWrap" aria-label="搜尋 ETF 或個股">
               <input id="activeEtfSearch" placeholder="搜尋 ETF 或個股代號，例如 00988A / 2330 / AVGO.US">
             </label>
             <section class="upcoming-etf-section" id="upcomingEtfSection">
@@ -2070,6 +2079,7 @@
         statusView: ["管理狀態", "僅管理員可查看部署、API、cache 與 quota 狀態。"]
       };
       setPageHeader(titleMap[viewId][0], titleMap[viewId][1]);
+      setActiveEtfNestedChrome(viewId === "activeEtfView" && activeEtfLevel !== "ranking");
       if (viewId === "activeEtfView" && !activeEtfs.length) loadActiveEtfs();
       if (viewId === "chartView") drawChart();
       if (viewId === "statusView") loadStatus();
@@ -2340,6 +2350,15 @@
       if (tabs) tabs.style.display = visible ? "" : "none";
     }
 
+    function setActiveEtfNestedChrome(nested) {
+      const topSearch = $("topSearchWrap");
+      const activeSearch = $("activeEtfSearchWrap");
+      const activeHead = document.querySelector("#activeEtfView .panel-head");
+      if (topSearch) topSearch.style.display = nested ? "none" : "";
+      if (activeSearch) activeSearch.style.display = nested ? "none" : "";
+      if (activeHead) activeHead.style.display = nested ? "none" : "";
+    }
+
     function upcomingRowsHtml(rows) {
       return rows.map(etf => `
         <button class="upcoming-etf-row" data-upcoming-etf-code="${html(etf.code)}" type="button">
@@ -2362,6 +2381,7 @@
     function renderUpcomingEtfListPage() {
       activeEtfLevel = "upcomingList";
       selectedEtf = null;
+      setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
       const rows = visibleUpcomingEtfs();
@@ -2381,6 +2401,7 @@
       if (!etf) return;
       activeEtfLevel = "upcoming";
       selectedEtf = null;
+      setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
       setPageHeader("ETF 研究", `${etf.code} 即將上市 ETF`);
@@ -2469,6 +2490,7 @@
     function renderActiveEtfRanking() {
       activeEtfLevel = "ranking";
       selectedEtf = null;
+      setActiveEtfNestedChrome(false);
       setUpcomingEntryVisible(true);
       setEtfTypeTabsVisible(true);
       setPageHeader("ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。");
@@ -2536,6 +2558,7 @@
         return;
       }
       activeEtfLevel = "detail";
+      setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
       setPageHeader("ETF 研究", `${selectedEtf.code} 持股變化`);
@@ -2553,8 +2576,14 @@
       const groups = isActiveManagedEtf(rank) ? allGroups : { holdings: allGroups.holdings };
       if (!groups[activeEtfTab]) activeEtfTab = Object.keys(groups)[0] || "holdings";
       const current = groups[activeEtfTab] || groups.added;
+      const heroName = selectedEtf.name || rank.name || "";
+      const heroSub = [rank.issuer, rank.manager_type, rank.category, rank.index_name].filter(Boolean).join("・");
       const unavailable = selectedEtf.detail_unavailable ? `<div class="message">這檔 ETF 的持股明細來源尚未抓到或尚未公布。${selectedEtf.detail_error ? `<br>${html(selectedEtf.detail_error)}` : ""}</div>` : "";
       $("activeEtfList").innerHTML = `
+        <div class="upcoming-detail-hero">
+          <h2><span class="upcoming-hero-code">${html(selectedEtf.code || rank.code || "")}</span><span class="upcoming-hero-name">${html(heroName)}</span></h2>
+          <p>${html(heroSub || "ETF 持股明細")}・${html(selectedEtf.data_date || activeEtfPayload?.data_date || "")}</p>
+        </div>
         <div class="mini-pills">
           <div class="mini-pill tone-amber"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
           <div class="mini-pill tone-green"><small>上市 / 天數</small><strong>${html(rank.listing_date || "-")}<br>${listingAge(rank.listing_date)}</strong></div>
@@ -2577,6 +2606,7 @@
 
     function renderEtfOverlap(data = {}) {
       activeEtfLevel = "overlap";
+      setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
       setPageHeader("ETF 研究", "共同持有 ETF");
@@ -2620,6 +2650,9 @@
 
     async function loadActiveEtfDetail(code) {
       const etf = activeEtfs.find(item => item.code === code);
+      setActiveEtfNestedChrome(true);
+      setUpcomingEntryVisible(false);
+      setEtfTypeTabsVisible(false);
       $("activeEtfList").innerHTML = `<div class="message">正在讀取 ${html(code)} 持股變化...</div>`;
       try {
         const payload = await getJson(`${API_BASE}/etfs/${encodeURIComponent(code)}`);
@@ -2636,6 +2669,9 @@
 
     async function loadEtfOverlap(stockId, stockName = "") {
       activeEtfOverlapParent = selectedEtf ? "detail" : "ranking";
+      setActiveEtfNestedChrome(true);
+      setUpcomingEntryVisible(false);
+      setEtfTypeTabsVisible(false);
       $("activeEtfList").innerHTML = `<div class="message">正在查詢 ${html(stockId)} 被哪些 ETF 持有...</div>`;
       try {
         const payload = await getJson(`${API_BASE}/etfs/stock/${encodeURIComponent(stockId)}`);

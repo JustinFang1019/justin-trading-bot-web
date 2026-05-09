@@ -272,6 +272,13 @@ Important implementation notes:
 6. Add funnel and stale-data endpoints later if needed; they were not added in this first conservative API pass.
 7. Add LIFF or authenticated write actions only after read-only mobile pages are correct.
 
+## 2026-05-09 ETF Nested View Final Polish
+
+- ETF detail, upcoming ETF detail, upcoming ETF list, and shared-holding ETF pages are treated as second-layer views. In these pages the global search input, ETF inner search input, and duplicated ETF panel heading are hidden; the black ETF hero card becomes the visible title area.
+- The auth panel is placed before the `上一層` button, so the hierarchy button stays on the right side. The `上一層` label remains the standard wording for returning one app layer, not browser history.
+- Source links (`TWSE`, `MoneyDJ`, `ETFInfo`) were toned down to white buttons with a thin border so they read as auxiliary references instead of primary actions.
+- ETF holding/change rows now make the stock name beside the stock code darker and heavier. Badges such as `3/3 檔` must stay on one line.
+
 ## Next Prompt Suggestion
 
 Ask Codex:
