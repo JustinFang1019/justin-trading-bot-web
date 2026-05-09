@@ -2104,8 +2104,14 @@
 
     function friendlyError(error, fallback = "暫時無法完成，請稍後再試。") {
       const message = String(error?.message || error || "");
-      if (/idtoken expired|id token verify failed|line auth failed|invalid_request|expired/i.test(message)) {
-        return "LINE 登入逾時，請重新按「登入」後再試一次。";
+      if (/idtoken expired|expired/i.test(message)) {
+        return "LINE 登入憑證過期，請再按一次「登入」。";
+      }
+      if (/channel|client_id|LINE_LOGIN_CHANNEL_ID|LIFF/i.test(message)) {
+        return "LINE 登入設定可能不一致，請確認 LIFF ID 與 Render 的 LINE Login Channel ID。";
+      }
+      if (/id token verify failed|line auth failed|line login failed|invalid_request/i.test(message)) {
+        return "LINE 驗證失敗，請重新按「登入」；若仍失敗可能是 LIFF Channel 設定不一致。";
       }
       if (/not whitelisted|whitelist/i.test(message)) {
         return "這個 LINE 帳號尚未在白名單，請聯絡管理員開通。";
@@ -2199,7 +2205,15 @@
       }
       const idToken = liff.getIDToken();
       if (!idToken) throw new Error("LINE idToken unavailable");
-      const payload = await postJson(`${API_BASE}/auth/line`, { id_token: idToken, liff_id: LIFF_ID });
+      let payload;
+      try {
+        payload = await postJson(`${API_BASE}/auth/line`, { id_token: idToken, liff_id: LIFF_ID });
+      } catch (error) {
+        if (/401|id token|line login failed|expired/i.test(String(error?.message || "")) && window.liff?.isLoggedIn?.()) {
+          liff.logout();
+        }
+        throw error;
+      }
       storeSession(payload.data || {});
       return true;
     }

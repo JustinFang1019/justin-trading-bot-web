@@ -40,6 +40,14 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- LINE login diagnostics after user reported inability to log in.
+  - Likely issue from current behavior: frontend showed only generic `登入失敗`, which corresponds more closely to backend `/auth/line` returning generic LINE id-token verification failure, not whitelist denial. Whitelist denial already maps to a separate `尚未在白名單` style message.
+  - Web `index.html` now translates LINE login failures more clearly: expired token, LIFF/channel mismatch, id-token verify failure, and whitelist errors get distinct messages.
+  - Web `index.html` now logs out the stale LIFF session locally when backend rejects the id token with 401/id-token style errors, so pressing login again can request a fresh LINE credential.
+  - Backend `stock_scanner/web_api.py` now returns more specific `/api/web/auth/line` error text for missing LINE Login channel config, expired token, or id-token verification failure instead of always returning generic `LINE login failed`.
+  - Verification: web script parsed successfully with Node `new Function(...)`; `git diff --check` passed in both repos. Backend Python compile still could not run because `py -3` reports no installed Python runtime. Live API validation was not run in this step.
+  - Recommended next prompt: "請重新開 GitHub Pages，按登入一次；如果還失敗，把新的錯誤文字貼給我，我再判斷是 LIFF Channel ID、白名單、還是 token 過期。"
+
 - ETF UI clarity cleanup after user screenshot feedback.
   - Web `index.html` now hides the global stock-command search bar on ETF pages, leaving only the ETF-specific search input.
   - Removed the ETF home fund-flow card entirely because it was not intraday and duplicated the dedicated detail page. Fund flow remains available from the feature grid/detail page.
