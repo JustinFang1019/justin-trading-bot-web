@@ -44,7 +44,8 @@ It is not yet a real backend or LINE/LIFF app.
   - `index.html` now makes `ETF 比較工具` interactive: selected ETF chips, manual ETF-code input, popular quick-pick chips, remove-by-click, and dynamic compare table width for up to 6 ETFs.
   - `進階篩選器` now has presets (`高股息`, `低費用`, `大型 ETF`, `主動式`, `全部`), search text, range controls for asset size / trailing yield / expense ratio, and a data-completeness checkbox. Results update immediately and still click through to ETF detail.
   - `個股「被加碼/減碼」週報` now has a stock-code search input and quick-pick chips, instead of being fixed to `2330`.
-  - Verification: frontend script parsed with Node `new Function(...)`; `git diff --check` passed. Local browser check via `http://127.0.0.1:8766/index.html` confirmed the compare input/chips, filter controls, and stock-flow search/quick-pick controls render. Clicking `2454` in `個股 ETF 動向` updated the query to `2454 聯發科`.
+  - `ETF 持股 14 日趨勢` was clarified so it means "choose an ETF, then inspect that ETF's component-stock weight changes"; it now has an ETF-code input and quick-pick chips instead of silently using fixed `00919`.
+  - Verification: frontend script parsed with Node `new Function(...)`; `git diff --check` passed. Local browser check via `http://127.0.0.1:8766/index.html` confirmed the compare input/chips, filter controls, stock-flow search/quick-pick controls, and holding-trend ETF selector render. Clicking `2454` in `個股 ETF 動向` updated the query to `2454 聯發科`; clicking `00878` in `ETF 持股 14 日趨勢` updated the page to `00878 成分股權重趨勢`.
   - Recommended next prompt: "ETF 比較和進階篩選實機看起來怎樣？要不要再加自訂欄位排序或儲存常用比較組？"
 
 - User asked to formally connect ETF APIs so the production UI is usable, not just preview/mock.

@@ -1815,8 +1815,8 @@
                 <span>輸入 2330，看本週哪些 ETF 加碼或減碼</span>
               </button>
               <button class="etf-feature-card" data-etf-tool="holdingTrend" type="button">
-                <strong>持股 14 日趨勢</strong>
-                <span>看權重連續加碼、減碼、新進或出清</span>
+                <strong>ETF 持股 14 日趨勢</strong>
+                <span>輸入 ETF 代號，看這檔 ETF 內成分股權重變化</span>
               </button>
               <button class="etf-feature-card" data-etf-tool="sourceAdmin" type="button">
                 <strong>資料來源狀態</strong>
@@ -1893,6 +1893,7 @@
     let activeEtfOverlapParentCode = "";
     let etfCompareCodes = ["00878", "00919", "00940"];
     let etfStockFlowId = "2330";
+    let etfHoldingTrendCode = "00919";
     let etfFilterSettings = {
       preset: "highDividend",
       query: "",
@@ -3391,6 +3392,22 @@
       `;
     }
 
+    function holdingTrendControlsHtml(code) {
+      const quickCodes = [...new Set(["00919", "00878", "0050", "006208", "00713", "00929", "00940", "00981A", ...popularEtfCodes()])].slice(0, 16);
+      return `
+        <div class="tool-controls">
+          <div class="tool-input-row">
+            <input id="etfHoldingTrendInput" inputmode="latin" value="${html(code)}" placeholder="輸入 ETF 代號，例如 00919 / 00878">
+            <button data-etf-holding-trend-search type="button">查詢</button>
+          </div>
+          <div class="tool-chip-row">
+            ${quickCodes.map(item => `<button class="tool-chip ${code === item ? "active" : ""}" data-etf-holding-trend-pick="${html(item)}" type="button">${html(item)}</button>`).join("")}
+          </div>
+          <div class="message">這裡查的是「某檔 ETF 裡的成分股」近 14 日權重變化；點個股可再看有哪些 ETF 持有。</div>
+        </div>
+      `;
+    }
+
     function applyEtfFilterPreset(preset) {
       const presets = {
         highDividend: { preset, minAsset: 300, minYield: 4, maxExpense: 1, completeOnly: true },
@@ -3605,13 +3622,18 @@
     }
 
     async function renderHoldingTrendPage() {
-      setEtfToolShell("持股 14 日權重變化", "看權重連續加碼、減碼、新進或出清。", "00919");
+      const code = normalizeEtfCode(etfHoldingTrendCode) || "00919";
+      etfHoldingTrendCode = code;
+      setEtfToolShell("ETF 持股 14 日趨勢", `查詢 ${code} 這檔 ETF 內成分股近 14 日權重變化。`, code);
       try {
-        const payload = await getJson(`${API_BASE}/etfs/holding-trends/00919`);
+        const payload = await getJson(`${API_BASE}/etfs/holding-trends/${encodeURIComponent(code)}`);
         const data = payload.data || {};
-        $("activeEtfBadge").textContent = `${data.snapshot_count || 0} 快照`;
+        $("activeEtfBadge").textContent = `${code} / ${data.snapshot_count || 0} 快照`;
         $("activeEtfList").innerHTML = `
+          ${holdingTrendControlsHtml(code)}
+          <div class="etf-hero"><h2>${html(code)} 成分股權重趨勢</h2><p>下方是這檔 ETF 持有的個股，呈現近 14 日權重升降，不是個股查詢結果。</p><div class="etf-price-line"><strong>${(data.rows || []).length} 檔成分股</strong><span>${html(data.data_date || "API")}</span></div></div>
           ${data.warning && data.complete === false ? `<div class="message">${html(data.warning)}</div>` : ""}
+          <div class="section-title">成分股權重變化 <span>點個股可看有哪些 ETF 持有</span></div>
           ${(data.rows || []).slice(0, 20).map((row, index) => `<div class="etf-row" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}"><div class="etf-line"><strong>${html(row.stock_id)} ${html(row.stock_name || "")}</strong><span>${fmtPctValue(row.weight_delta)}</span></div>${etfSparkHtml(index + 3)}<div class="etf-spark-note">目前權重 ${fmtPctValue(row.weight)}・前次/最早快照 ${fmtPctValue(row.old_weight)}・${html(data.data_date || "")}</div></div>`).join("") || `<div class="message">目前沒有持股趨勢資料。</div>`}
         `;
       } catch (error) {
@@ -3862,6 +3884,13 @@
         const stockId = normalizeStockFlowId(event.target.value || "");
         if (stockId) etfStockFlowId = stockId;
         await renderStockEtfFlowPage();
+        return;
+      }
+      if (event.target?.id === "etfHoldingTrendInput") {
+        event.preventDefault();
+        const code = normalizeEtfCode(event.target.value || "");
+        if (code) etfHoldingTrendCode = code;
+        await renderHoldingTrendPage();
       }
     });
     $("authButton").addEventListener("click", async () => {
@@ -3967,6 +3996,22 @@
         const stockId = normalizeStockFlowId(input?.value || "");
         if (stockId) etfStockFlowId = stockId;
         await renderStockEtfFlowPage();
+        return;
+      }
+
+      const holdingTrendPick = event.target.closest("[data-etf-holding-trend-pick]");
+      if (holdingTrendPick) {
+        etfHoldingTrendCode = normalizeEtfCode(holdingTrendPick.dataset.etfHoldingTrendPick) || "00919";
+        await renderHoldingTrendPage();
+        return;
+      }
+
+      const holdingTrendSearch = event.target.closest("[data-etf-holding-trend-search]");
+      if (holdingTrendSearch) {
+        const input = $("etfHoldingTrendInput");
+        const code = normalizeEtfCode(input?.value || "");
+        if (code) etfHoldingTrendCode = code;
+        await renderHoldingTrendPage();
         return;
       }
 
