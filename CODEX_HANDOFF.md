@@ -49,10 +49,10 @@ It is not yet a real backend or LINE/LIFF app.
 
 - ETF metric-pill cleanup after user noted each ETF row used to have four boxes and `費用率/經保費` wraps.
   - Root cause: the previous fourth ETF row metric was removed when the misleading `資金/規模` indicator was taken out; the row was left with only yield, fee, and premium/discount.
-  - Web `index.html` now restores the fourth ETF row metric as `規模`, keeping the four-box layout without implying intraday fund flow.
+  - Web `index.html` restores the fourth ETF row metric as `受益人`, keeping the four-box layout without duplicating the row-right `規模` value or implying intraday fund flow.
   - Web `index.html` renames `費用率/經保費` to `費率` in ETF row pills, detail hero pills, and compare table labels to avoid mobile wrapping. The value still represents true fee if available, otherwise management fee + custody fee fallback.
   - Verification: web script parsed with Node `new Function(...)`; `git diff --check` passed. Local browser could open the ETF page shell but API fetch was blocked in the local preview, so list-row visual data was verified from markup/code rather than live rows.
-  - Recommended next prompt: "請看手機 ETF 首頁列表，確認四格 `殖利率 / 費率 / 折溢價 / 規模` 是否比原本清楚。"
+  - Recommended next prompt: "請看手機 ETF 首頁列表，確認四格 `殖利率 / 費率 / 折溢價 / 受益人` 是否比原本清楚。"
 
 - Teaching public-access fix after user reported the third "教學" topic should be available without login.
   - Live check showed `/api/web/command?text=教學` already returned the teaching menu, but teaching subtopic commands such as `KD` returned `401 Unauthorized`, so clicking a teaching topic could still look blocked.

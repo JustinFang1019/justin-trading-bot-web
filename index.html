@@ -3315,7 +3315,7 @@
           <div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${html(m.yield12m)}</strong></div>
           <div class="mini-pill tone-blue"><small>費率</small><strong>${html(m.expense)}</strong></div>
           <div class="mini-pill tone-amber"><small>折溢價</small><strong>${html(m.premium)}</strong></div>
-          <div class="mini-pill tone-green"><small>規模</small><strong>${fmtBillion(etf.asset_size_billion)}</strong></div>
+          <div class="mini-pill tone-green"><small>受益人</small><strong>${fmtHolders(etf.holders || etf.beneficiaries)}</strong></div>
         </div>
       `;
     }
