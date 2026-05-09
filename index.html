@@ -3295,8 +3295,9 @@
       return `
         <div class="metric-pills">
           <div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${html(m.yield12m)}</strong></div>
-          <div class="mini-pill tone-blue"><small>費用率/經保費</small><strong>${html(m.expense)}</strong></div>
+          <div class="mini-pill tone-blue"><small>費率</small><strong>${html(m.expense)}</strong></div>
           <div class="mini-pill tone-amber"><small>折溢價</small><strong>${html(m.premium)}</strong></div>
+          <div class="mini-pill tone-green"><small>規模</small><strong>${fmtBillion(etf.asset_size_billion)}</strong></div>
         </div>
       `;
     }
@@ -3404,7 +3405,7 @@
           <div class="etf-price-line"><div><small>收盤價</small><strong>${fmtNumber(rank.close_price)}</strong></div><span>${fmtSignedPct(rank.change_rate)}</span></div>
         </div>
         <div class="mini-pills">
-          <div class="mini-pill tone-blue"><small>費用率/經保費</small><strong>${html(heroMetrics.expense)}</strong></div>
+          <div class="mini-pill tone-blue"><small>費率</small><strong>${html(heroMetrics.expense)}</strong></div>
           <div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${html(heroMetrics.yield12m)}</strong></div>
           <div class="mini-pill tone-amber"><small>折溢價</small><strong>${html(heroMetrics.premium)}</strong></div>
           <div class="mini-pill tone-blue"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
@@ -3854,7 +3855,7 @@
           <div class="compare-table"><div class="compare-grid" style="${gridStyle}">
             <div class="label"></div>${rows.map(row => `<div class="head">${html(row.code)}</div>`).join("")}
             <div class="label">規模</div>${rows.map(row => `<div>${fmtBillion(row.asset_size_billion)}</div>`).join("")}
-            <div class="label">費用率/經保費</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).expense)}</div>`).join("")}
+            <div class="label">費率</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).expense)}</div>`).join("")}
             <div class="label">近12月殖利率</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).yield12m)}</div>`).join("")}
             <div class="label">折溢價</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).premium)}</div>`).join("")}
             <div class="label">持股檔數</div>${rows.map(row => `<div>${row.holding_count || 0}</div>`).join("")}
