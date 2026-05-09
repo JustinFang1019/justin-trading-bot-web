@@ -40,6 +40,18 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-09
 
+- ETF usability/data cleanup after user reported confusing ETF home/search, missing fee/yield/flow fields, non-clickable calendar, and fixed heatmap.
+  - Web `index.html` now changes the global search placeholder to Web trial-command wording, so it no longer looks like a stale prior command.
+  - ETF fund flow home card now reads `/api/web/etfs/flow` instead of deriving from stale ranking scale deltas, labels it as near-month subscription/redemption data, states it is not an intraday jumping buy/sell imbalance, and adds refresh plus optional 5-minute auto refresh.
+  - ETF fund flow detail page now supports `1m`, `3m`, and `12m` period buttons, shows subscription/redemption mini bars, and keeps the `申`/`贖` values visible.
+  - Heatmap is now hand-selectable: users can add/remove ETF codes, quick-pick popular ETFs, and recompute overlap for up to 6 ETFs.
+  - Dividend calendar day/event chips are now clickable and show more ETF codes directly inside the calendar cells.
+  - Stock ETF flow UI no longer repeats the cache explanation in the controls. Backend `stock_scanner/web_api.py` now uses ETFInfo public stock-holder pages as a fallback current holding source, while still using cached before/after holding snapshots for true add/reduce deltas.
+  - Backend ETFInfo metric enrichment bumped cache versions and increases enrichment coverage. If true total expense ratio is not disclosed yet, backend still derives management fee + custody fee when ETFInfo provides them; UI labels this as `費用率/經保費` instead of over-promising true total expense ratio.
+  - Intentionally not changed: monthly fund flow is not intraday buy/sell imbalance; listed-less-than-12-month ETFs can still lack 12-month yield.
+  - Verification: web script parsed successfully with Node `new Function(...)`; `git diff --check` passed in both repos. In-app browser local preview confirmed ETF placeholder, hand-select heatmap controls, clickable dividend calendar ETF chips, and updated stock-flow wording. Backend Python compile still could not run because `py -3` reports no installed Python runtime.
+  - Recommended next prompt: "Render 部署後再驗 `/api/web/etfs/flow`、`/api/web/etfs/stock-flow/2330`、`/api/web/etfs/source-status`，確認 IFA 月申贖、ETFInfo 個股持有 fallback、費用率快取都有生效。"
+
 - ETF fund-flow correction after user pointed out historical flow should be fetchable.
   - Important data distinction: TWSE ETF e-Fortune product ranking is still a current ETF list/scale source, and TPEx official historical ETF endpoint provides historical trading/turnover data, not true fund inflow/outflow.
   - Backend `stock_scanner/web_api.py` in `justin-trading-bot-main-deploy` now maps known active ETF stock codes to ifa.ai fund IDs and fetches the fund redemption page `__NEXT_DATA__` to read historical monthly subscription/redemption/net-subscription values.
