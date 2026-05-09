@@ -338,3 +338,9 @@ Ask Codex:
 - User said the Home icon looked too simple and asked for a larger solid house.
 - Updated `index.html` on branch `codex/solid-home-icon`: the toolbar Home button now uses a larger solid blue CSS house mark instead of the text glyph `⌂`.
 - Behavior is unchanged from the previous Home button implementation.
+
+## 2026-05-09 Refined Home Icon
+
+- User felt the solid CSS house was too large.
+- Updated `index.html` on branch `codex/refine-home-icon`: replaced the oversized CSS-composed house with a smaller 21px solid SVG house icon using `currentColor`.
+- Home button placement and behavior remain unchanged.
