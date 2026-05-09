@@ -1239,6 +1239,90 @@
       padding: 10px;
     }
 
+    .tool-controls {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .tool-input-row {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .tool-input-row input {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 800;
+      min-width: 0;
+      padding: 10px 12px;
+    }
+
+    .tool-input-row button,
+    .tool-chip {
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--blue);
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 900;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 12px;
+    }
+
+    .tool-chip.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .tool-chip.warn {
+      background: var(--amber-soft);
+      border-color: #fde68a;
+      color: var(--amber);
+    }
+
+    .tool-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-panel input[type="range"] {
+      accent-color: var(--blue);
+      width: 100%;
+    }
+
+    .filter-panel .range-line {
+      grid-template-columns: 78px minmax(0, 1fr) 78px;
+    }
+
+    .filter-panel label {
+      align-items: center;
+      color: var(--muted);
+      display: flex;
+      font-size: 12px;
+      font-weight: 900;
+      gap: 8px;
+    }
+
+    .filter-panel input[type="checkbox"] {
+      accent-color: var(--blue);
+      height: 16px;
+      width: 16px;
+    }
+
     .range-line {
       align-items: center;
       display: grid;
@@ -1807,6 +1891,15 @@
     let activeEtfLevel = "ranking";
     let activeEtfOverlapParent = "ranking";
     let activeEtfOverlapParentCode = "";
+    let etfCompareCodes = ["00878", "00919", "00940"];
+    let etfFilterSettings = {
+      preset: "highDividend",
+      query: "",
+      minAsset: 300,
+      minYield: 4,
+      maxExpense: 1,
+      completeOnly: true
+    };
     let selectedUpcomingEtfCode = "";
     const upcomingEtfs = [
       {
@@ -3239,6 +3332,100 @@
       `;
     }
 
+    function normalizeEtfCode(value) {
+      return String(value || "").trim().toUpperCase().replace(/[^0-9A-Z]/g, "").slice(0, 6);
+    }
+
+    function popularEtfCodes() {
+      const preferred = ["0050", "0056", "006208", "00713", "00878", "00891", "00919", "00929", "00940"];
+      const ranked = activeEtfs.slice(0, 12).map(row => row.code).filter(Boolean);
+      return [...new Set([...preferred, ...ranked])].slice(0, 16);
+    }
+
+    function setCompareCodes(codes) {
+      const normalized = [];
+      for (const code of codes || []) {
+        const sid = normalizeEtfCode(code);
+        if (sid && !normalized.includes(sid)) normalized.push(sid);
+      }
+      etfCompareCodes = normalized.slice(0, 6);
+      if (!etfCompareCodes.length) etfCompareCodes = ["00878", "00919", "00940"];
+    }
+
+    function etfCompareControlsHtml() {
+      return `
+        <div class="tool-controls">
+          <div class="tool-chip-row">
+            ${etfCompareCodes.map(code => `<button class="tool-chip active" data-etf-compare-remove="${html(code)}" type="button">${html(code)} ×</button>`).join("")}
+          </div>
+          <div class="tool-input-row">
+            <input id="etfCompareInput" inputmode="latin" placeholder="輸入 ETF 代號，例如 0050 / 00919">
+            <button data-etf-compare-add type="button">加入</button>
+          </div>
+          <div class="tool-chip-row">
+            ${popularEtfCodes().map(code => `<button class="tool-chip ${etfCompareCodes.includes(code) ? "active" : ""}" data-etf-compare-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
+          </div>
+          <div class="message">最多比較 6 檔；點已選代號可移除。</div>
+        </div>
+      `;
+    }
+
+    function applyEtfFilterPreset(preset) {
+      const presets = {
+        highDividend: { preset, minAsset: 300, minYield: 4, maxExpense: 1, completeOnly: true },
+        lowExpense: { preset, minAsset: 500, minYield: 0, maxExpense: 0.45, completeOnly: true },
+        large: { preset, minAsset: 1000, minYield: 0, maxExpense: 1.5, completeOnly: false },
+        active: { preset, minAsset: 0, minYield: 0, maxExpense: 2, completeOnly: false },
+        all: { preset, minAsset: 0, minYield: 0, maxExpense: 2, completeOnly: false }
+      };
+      etfFilterSettings = { ...etfFilterSettings, ...(presets[preset] || presets.highDividend), query: etfFilterSettings.query || "" };
+    }
+
+    function advancedFilteredEtfs() {
+      const s = etfFilterSettings;
+      const q = String(s.query || "").trim().toLowerCase();
+      return activeEtfs.filter(row => {
+        const text = [row.code, row.name, row.issuer, row.category, row.manager_type, row.index_name].join(" ").toLowerCase();
+        if (q && !text.includes(q)) return false;
+        if (s.preset === "active" && !`${row.manager_type || ""} ${row.category || ""} ${row.name || ""}`.includes("主動")) return false;
+        if (s.preset === "highDividend" && !`${row.category || ""} ${row.name || ""} ${row.index_name || ""}`.includes("高")) return false;
+        if (s.completeOnly && (row.yield_12m == null || row.expense_ratio == null || row.nav_premium == null)) return false;
+        if (Number(row.asset_size_billion || 0) < Number(s.minAsset || 0)) return false;
+        if (row.yield_12m != null && Number(row.yield_12m) < Number(s.minYield || 0)) return false;
+        if (row.yield_12m == null && Number(s.minYield || 0) > 0) return false;
+        if (row.expense_ratio != null && Number(row.expense_ratio) > Number(s.maxExpense || 99)) return false;
+        if (row.expense_ratio == null && s.completeOnly) return false;
+        return true;
+      }).slice(0, 40);
+    }
+
+    function etfFilterControlsHtml(rows) {
+      const s = etfFilterSettings;
+      const presets = [
+        ["highDividend", "高股息"],
+        ["lowExpense", "低費用"],
+        ["large", "大型 ETF"],
+        ["active", "主動式"],
+        ["all", "全部"]
+      ];
+      return `
+        <div class="filter-panel">
+          <div class="tool-chip-row">
+            ${presets.map(([key, label]) => `<button class="tool-chip ${s.preset === key ? "active" : ""}" data-etf-filter-preset="${key}" type="button">${label}</button>`).join("")}
+          </div>
+          <div class="tool-input-row">
+            <input id="etfAdvancedFilterQuery" data-etf-filter-text value="${html(s.query || "")}" placeholder="搜尋名稱、發行商、指數或代號">
+            <button data-etf-filter-clear type="button">清除</button>
+          </div>
+          <div class="range-line"><span>規模</span><input data-etf-filter-control="minAsset" type="range" min="0" max="5000" step="100" value="${html(s.minAsset)}"><strong>${Number(s.minAsset || 0).toLocaleString("zh-TW")} 億+</strong></div>
+          <div class="range-line"><span>殖利率</span><input data-etf-filter-control="minYield" type="range" min="0" max="12" step="0.5" value="${html(s.minYield)}"><strong>${Number(s.minYield || 0).toLocaleString("zh-TW", { maximumFractionDigits: 1 })}%+</strong></div>
+          <div class="range-line"><span>費用率</span><input data-etf-filter-control="maxExpense" type="range" min="0.2" max="2" step="0.05" value="${html(s.maxExpense)}"><strong>≤ ${Number(s.maxExpense || 0).toLocaleString("zh-TW", { maximumFractionDigits: 2 })}%</strong></div>
+          <label><input data-etf-filter-complete type="checkbox" ${s.completeOnly ? "checked" : ""}> 只看費用率 / 殖利率 / 折溢價都有資料的 ETF</label>
+          <div class="message">目前符合 ${rows.length} 檔；可用上方條件即時調整。</div>
+        </div>
+      `;
+    }
+
     async function renderEtfToolPage(tool) {
       activeEtfLevel = `tool:${tool}`;
       selectedEtf = null;
@@ -3298,14 +3485,16 @@
     async function renderEtfComparePage() {
       setEtfToolShell("ETF 比較工具", "比較費用率、殖利率、折溢價與持股重疊。", "3 檔");
       try {
-        const payload = await getJson(`${API_BASE}/etfs/compare?codes=00878,00919,00940`);
+        setCompareCodes(etfCompareCodes);
+        const payload = await getJson(`${API_BASE}/etfs/compare?codes=${encodeURIComponent(etfCompareCodes.join(","))}`);
         const data = payload.data || {};
         const rows = data.etfs || [];
         $("activeEtfBadge").textContent = `${rows.length} 檔`;
+        const gridStyle = `grid-template-columns:90px repeat(${Math.max(1, rows.length)}, 112px); min-width:${90 + Math.max(1, rows.length) * 112}px;`;
         $("activeEtfList").innerHTML = `
-          <div class="filters">${rows.map(row => `<button class="active" data-etf-code="${html(row.code)}">${html(row.code)}</button>`).join("")}</div>
+          ${etfCompareControlsHtml()}
           ${data.warning && data.complete === false ? `<div class="message">${html(data.warning)}</div>` : ""}
-          <div class="compare-table"><div class="compare-grid">
+          <div class="compare-table"><div class="compare-grid" style="${gridStyle}">
             <div class="label"></div>${rows.map(row => `<div class="head">${html(row.code)}</div>`).join("")}
             <div class="label">規模</div>${rows.map(row => `<div>${fmtBillion(row.asset_size_billion)}</div>`).join("")}
             <div class="label">總費用率</div>${rows.map(row => `<div>${html(etfDecisionMetrics(row).expense)}</div>`).join("")}
@@ -3325,21 +3514,11 @@
     async function renderEtfFilterPage() {
       setPageHeader("進階篩選", "規模、殖利率、費用率、配息頻率與資金流。");
       $("activeEtfTitle").textContent = "進階篩選器";
-      $("activeEtfSub").textContent = "使用目前 ETF API 欄位即時篩選，缺欄位的 ETF 會自然排除。";
-      const rows = activeEtfs
-        .filter(row => Number(row.asset_size_billion) >= 500)
-        .filter(row => row.expense_ratio == null || Number(row.expense_ratio) <= 1)
-        .filter(row => row.yield_12m == null || Number(row.yield_12m) >= 4)
-        .slice(0, 20);
+      $("activeEtfSub").textContent = "可調整條件即時篩選；結果可直接點進 ETF 明細。";
+      const rows = advancedFilteredEtfs();
       $("activeEtfBadge").textContent = `${rows.length}/${activeEtfs.length || 0} 檔`;
       $("activeEtfList").innerHTML = `
-        <div class="filter-panel">
-          <div class="range-line"><span>規模</span><div class="range-track"><i style="width:72%"></i></div><strong>500 億+</strong></div>
-          <div class="range-line"><span>殖利率</span><div class="range-track"><i style="width:64%"></i></div><strong>4%+</strong></div>
-          <div class="range-line"><span>總費用率</span><div class="range-track"><i style="width:48%"></i></div><strong>≤ 1.0%</strong></div>
-          <div class="range-line"><span>資料</span><div class="range-track"><i style="width:80%"></i></div><strong>ETFInfo/TWSE</strong></div>
-        </div>
-        <div class="filters"><button class="active">熱門高股息</button><button>低費用市值型</button><button>主動式新秀</button><button>海外配置</button></div>
+        ${etfFilterControlsHtml(rows)}
         ${rows.map((row, index) => `<div class="etf-row" data-etf-code="${html(row.code)}"><div class="etf-line"><strong><span class="rank">#${index + 1}</span> ${html(row.code)} ${html(row.name || "")}</strong><span>符合</span></div><div class="meta"><span>殖利率 ${html(etfDecisionMetrics(row).yield12m)}</span><span>費用率 ${html(etfDecisionMetrics(row).expense)}</span><span>規模 ${fmtBillion(row.asset_size_billion)}</span></div></div>`).join("") || `<div class="message">目前沒有符合這組條件的 ETF。</div>`}
       `;
     }
@@ -3621,6 +3800,39 @@
       renderActiveEtfRanking();
       updateBackButton();
     });
+    document.addEventListener("input", async event => {
+      const control = event.target.closest("[data-etf-filter-control]");
+      if (control) {
+        etfFilterSettings[control.dataset.etfFilterControl] = Number(control.value);
+        await renderEtfFilterPage();
+        return;
+      }
+      const text = event.target.closest("[data-etf-filter-text]");
+      if (text) {
+        etfFilterSettings.query = text.value || "";
+        await renderEtfFilterPage();
+        const input = $("etfAdvancedFilterQuery");
+        if (input) {
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+        return;
+      }
+      const complete = event.target.closest("[data-etf-filter-complete]");
+      if (complete) {
+        etfFilterSettings.completeOnly = complete.checked;
+        await renderEtfFilterPage();
+      }
+    });
+    document.addEventListener("keydown", async event => {
+      if (event.key !== "Enter") return;
+      if (event.target?.id === "etfCompareInput") {
+        event.preventDefault();
+        const code = normalizeEtfCode(event.target.value || "");
+        if (code) setCompareCodes([...etfCompareCodes, code]);
+        await renderEtfComparePage();
+      }
+    });
     $("authButton").addEventListener("click", async () => {
       if (webSessionToken) {
         clearSession();
@@ -3684,6 +3896,44 @@
       const etfTool = event.target.closest("[data-etf-tool]");
       if (etfTool) {
         await renderEtfToolPage(etfTool.dataset.etfTool);
+        return;
+      }
+
+      const comparePick = event.target.closest("[data-etf-compare-pick]");
+      if (comparePick) {
+        const code = normalizeEtfCode(comparePick.dataset.etfComparePick);
+        setCompareCodes(etfCompareCodes.includes(code) ? etfCompareCodes.filter(item => item !== code) : [...etfCompareCodes, code]);
+        await renderEtfComparePage();
+        return;
+      }
+
+      const compareRemove = event.target.closest("[data-etf-compare-remove]");
+      if (compareRemove) {
+        setCompareCodes(etfCompareCodes.filter(code => code !== normalizeEtfCode(compareRemove.dataset.etfCompareRemove)));
+        await renderEtfComparePage();
+        return;
+      }
+
+      const compareAdd = event.target.closest("[data-etf-compare-add]");
+      if (compareAdd) {
+        const input = $("etfCompareInput");
+        const code = normalizeEtfCode(input?.value || "");
+        if (code) setCompareCodes([...etfCompareCodes, code]);
+        await renderEtfComparePage();
+        return;
+      }
+
+      const filterPreset = event.target.closest("[data-etf-filter-preset]");
+      if (filterPreset) {
+        applyEtfFilterPreset(filterPreset.dataset.etfFilterPreset);
+        await renderEtfFilterPage();
+        return;
+      }
+
+      const filterClear = event.target.closest("[data-etf-filter-clear]");
+      if (filterClear) {
+        etfFilterSettings.query = "";
+        await renderEtfFilterPage();
         return;
       }
 
