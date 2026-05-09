@@ -321,3 +321,14 @@ Ask Codex:
 - Updated the Web help card and search/header copy so the UI says help-card demo commands are available and other stock features belong in LINE bot. User explicitly confirmed `RS排名` can stay in the unauthenticated help-card list.
 - Intentionally not changed: backend `/api/web/command`, LIFF session endpoints, ETF research, tutorial command behavior, and original LINE bot strategy/card logic.
 - Verification to run before push/merge: `git diff --check`, inline script parse through Node REPL, and if possible manual GitHub Pages/mobile check after deploy.
+
+## 2026-05-09 Topic Home Button
+
+- User approved adding a Home button on the same toolbar row as `上一層`, placed immediately to the left of `上一層`, while keeping the original UI styling.
+- Implemented in `index.html` on branch `codex/topic-home-button`.
+- The new `⌂` button returns to the current topic's home state:
+  - `個股查詢`: clears the command input/history and shows the Web help card.
+  - `ETF 研究`: clears ETF search/filter and returns to the ETF ranking home.
+  - Other tabs currently have no deeper home state, so the button reactivates the current tab and scrolls to top.
+- Preview artifacts created during discussion but not intended for production unless explicitly requested: `today-broadcast-preview.html`, `home-button-preview.png`.
+- Intentionally not changed: LINE command access rules, backend APIs, ETF data behavior, and original LINE bot card/strategy logic.
