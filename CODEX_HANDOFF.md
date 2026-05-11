@@ -40,6 +40,13 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- Teaching child pages always expose back navigation.
+  - User clarified the issue was not only the click path: any teaching child page, including `RS排名`, had no usable `上一層` button.
+  - Web `index.html` now detects when the active scan page itself is a teaching child command (`KD`, `RS`, `RS排名`, etc.) and enables `上一層` even when command history has only one item or was opened directly.
+  - Pressing `上一層` from those direct child pages now returns to the local 教學選單 instead of doing nothing.
+  - Verification: web script parsed with Node; `git diff --check` passed.
+  - Recommended next prompt: "Deploy 後直接搜尋 RS排名、RS、KD，再確認上一層都會回教學選單。"
+
 - Teaching/help page back-button fix.
   - User reported `上一層` was disabled on teaching content pages such as `RS 排名`.
   - Root cause: help-card navigation rendered or loaded commands without recording the previous help/teaching page in `commandHistory`, so the shared top `上一層` button thought there was no prior layer.

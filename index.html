@@ -2973,6 +2973,17 @@
       return PUBLIC_EDU_COMMANDS.some(item => compactCommand(item) === compactCommand(command));
     }
 
+    function educationBackParent(command) {
+      const compact = compactCommand(command);
+      if (!compact || compact === compactCommand("教學") || compact === compactCommand("學習")) return "";
+      if (isEducationCommand(command) || compact === compactCommand("RS排名")) return "教學";
+      return "";
+    }
+
+    function isScanEducationChildPage() {
+      return Boolean(document.querySelector("#scanView.active") && educationBackParent($("searchInput").value));
+    }
+
     function renderJoinLineBotPrompt(command) {
       const text = String(command || "").trim();
       selected = null;
@@ -3490,6 +3501,15 @@
         updateBackButton();
         return;
       }
+      const scanParent = educationBackParent($("searchInput").value);
+      if (document.querySelector("#scanView.active") && scanParent && commandHistory.length <= 1) {
+        commandHistory = [scanParent];
+        $("searchInput").value = scanParent;
+        renderWebEducation();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        updateBackButton();
+        return;
+      }
       if (commandHistory.length <= 1) return;
       commandHistory.pop();
       const prev = commandHistory[commandHistory.length - 1];
@@ -3544,7 +3564,7 @@
     function updateBackButton() {
       const etfNested = Boolean(document.querySelector("#activeEtfView.active") && activeEtfLevel !== "ranking");
       $("backButton").textContent = "上一層";
-      $("backButton").disabled = !etfNested && commandHistory.length <= 1;
+      $("backButton").disabled = !etfNested && commandHistory.length <= 1 && !isScanEducationChildPage();
     }
 
     function queueLookup() {
