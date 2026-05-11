@@ -3560,10 +3560,18 @@
         if (activeEtfs.length) renderActiveEtfRanking();
         else loadActiveEtfs();
       } else if (viewId === "scanView") {
-        commandHistory = [];
-        $("searchInput").value = "";
-        setPageForCommand("");
-        renderWebHelp();
+        const scanParent = scanBackTarget || educationBackParent($("searchInput").value);
+        if (scanParent) {
+          commandHistory = [scanParent];
+          scanBackTarget = "";
+          $("searchInput").value = scanParent;
+          renderWebEducation();
+        } else {
+          commandHistory = [];
+          $("searchInput").value = "";
+          setPageForCommand("");
+          renderWebHelp();
+        }
       } else {
         activate(viewId);
       }

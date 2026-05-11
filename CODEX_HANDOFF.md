@@ -40,6 +40,12 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- Teaching child page home-button target fixed.
+  - User clarified the `home` button on teaching child pages should return to the teaching home/menu, not the general web help page.
+  - Web `index.html` now checks `scanBackTarget` / teaching-child detection inside `goTopicHome()`. From teaching child pages, home returns to the 教學選單; from normal scan pages, home still returns to the general 說明 page.
+  - Verification: web script parsed with Node; `git diff --check` passed.
+  - Recommended next prompt: "Deploy 後進入教學子頁，測 home 回教學選單、上一層也回教學選單；再從一般個股頁測 home 仍回說明。"
+
 - RS ranking public-command backend permission fix.
   - User reported `RS排名` returned 403 while `RS` returned 200. Render logs confirmed `/api/web/command?text=RS排名` was blocked by the backend, not by the frontend.
   - Backend `stock_scanner/web_api.py` now treats normalized `RS排名`, `RS排行`, and `RS排行榜` as public web commands so the existing backend guard does not reject the command before generating the card.
