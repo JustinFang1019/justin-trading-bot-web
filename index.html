@@ -2370,7 +2370,7 @@
     let activeEtfLevel = "ranking";
     let activeEtfOverlapParent = "ranking";
     let activeEtfOverlapParentCode = "";
-    let etfCompareCodes = ["00981A", "00982A", "00878"];
+    let etfCompareCodes = ["00878", "00919", "00929", "00940"];
     let etfHeatmapCodes = ["00981A", "00982A", "00878", "00919", "00929", "00940"];
     let etfStockFlowId = "2330";
     let etfHoldingTrendCode = "00981A";
@@ -3964,7 +3964,11 @@
     function prioritizedEtfCodes(mode = "activeRotation", limit = 16) {
       const preferred = mode === "flow"
         ? (activeEtfPayload?.default_heatmap_codes || [])
-        : (activeEtfPayload?.default_holding_trend_codes || activeEtfPayload?.default_compare_codes || []);
+        : (activeEtfPayload?.default_holding_trend_codes || []);
+      if (mode === "compare") {
+        const comparePreferred = activeEtfPayload?.default_compare_codes || activeEtfPayload?.default_heatmap_codes || [];
+        return [...new Set([...comparePreferred, ...prioritizedEtfCodes("flow", limit)])].slice(0, limit);
+      }
       const fallback = ["00981A", "00982A", "00980A", "00985A", "00984A", "00878", "00919", "00929", "00940", "0050", "006208"];
       const sorted = [...activeEtfs].sort((a, b) => {
         if (mode === "flow") return etfFlowInterestScore(b) - etfFlowInterestScore(a);
@@ -3984,7 +3988,7 @@
         if (sid && !normalized.includes(sid)) normalized.push(sid);
       }
       etfCompareCodes = normalized.slice(0, 6);
-      if (!etfCompareCodes.length) etfCompareCodes = prioritizedEtfCodes("activeRotation", 3);
+      if (!etfCompareCodes.length) etfCompareCodes = prioritizedEtfCodes("compare", 4);
     }
 
     function setHeatmapCodes(codes) {
@@ -4008,7 +4012,7 @@
             <button data-etf-compare-add type="button">加入</button>
           </div>
           <div class="tool-chip-row">
-            ${popularEtfCodes().map(code => `<button class="tool-chip ${etfCompareCodes.includes(code) ? "active" : ""}" data-etf-compare-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
+            ${prioritizedEtfCodes("compare", 16).map(code => `<button class="tool-chip ${etfCompareCodes.includes(code) ? "active" : ""}" data-etf-compare-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
           </div>
           <div class="message">最多比較 6 檔；點已選代號可移除。</div>
         </div>

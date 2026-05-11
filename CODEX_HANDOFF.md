@@ -40,6 +40,12 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- ETF compare default changed to hot inflow ranking.
+  - User clarified `ETF 比較工具` defaults should also compare ETFs with the largest recent inflow because that better represents popularity.
+  - Backend `stock_scanner/web_api.py` now sets `default_compare_codes` using the flow-interest ranking, matching the heatmap concept, while keeping `default_holding_trend_codes` active/rotation-first.
+  - Web `index.html` now uses the compare/flow list for compare defaults and compare suggestion chips; holding-trend suggestions remain active/rotation-first.
+  - Verification: web script parse and diff checks should be rerun before push.
+
 - ETF tool priority tuning for active ETFs and hot inflows.
   - User clarified that ETF holding-change features should emphasize active ETFs because active ETFs rotate holdings more often, and that heatmap defaults should start from ETFs with stronger recent inflow / popularity.
   - Backend `stock_scanner/web_api.py` now prioritizes ETF tool candidates by active ETF status first, then holding/asset rotation score, and exposes `default_compare_codes`, `default_heatmap_codes`, and `default_holding_trend_codes` in `/api/web/etfs`.
