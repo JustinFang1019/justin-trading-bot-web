@@ -4718,7 +4718,7 @@
       const requestSeq = ++etfToolRequestSeq;
       setEtfToolShell("ETF 資金流向", "以基金申購 / 贖回月資料判斷淨流入流出。", "資料");
       try {
-        const payload = await getJson(`${API_BASE}/etfs/flow`);
+        const payload = await getJson(`${API_BASE}/etfs/flow?period=${encodeURIComponent(etfFlowPeriod)}`);
         if (requestSeq !== etfToolRequestSeq) return;
         const data = payload.data || {};
         const inflows = data.inflows || [];

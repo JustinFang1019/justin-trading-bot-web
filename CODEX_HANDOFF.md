@@ -40,6 +40,14 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- ETF fund-flow period bug fix.
+  - User noticed `ETF 資金流向` appeared to be using 12-month data even though the current date is 2026-05. Root cause: web `index.html` rendered period tabs but did not pass `period` to `/api/web/etfs/flow`, while backend IFA period parsing could fall back to item order if the Chinese period-name regex did not match exactly.
+  - Backend `stock_scanner/web_api.py` now defaults ETF flow to `1m`, accepts `period=1m|3m|12m`, labels source fields as `ifa_net_subscription_{months}m`, and bumps `IFA_FLOW_CACHE_VERSION` to 2 so stale/mis-keyed flow caches refresh.
+  - Backend IFA parsing now extracts the numeric month from the period name using a language-agnostic digit match instead of relying on the exact Chinese phrase `過去 N 個月`.
+  - Web `index.html` now calls `/etfs/flow?period=${etfFlowPeriod}` so the selected `近1月 / 近3月 / 近12月` tab matches the backend period.
+  - Verification: portable workspace Python `.python311` ran `py_compile` for `stock_scanner/web_api.py` and `app.py`; web script parsed with Node; `git diff --check` passed in both repos.
+  - Recommended next prompt: "Deploy 後打開 ETF 資金流向，確認預設是近1月；再切近3月/近12月，檢查 row 上的期間文字與合計是否跟 tab 一致。"
+
 - Stock ETF flow page redesign v2.1.
   - User provided updated scope `C:\Users\Siriu\Downloads\etf-codex-patch-stock-flow-page.md` and preview `C:\Users\Siriu\Downloads\etf-stock-flow-page-redesign.html`, asking to use the preview when details are unclear.
   - Web `index.html` now updates the `個股 ETF 動向` page: hero is split into left title and right stacked count, period chips (`近 7/14/30 日`) are wired as frontend state, stats are reduced to three cards with `新進` shown as a subset of加碼, net buy/sell gets an emphasized border and arrow, search quick picks now have a `常用查詢` label and solid blue search button, the long source note is shortened into a gray hint, and new ETF rows show `+X% / 新進權重`.
