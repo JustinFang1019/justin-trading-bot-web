@@ -4410,17 +4410,30 @@
       `;
     }
 
-    function stockFlowControlsHtml(stockId) {
-      const quickCodes = ["2330", "2454", "2317", "2308", "2412", "2881", "3008", "3661"];
+    function stockFlowControlsHtml(stockId, quickPicks = []) {
+      const fallbackPicks = ["2330", "2454", "2317", "2308", "2412", "2881", "3008", "3661"].map(code => ({ stock_id: code }));
+      const normalizedPicks = (Array.isArray(quickPicks) && quickPicks.length ? quickPicks : fallbackPicks)
+        .map(item => typeof item === "string" ? { stock_id: item } : item)
+        .filter(item => normalizeStockFlowId(item.stock_id));
+      const hasCurrent = normalizedPicks.some(item => normalizeStockFlowId(item.stock_id) === stockId);
+      const quickCodes = (hasCurrent ? normalizedPicks : [{ stock_id: stockId }, ...normalizedPicks]).slice(0, 8);
       return `
         <div class="tool-controls stock-flow-search">
           <div class="tool-input-row">
             <input id="etfStockFlowInput" inputmode="latin" value="${html(stockId)}" placeholder="輸入個股代號，例如 2330 / 2454">
             <button data-etf-stock-flow-search type="button">查詢</button>
           </div>
-          <div class="chips-label">常用查詢</div>
+          <div class="chips-label">熱門被持有個股</div>
           <div class="tool-chip-row">
-            ${quickCodes.map(code => `<button class="tool-chip ${stockId === code ? "active" : ""}" data-etf-stock-flow-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
+            ${quickCodes.map(item => {
+              const code = normalizeStockFlowId(item.stock_id);
+              const hint = [
+                item.stock_name,
+                item.holding_etf_count ? `${item.holding_etf_count} 檔 ETF 持有` : "",
+                Number.isFinite(Number(item.recent_change_billion)) ? `近期變動 ${Number(item.recent_change_billion).toFixed(1)} 億` : ""
+              ].filter(Boolean).join(" / ");
+              return `<button class="tool-chip ${stockId === code ? "active" : ""}" data-etf-stock-flow-pick="${html(code)}" title="${html(hint)}" type="button">${html(code)}</button>`;
+            }).join("")}
           </div>
         </div>
       `;
@@ -4904,7 +4917,7 @@
         };
         $("activeEtfBadge").textContent = data.stock_id || stockId;
         $("activeEtfList").innerHTML = `
-          ${stockFlowControlsHtml(data.stock_id || stockId)}
+          ${stockFlowControlsHtml(data.stock_id || stockId, data.quick_picks || [])}
           <div class="etf-hero">
             <div class="stock-flow-hero-flex">
               <div class="stock-flow-hero-left">
