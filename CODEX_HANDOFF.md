@@ -40,6 +40,13 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- ETF homepage sort row and visual asset-size change.
+  - User asked to add a sortable row under ETF category tabs and make `規模變化` more visual. Web `index.html` now adds ETF homepage sorting by `規模金額` default, `近12月殖利率`, `費率`, `折溢價`, and `受益人數`; clicking the active sort toggles descending/ascending, while switching to another metric starts descending.
+  - ETF homepage ranks now reflect the current sort order instead of the original backend rank. Each ETF card now shows a zero-axis horizontal size-change bar: positive asset delta extends right in green, negative extends left in red, with the exact `億` value retained above the bar.
+  - Intentionally not changed: backend ranking payload remains unchanged; this is a frontend sorting/visualization update using existing fields.
+  - Verification: web script parsed with Node `new Function(...)`; `git diff --check` passed. Browser preview via Browser plugin was attempted, but the in-app browser blocked local `file://` and `localhost` navigation with client policy, so visual verification was limited to static code/JS checks.
+  - Recommended next prompt: "Deploy 後用手機版看 ETF 首頁，點排序列的殖利率、費率、折溢價、受益人數各兩次，確認排序方向和卡片寬度都正常；如果規模變化條太細或顏色不直覺，再截圖指定調整。"
+
 - ETF total expense ratio gap-fill improvement.
   - User reported that some ETF total expense ratios were still missing. Investigation showed ETFInfo often exposes `managementFee` and `custodyFee` even when `totalExpenseRatio` is null, and the backend parser already computes the sum, but the scheduled/manual ETFInfo metric warmup only refreshed a tiny common subset.
   - Backend `stock_scanner/web_api.py` now adds fee-readiness helpers, source-status fee coverage (`費率 ready/total`), and a missing-fee-first refresh candidate list. Admin manual `ETFInfo metrics` retry now refreshes the next missing-fee batch with a time budget so it does not block the web worker indefinitely.

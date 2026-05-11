@@ -223,6 +223,43 @@
       text-align: center;
     }
 
+    .etf-sort-row {
+      display: flex;
+      gap: 7px;
+      margin-top: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .etf-sort-row button {
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: #475467;
+      cursor: pointer;
+      display: inline-flex;
+      flex: 1 0 auto;
+      font-size: 12px;
+      font-weight: 900;
+      gap: 4px;
+      justify-content: center;
+      min-width: 92px;
+      padding: 8px 10px;
+      white-space: nowrap;
+    }
+
+    .etf-sort-row button.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .etf-sort-row button span {
+      font-size: 12px;
+      min-width: 10px;
+    }
+
     .filters button,
     .icon-btn,
     .card-button {
@@ -1088,6 +1125,64 @@
     .etf-spark i.dn { background: var(--red); }
     .etf-spark i.flat { background: #cbd5e1; }
     .etf-spark i.zero { background: transparent !important; min-height: 0; }
+
+    .asset-delta-wrap {
+      display: grid;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .asset-delta-head {
+      align-items: center;
+      color: var(--muted);
+      display: flex;
+      font-size: 12px;
+      font-weight: 800;
+      justify-content: space-between;
+    }
+
+    .asset-delta-head strong {
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .asset-delta-bar {
+      background: #eef2f7;
+      border-radius: 999px;
+      height: 9px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .asset-delta-bar::after {
+      background: rgba(15, 23, 42, 0.32);
+      content: "";
+      height: 100%;
+      left: 50%;
+      position: absolute;
+      top: 0;
+      width: 1px;
+    }
+
+    .asset-delta-bar i {
+      border-radius: 999px;
+      display: block;
+      height: 100%;
+      min-width: 3px;
+      position: absolute;
+      top: 0;
+    }
+
+    .asset-delta-bar i.up {
+      background: var(--green);
+      left: 50%;
+    }
+
+    .asset-delta-bar i.dn {
+      background: var(--red);
+      right: 50%;
+    }
 
     .etf-spark-note {
       color: var(--muted);
@@ -2315,6 +2410,13 @@
               <button data-etf-filter="highDividend">高股息</button>
               <button data-etf-filter="bond">債券/入息</button>
             </div>
+            <div class="etf-sort-row" id="etfSortRow" aria-label="ETF 排序">
+              <button class="active" data-etf-sort="asset_size_billion" type="button">規模金額 <span>↓</span></button>
+              <button data-etf-sort="yield_12m" type="button">近12月殖利率 <span></span></button>
+              <button data-etf-sort="expense_ratio" type="button">費率 <span></span></button>
+              <button data-etf-sort="nav_premium" type="button">折溢價 <span></span></button>
+              <button data-etf-sort="holders" type="button">受益人數 <span></span></button>
+            </div>
           </div>
           <div class="status-grid" id="activeEtfList" style="margin-top:10px;"></div>
         </div>
@@ -2367,6 +2469,8 @@
     let activeEtfTab = "ranking";
     let activeEtfSearch = "";
     let activeEtfFilter = "all";
+    let activeEtfSortKey = "asset_size_billion";
+    let activeEtfSortDir = "desc";
     let activeEtfLevel = "ranking";
     let activeEtfOverlapParent = "ranking";
     let activeEtfOverlapParentCode = "";
@@ -3468,9 +3572,37 @@
 
     function visibleActiveEtfs() {
       const q = activeEtfSearch.trim().toLowerCase();
-      return activeEtfs.filter(etf => {
+      const rows = activeEtfs.filter(etf => {
         const queryOk = !q || [etf.code, etf.name, etf.issuer, etf.category, etf.index_name].some(value => String(value || "").toLowerCase().includes(q));
         return queryOk && etfFilterOk(etf);
+      });
+      return sortActiveEtfs(rows);
+    }
+
+    function sortMetricValue(etf = {}, key = activeEtfSortKey) {
+      if (key === "holders") return Number(etf.holders ?? etf.beneficiaries);
+      return Number(etf[key]);
+    }
+
+    function sortActiveEtfs(rows = []) {
+      const dir = activeEtfSortDir === "asc" ? 1 : -1;
+      return [...rows].sort((a, b) => {
+        const av = sortMetricValue(a);
+        const bv = sortMetricValue(b);
+        const aOk = Number.isFinite(av);
+        const bOk = Number.isFinite(bv);
+        if (aOk && bOk && av !== bv) return (av - bv) * dir;
+        if (aOk !== bOk) return aOk ? -1 : 1;
+        return Number(b.asset_size_billion || 0) - Number(a.asset_size_billion || 0) || String(a.code || "").localeCompare(String(b.code || ""));
+      });
+    }
+
+    function updateEtfSortButtons() {
+      document.querySelectorAll("[data-etf-sort]").forEach(button => {
+        const active = button.dataset.etfSort === activeEtfSortKey;
+        button.classList.toggle("active", active);
+        const arrow = button.querySelector("span");
+        if (arrow) arrow.textContent = active ? (activeEtfSortDir === "asc" ? "↑" : "↓") : "";
       });
     }
 
@@ -3523,6 +3655,8 @@
     function setEtfTypeTabsVisible(visible) {
       const tabs = $("etfTypeTabs");
       if (tabs) tabs.style.display = visible ? "" : "none";
+      const sort = $("etfSortRow");
+      if (sort) sort.style.display = visible ? "" : "none";
     }
 
     function setEtfHomeToolsVisible(visible) {
@@ -3738,6 +3872,27 @@
       return "等待可用快照";
     }
 
+    function etfAssetDeltaBarHtml(etf = {}, maxAbs = 0) {
+      const delta = Number(etf.asset_delta_billion);
+      if (!Number.isFinite(delta)) {
+        return `
+          <div class="asset-delta-wrap">
+            <div class="asset-delta-head"><span>規模變化</span><strong>${html(etfAssetTrendText(etf))}</strong></div>
+            <div class="asset-delta-bar"></div>
+          </div>
+        `;
+      }
+      const scale = Math.max(1, Number(maxAbs) || Math.abs(delta));
+      const width = Math.max(5, Math.min(50, Math.abs(delta) / scale * 50));
+      const klass = delta >= 0 ? "up" : "dn";
+      return `
+        <div class="asset-delta-wrap">
+          <div class="asset-delta-head"><span>規模變化</span><strong>${html(fmtBillionSigned(delta))}</strong></div>
+          <div class="asset-delta-bar"><i class="${klass}" style="width:${width}%"></i></div>
+        </div>
+      `;
+    }
+
     function metricPillsHtml(etf = {}) {
       const m = etfDecisionMetrics(etf);
       return `
@@ -3763,21 +3918,23 @@
       setEtfTypeTabsVisible(true);
       setPageHeader("ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。");
       $("activeEtfTitle").textContent = "ETF 研究";
-      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}，全部 ETF 依規模排序；可輸入 ETF 或個股代號。` : "盤後每日更新，Web 只讀快照。";
+      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}；可依規模、殖利率、費率、折溢價與受益人排序。` : "盤後每日更新，Web 只讀快照。";
       const rows = visibleActiveEtfs();
       $("activeEtfBadge").textContent = `${rows.length || 0}/${activeEtfs.length || 0} 檔`;
+      updateEtfSortButtons();
       const flow = $("activeEtfFlowSummary");
       if (flow) flow.innerHTML = "";
+      const maxDelta = Math.max(...rows.map(row => Math.abs(Number(row.asset_delta_billion))).filter(Number.isFinite), 1);
       $("activeEtfList").innerHTML = rows.length ? rows.map((etf, index) => {
         return `
           <div class="etf-row" data-etf-code="${html(etf.code)}">
             <div class="etf-line">
-              <strong><span class="rank">#${html(etf.rank || index + 1)}</span> ${html(etf.code)} ${html(etf.name || "")}</strong>
+              <strong><span class="rank">#${html(index + 1)}</span> ${html(etf.code)} ${html(etf.name || "")}</strong>
               <span>${fmtBillion(etf.asset_size_billion)}</span>
             </div>
             <div class="meta"><span>${html(etf.manager_type || "")}</span><span>${html(etf.category || "")}</span><span>${html(etf.issuer || "")}</span><span>${listingAge(etf.listing_date)}</span></div>
             ${metricPillsHtml(etf)}
-            <div class="etf-spark-note">規模變化狀態：${etfAssetTrendText(etf)}</div>
+            ${etfAssetDeltaBarHtml(etf, maxDelta)}
           </div>
         `;
       }).join("") : `<div class="message">${activeEtfs.length ? "沒有符合搜尋或分類的 ETF。" : "目前沒有 ETF 快照。Render 部署後會在第一次讀取時建立快取。"}</div>`;
@@ -4924,6 +5081,18 @@
       const etfTool = event.target.closest("[data-etf-tool]");
       if (etfTool) {
         await renderEtfToolPage(etfTool.dataset.etfTool);
+        return;
+      }
+
+      const etfSort = event.target.closest("[data-etf-sort]");
+      if (etfSort) {
+        const key = etfSort.dataset.etfSort;
+        if (activeEtfSortKey === key) activeEtfSortDir = activeEtfSortDir === "desc" ? "asc" : "desc";
+        else {
+          activeEtfSortKey = key;
+          activeEtfSortDir = "desc";
+        }
+        renderActiveEtfRanking();
         return;
       }
 
