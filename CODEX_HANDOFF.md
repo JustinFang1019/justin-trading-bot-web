@@ -1,6 +1,6 @@
 # Codex Handoff
 
-Last updated: 2026-05-10 Asia/Taipei
+Last updated: 2026-05-12 Asia/Taipei
 
 ## Current User Intent
 
@@ -37,6 +37,15 @@ Then commit and push the handoff update to GitHub so another computer can contin
 - `.github/workflows/update-market-data.yml` to update snapshots on weekdays.
 
 It is not yet a real backend or LINE/LIFF app.
+
+## Latest Session Notes - 2026-05-12
+
+- ETF outage diagnosis/fix after Render logs showed `WORKER TIMEOUT` while fetching ETFInfo metrics for `00403A`.
+  - Root cause: backend `stock_scanner/web_api.py` still allowed normal web requests to synchronously fetch missing ETFInfo metrics and missing holdings while rebuilding ETF ranking / compare / heatmap / reverse-flow pages. A first ETF request after cache rollover could chain many external requests and exceed Gunicorn's worker timeout.
+  - Backend fix: normal web requests now use cached ETFInfo metrics and cached holdings only; missing metrics return a cache-not-ready marker instead of live-fetching. Only authorized `refresh=1` requests fetch missing ETFInfo metrics. ETFInfo request timeout is reduced via `ETFINFO_REQUEST_TIMEOUT` defaulting to 5 seconds, and normal detail responses no longer fetch ETFInfo public-change data unless explicitly refreshed.
+  - Intentionally not changed: frontend UI layout was not changed in this incident fix; this is a backend stability patch.
+  - Verification: backend `git diff --check` passed. Python compile still could not run on this machine because the Windows launcher reports `No installed Python found!`.
+  - Recommended next prompt: "部署後看 Render logs 是否還有 `WORKER TIMEOUT`；若 `/api/web/etfs` 仍慢，再把 ranking payload 拆成摘要與分頁。"
 
 ## Latest Session Notes - 2026-05-10
 
