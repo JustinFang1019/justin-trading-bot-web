@@ -40,6 +40,15 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- ETF tool priority tuning for active ETFs and hot inflows.
+  - User clarified that ETF holding-change features should emphasize active ETFs because active ETFs rotate holdings more often, and that heatmap defaults should start from ETFs with stronger recent inflow / popularity.
+  - Backend `stock_scanner/web_api.py` now prioritizes ETF tool candidates by active ETF status first, then holding/asset rotation score, and exposes `default_compare_codes`, `default_heatmap_codes`, and `default_holding_trend_codes` in `/api/web/etfs`.
+  - Backend heatmap defaults use a flow-interest score that reads cached `net_purchase_*.json` near-5-day net purchase when available, then falls back to net flow / asset delta / size / holders.
+  - Backend `stock-flow` rows now carry `manager_type` and sort active ETFs ahead when rotation amount is comparable, with share-delta amount and weight delta as the next priorities.
+  - Web `index.html` now initializes compare, heatmap, and holding-trend defaults from the backend suggestions; fallback defaults are active-ETF-first. Heatmap chips use the flow-interest list rather than the generic ETF suggestions.
+  - Verification: web script parsed with Node `new Function(...)`; `git diff --check` passed in both repos. Python compile still could not run because this Windows environment reports `No installed Python found!`.
+  - Recommended next prompt: "部署後打開 ETF 熱力圖與 ETF 持股 14 日趨勢，確認預設代號是否更符合主動式/熱門資金流方向；若要指定固定白名單，再把想優先的 ETF 代號貼給 Codex。"
+
 - ETF source admin access and auto-refresh plan.
   - User asked for `ETF 資料來源狀態` to be visible/clickable only by the admin, with default automatic updates at important ETF data-change times and manual update available only when data looks wrong.
   - Web `index.html` now hides the `資料來源狀態` feature card unless the logged-in LINE session is admin, guards direct render attempts, and sends admin auth headers for source status/retry/log actions.

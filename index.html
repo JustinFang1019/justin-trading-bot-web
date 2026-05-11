@@ -2370,10 +2370,10 @@
     let activeEtfLevel = "ranking";
     let activeEtfOverlapParent = "ranking";
     let activeEtfOverlapParentCode = "";
-    let etfCompareCodes = ["00878", "00919", "00940"];
-    let etfHeatmapCodes = ["00878", "00919", "00940", "00713", "00929", "00891"];
+    let etfCompareCodes = ["00981A", "00982A", "00878"];
+    let etfHeatmapCodes = ["00981A", "00982A", "00878", "00919", "00929", "00940"];
     let etfStockFlowId = "2330";
-    let etfHoldingTrendCode = "00919";
+    let etfHoldingTrendCode = "00981A";
     let etfFlowPeriod = "1m";
     let calendarMonth = null;
     let holdingTrendSort = "weight";
@@ -3941,10 +3941,40 @@
       return String(value || "").trim().toUpperCase().replace(/[^0-9A-Z.]/g, "").slice(0, 12);
     }
 
+    function etfIsActive(row) {
+      return `${row?.manager_type || ""} ${row?.category || ""} ${row?.name || ""}`.includes("主動");
+    }
+
+    function etfRotationScore(row) {
+      return Math.max(
+        Math.abs(num(row?.asset_delta_billion, 0)),
+        Math.abs(num(row?.net_flow_5d_billion, 0)),
+        Math.abs(num(row?.net_purchase_5d_billion, 0))
+      );
+    }
+
+    function etfFlowInterestScore(row) {
+      return Math.max(
+        num(row?.net_purchase_5d_billion, 0),
+        num(row?.net_flow_5d_billion, 0),
+        num(row?.asset_delta_billion, 0)
+      ) * 1000000 + num(row?.asset_size_billion, 0) * 10 + num(row?.holders || row?.beneficiaries, 0) / 1000;
+    }
+
+    function prioritizedEtfCodes(mode = "activeRotation", limit = 16) {
+      const preferred = mode === "flow"
+        ? (activeEtfPayload?.default_heatmap_codes || [])
+        : (activeEtfPayload?.default_holding_trend_codes || activeEtfPayload?.default_compare_codes || []);
+      const fallback = ["00981A", "00982A", "00980A", "00985A", "00984A", "00878", "00919", "00929", "00940", "0050", "006208"];
+      const sorted = [...activeEtfs].sort((a, b) => {
+        if (mode === "flow") return etfFlowInterestScore(b) - etfFlowInterestScore(a);
+        return Number(etfIsActive(b)) - Number(etfIsActive(a)) || etfRotationScore(b) - etfRotationScore(a) || num(b.asset_size_billion, 0) - num(a.asset_size_billion, 0);
+      }).map(row => row.code).filter(Boolean);
+      return [...new Set([...preferred, ...sorted, ...fallback])].slice(0, limit);
+    }
+
     function popularEtfCodes() {
-      const preferred = ["0050", "0056", "006208", "00713", "00878", "00891", "00919", "00929", "00940"];
-      const ranked = activeEtfs.slice(0, 12).map(row => row.code).filter(Boolean);
-      return [...new Set([...preferred, ...ranked])].slice(0, 16);
+      return prioritizedEtfCodes("activeRotation", 16);
     }
 
     function setCompareCodes(codes) {
@@ -3954,7 +3984,7 @@
         if (sid && !normalized.includes(sid)) normalized.push(sid);
       }
       etfCompareCodes = normalized.slice(0, 6);
-      if (!etfCompareCodes.length) etfCompareCodes = ["00878", "00919", "00940"];
+      if (!etfCompareCodes.length) etfCompareCodes = prioritizedEtfCodes("activeRotation", 3);
     }
 
     function setHeatmapCodes(codes) {
@@ -3964,7 +3994,7 @@
         if (sid && !normalized.includes(sid)) normalized.push(sid);
       }
       etfHeatmapCodes = normalized.slice(0, 6);
-      if (etfHeatmapCodes.length < 2) etfHeatmapCodes = ["00878", "00919", "00940", "00713"];
+      if (etfHeatmapCodes.length < 2) etfHeatmapCodes = prioritizedEtfCodes("flow", 6);
     }
 
     function etfCompareControlsHtml() {
@@ -3996,9 +4026,9 @@
             <button data-etf-heatmap-add type="button">加入</button>
           </div>
           <div class="tool-chip-row">
-            ${popularEtfCodes().map(code => `<button class="tool-chip ${etfHeatmapCodes.includes(code) ? "active" : ""}" data-etf-heatmap-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
+            ${prioritizedEtfCodes("flow", 16).map(code => `<button class="tool-chip ${etfHeatmapCodes.includes(code) ? "active" : ""}" data-etf-heatmap-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
           </div>
-          <div class="message">至少 2 檔、最多 6 檔；熱力圖會用目前可取得的持股權重計算交集。</div>
+          <div class="message">預設優先挑近期資金流入或規模變化較大的熱門 ETF；至少 2 檔、最多 6 檔。</div>
         </div>
       `;
     }
@@ -4019,7 +4049,7 @@
     }
 
     function holdingTrendControlsHtml(code) {
-      const quickCodes = [...new Set(["00919", "00878", "0050", "006208", "00713", "00929", "00940", "00981A", ...popularEtfCodes()])].slice(0, 16);
+      const quickCodes = prioritizedEtfCodes("activeRotation", 16);
       return `
         <div class="tool-controls">
           <div class="tool-input-row">
@@ -4587,6 +4617,9 @@
         const payload = await getJson(`${API_BASE}/etfs`);
         activeEtfPayload = payload.data || {};
         activeEtfs = activeEtfPayload.etfs || [];
+        setCompareCodes(activeEtfPayload.default_compare_codes || etfCompareCodes);
+        setHeatmapCodes(activeEtfPayload.default_heatmap_codes || etfHeatmapCodes);
+        etfHoldingTrendCode = normalizeEtfCode((activeEtfPayload.default_holding_trend_codes || [])[0]) || etfHoldingTrendCode;
         activeEtfTab = "added";
         renderActiveEtfRanking();
         updateBackButton();
