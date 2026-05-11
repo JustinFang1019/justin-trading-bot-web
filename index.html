@@ -3342,6 +3342,8 @@
     async function runHelpCommand(command) {
       const text = String(command || "").trim();
       if (!text) return;
+      rememberCurrentScanPage(text);
+      rememberCommand(text);
       activate("scanView");
       $("searchInput").value = text;
       if (["說明", "help", "HELP"].includes(text)) {
@@ -3357,7 +3359,7 @@
         return;
       }
       $("cardFeed").innerHTML = `<div class="message">正在示範查詢 ${html(text)}...</div>`;
-      await loadCommand(text);
+      await loadCommand(text, { trackHistory: false });
     }
 
     function setPageForCommand(command) {
@@ -3390,11 +3392,13 @@
       $("actionNotice").innerHTML = "";
     }
 
-    async function loadCommand(command) {
+    async function loadCommand(command, options = {}) {
+      const trackHistory = options.trackHistory !== false;
       const text = String(command || "").trim();
       if (!text) return;
       setPageForCommand(text);
       if (isEducationCommand(text) && compactCommand(text) === compactCommand("教學")) {
+        if (trackHistory) rememberCommand(text);
         renderWebEducation();
         return;
       }
@@ -3404,7 +3408,7 @@
       }
       try {
         const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`, commandFetchOptions());
-        rememberCommand(text);
+        if (trackHistory) rememberCommand(text);
         renderCommandPayload(text, payload.data || {});
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = `更新 ${friendlyTime(payload.generated_at)}`;
@@ -3440,6 +3444,12 @@
       const last = commandHistory[commandHistory.length - 1];
       if (text && text !== last) commandHistory.push(text);
       updateBackButton();
+    }
+
+    function rememberCurrentScanPage(nextText = "") {
+      const current = $("searchInput").value.trim() || "說明";
+      if (nextText && compactCommand(current) === compactCommand(nextText)) return;
+      rememberCommand(current);
     }
 
     async function goBack() {
@@ -3484,8 +3494,18 @@
       commandHistory.pop();
       const prev = commandHistory[commandHistory.length - 1];
       $("searchInput").value = prev;
-      updateBackButton();
       $("cardFeed").innerHTML = `<div class="message">正在回到 ${html(prev)}...</div>`;
+      if (["說明", "help", "HELP"].includes(prev)) {
+        renderOriginalFeed();
+        updateBackButton();
+        return;
+      }
+      if (isEducationCommand(prev) && compactCommand(prev) === compactCommand("教學")) {
+        renderWebEducation();
+        updateBackButton();
+        return;
+      }
+      updateBackButton();
       try {
         const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(prev)}`, commandFetchOptions());
         renderCommandPayload(prev, payload.data || {});

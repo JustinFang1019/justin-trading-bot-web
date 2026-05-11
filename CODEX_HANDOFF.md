@@ -40,6 +40,13 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- Teaching/help page back-button fix.
+  - User reported `上一層` was disabled on teaching content pages such as `RS 排名`.
+  - Root cause: help-card navigation rendered or loaded commands without recording the previous help/teaching page in `commandHistory`, so the shared top `上一層` button thought there was no prior layer.
+  - Web `index.html` now records help navigation as a stack, e.g. `說明 → 教學 → RS`, and `goBack()` handles local `說明` / `教學` pages without calling the backend command API.
+  - Verification: web script parsed with Node; `git diff --check` passed.
+  - Recommended next prompt: "Deploy 後從說明小卡點 教學，再點 RS 或 KD，確認上一層先回教學選單，再按一次回說明。"
+
 - ETF flow period labels and fallback cleanup.
   - User noticed ETF 資金流向 rows showed stale period strings such as `2025.12`, `2025.12~2025.10`, and `2025.12~2025.01` under `近1月 / 近3月 / 近12月`, and that rows could mix `規模變化` fallback amounts with stale ifa申/贖 labels.
   - Backend `stock_scanner/web_api.py` now parses the actual month range from ifa.ai period names, returns `flow_period_label`, actual observed months, requested months, stale flags, and counts rows whose available months are shorter than the selected tab. `IFA_FLOW_CACHE_VERSION` is bumped to 3 so old period parsing refreshes.
