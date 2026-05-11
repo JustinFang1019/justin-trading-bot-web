@@ -40,6 +40,14 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- Stock ETF flow page redesign v2.1.
+  - User provided updated scope `C:\Users\Siriu\Downloads\etf-codex-patch-stock-flow-page.md` and preview `C:\Users\Siriu\Downloads\etf-stock-flow-page-redesign.html`, asking to use the preview when details are unclear.
+  - Web `index.html` now updates the `個股 ETF 動向` page: hero is split into left title and right stacked count, period chips (`近 7/14/30 日`) are wired as frontend state, stats are reduced to three cards with `新進` shown as a subset of加碼, net buy/sell gets an emphasized border and arrow, search quick picks now have a `常用查詢` label and solid blue search button, the long source note is shortened into a gray hint, and new ETF rows show `+X% / 新進權重`.
+  - Web `index.html` also applies the spec's global refinements conservatively: top status pill is a single-line horizontal bar with `更新 M/D HH:mm`, and the auth row demotes `登出` while making `上一層` the main blue navigation button.
+  - Intentionally not changed: backend period support is not added yet. The three period chips currently re-render the same cached stock-flow payload, matching v2.1 scope; `/etfs/stock-flow/{id}?period=...` is a later v2.2 backend task.
+  - Verification: web script parsed with Node `new Function(...)`; `git diff --check` passed. Local browser preview was not rerun because the Browser plugin previously blocked local/file URL navigation in this environment.
+  - Recommended next prompt: "Deploy 後打開 ETF > 個股 ETF 動向，測 2317 / 2330；確認 hero、三格統計、期間 chips、Top row 新進權重與手機寬度是否和預覽一致，再決定是否要接後端 `?period=`。"
+
 - ETF homepage sort row and visual asset-size change.
   - User asked to add a sortable row under ETF category tabs and make `規模變化` more visual. Web `index.html` now adds ETF homepage sorting by `規模金額` default, `近12月殖利率`, `費率`, `折溢價`, and `受益人數`; clicking the active sort toggles descending/ascending, while switching to another metric starts descending.
   - ETF homepage ranks now reflect the current sort order instead of the original backend rank. Each ETF card now shows a zero-axis horizontal size-change bar: positive asset delta extends right in green, negative extends left in red, with the exact `億` value retained above the bar.

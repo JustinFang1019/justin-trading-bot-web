@@ -82,25 +82,40 @@
     }
 
     .status-pill {
+      align-items: center;
       background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      display: grid;
-      gap: 3px;
-      min-width: 136px;
-      padding: 8px 9px;
-      text-align: right;
+      border-radius: 6px;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      min-width: 288px;
+      padding: 5px 12px;
+      text-align: left;
     }
 
     .status-pill strong {
-      display: block;
+      align-items: center;
+      display: inline-flex;
       font-size: 12px;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .status-pill strong::before {
+      background: var(--green);
+      border-radius: 999px;
+      content: "";
+      display: inline-block;
+      height: 6px;
+      width: 6px;
     }
 
     .status-pill span {
       color: var(--muted);
-      display: block;
-      font-size: 10px;
+      display: inline-block;
+      font-size: 11px;
+      white-space: nowrap;
     }
 
     .status-pill .usage-count {
@@ -191,15 +206,44 @@
     }
 
     .auth-panel button {
-      background: var(--blue);
-      border: 1px solid var(--blue);
+      background: transparent;
+      border: 1px solid transparent;
       border-radius: 8px;
-      color: #fff;
+      color: var(--muted);
       cursor: pointer;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 700;
       padding: 7px 9px;
       white-space: nowrap;
+    }
+
+    .auth-panel button.login-primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .auth-panel button:hover:not(.login-primary) {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .back-btn {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .back-btn:disabled {
+      background: var(--surface);
+      border-color: var(--line);
+      color: var(--muted);
+    }
+
+    .home-btn {
+      background: #fff;
+      color: var(--blue);
     }
 
     .filters {
@@ -1737,6 +1781,145 @@
     .stock-flow-row .delta.neg { color: var(--red); }
     .stock-flow-row .delta small { color: var(--muted); display: block; font-size: 10px; font-weight: 600; }
 
+    .stock-flow-search .tool-input-row {
+      margin-bottom: 8px;
+    }
+
+    .stock-flow-search .tool-input-row button {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .chips-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .period-chips {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .period-chips button {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+    }
+
+    .period-chips button.on {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .stock-flow-hero-flex {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .stock-flow-hero-left {
+      min-width: 0;
+    }
+
+    .stock-flow-counter {
+      flex: 0 0 auto;
+      text-align: right;
+    }
+
+    .stock-flow-counter strong {
+      color: var(--ink);
+      display: block;
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .stock-flow-counter small {
+      color: var(--muted);
+      display: block;
+      font-size: 10.5px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .stock-flow-stats {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 8px;
+    }
+
+    .stock-flow-stats .sfs {
+      border-radius: 8px;
+      min-height: 70px;
+      padding: 12px 14px;
+    }
+
+    .stock-flow-stats .sfs small {
+      color: var(--muted);
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stock-flow-stats .sfs strong {
+      display: block;
+      font-size: 18px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
+
+    .stock-flow-stats .subset {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .stock-flow-stats .inc { background: var(--green-soft); }
+    .stock-flow-stats .inc strong { color: var(--green); }
+    .stock-flow-stats .dec { background: var(--red-soft); }
+    .stock-flow-stats .dec strong { color: var(--red); }
+    .stock-flow-stats .net {
+      background: var(--red-soft);
+      border: 2px solid var(--red);
+    }
+
+    .stock-flow-stats .net.negative {
+      background: var(--green-soft);
+      border-color: var(--green);
+    }
+
+    .stock-flow-stats .net.neutral {
+      background: var(--amber-soft);
+      border-color: #facc15;
+    }
+
+    .stock-flow-stats .net strong { color: var(--red); }
+    .stock-flow-stats .net.negative strong { color: var(--green); }
+    .stock-flow-stats .net.neutral strong { color: var(--amber); }
+
+    .page-hint {
+      color: var(--muted);
+      font-size: 10.5px;
+      line-height: 1.45;
+      margin: 8px 0;
+      padding: 0 8px;
+      text-align: center;
+    }
+
     .source-grid {
       display: grid;
       gap: 10px;
@@ -1855,6 +2038,16 @@
     .holding-trend-row .ht-weight small.dn { color: var(--red); }
 
     @media (max-width: 720px) {
+      .topbar {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .status-pill {
+        grid-column: 1 / -1;
+        min-width: 0;
+        width: 100%;
+      }
+
       .cal-layout,
       .source-grid {
         grid-template-columns: 1fr;
@@ -1876,6 +2069,20 @@
       .holding-trend-row .etf-spark {
         grid-column: 1 / -1;
         margin-top: 0;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .status-pill {
+        flex-wrap: wrap;
+      }
+
+      .status-pill .usage-count {
+        margin-left: auto;
+      }
+
+      .stock-flow-stats {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -2274,7 +2481,7 @@
       <div class="controls">
         <div class="auth-panel">
           <span id="authStatus">LINE 登入檢查中</span>
-          <button id="authButton" type="button">登入</button>
+          <button class="login-primary" id="authButton" type="button">登入</button>
         </div>
         <button class="home-btn" id="homeButton" type="button" aria-label="回主題首頁">
           <svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -2477,6 +2684,7 @@
     let etfCompareCodes = ["00878", "00919", "00929", "00940"];
     let etfHeatmapCodes = ["00981A", "00982A", "00878", "00919", "00929", "00940"];
     let etfStockFlowId = "2330";
+    let stockFlowPeriod = "7d";
     let etfHoldingTrendCode = "00981A";
     let etfFlowPeriod = "1m";
     let calendarMonth = null;
@@ -2587,6 +2795,13 @@
       return `${API_BASE}/usage?visitor_id=${encodeURIComponent(getVisitorId())}`;
     }
 
+    function friendlyTime(iso) {
+      if (!iso) return "-";
+      const m = String(iso).match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+      if (!m) return String(iso);
+      return `${Number(m[2])}/${Number(m[3])} ${m[4]}:${m[5]}`;
+    }
+
     function setPageHeader(title, sub) {
       $("pageTitle").textContent = title;
       $("pageSub").textContent = sub;
@@ -2654,6 +2869,7 @@
     function setAuthState(label, signedIn = false) {
       $("authStatus").textContent = label;
       $("authButton").textContent = signedIn ? "登出" : "登入";
+      $("authButton").classList.toggle("login-primary", !signedIn);
     }
 
     function storeSession(data) {
@@ -3191,7 +3407,7 @@
         rememberCommand(text);
         renderCommandPayload(text, payload.data || {});
         $("syncTitle").textContent = "已連線";
-        $("syncMeta").textContent = payload.generated_at || "";
+        $("syncMeta").textContent = `更新 ${friendlyTime(payload.generated_at)}`;
       } catch (error) {
         if (error.message.startsWith("401") && LIFF_ID) {
           clearSession();
@@ -4197,11 +4413,12 @@
     function stockFlowControlsHtml(stockId) {
       const quickCodes = ["2330", "2454", "2317", "2308", "2412", "2881", "3008", "3661"];
       return `
-        <div class="tool-controls">
+        <div class="tool-controls stock-flow-search">
           <div class="tool-input-row">
             <input id="etfStockFlowInput" inputmode="latin" value="${html(stockId)}" placeholder="輸入個股代號，例如 2330 / 2454">
             <button data-etf-stock-flow-search type="button">查詢</button>
           </div>
+          <div class="chips-label">常用查詢</div>
           <div class="tool-chip-row">
             ${quickCodes.map(code => `<button class="tool-chip ${stockId === code ? "active" : ""}" data-etf-stock-flow-pick="${html(code)}" type="button">${html(code)}</button>`).join("")}
           </div>
@@ -4658,33 +4875,59 @@
         if (requestSeq !== etfToolRequestSeq) return;
         const data = payload.data || {};
         const rows = data.rows || [];
-        const incRows = rows.filter(row => Number(row.weight_delta) > 0 || row.is_new);
+        const rowIsNew = row => Boolean(row.is_new) || ((row.old_weight == null || Number(row.old_weight) === 0) && Number(row.weight) > 0 && Number(row.weight_delta) >= 0);
+        const incRows = rows.filter(row => Number(row.weight_delta) > 0 || rowIsNew(row));
         const decRows = rows.filter(row => Number(row.weight_delta) < 0);
         const increased = incRows.length;
         const decreased = decRows.length;
-        const newCount = rows.filter(row => row.is_new).length;
+        const newCount = rows.filter(rowIsNew).length;
+        const hasNetBillion = rows.some(row => Number.isFinite(Number(row.share_delta_billion)));
         const totalNetBillion = rows.reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0);
-        const netClass = totalNetBillion > 0 ? "tone-red" : totalNetBillion < 0 ? "tone-green" : "tone-amber";
+        const netSign = !hasNetBillion ? "" : totalNetBillion > 0 ? "▲" : totalNetBillion < 0 ? "▼" : "";
+        const netText = hasNetBillion ? `${netSign} ${totalNetBillion >= 0 ? "+" : ""}${totalNetBillion.toFixed(1)} 億` : "—";
+        const netClass = !hasNetBillion || totalNetBillion === 0 ? "neutral" : totalNetBillion < 0 ? "negative" : "";
+        const periodLabel = { "7d": "近 7 個交易日", "14d": "近 14 個交易日", "30d": "近 30 個交易日" }[stockFlowPeriod] || "近 7 個交易日";
         const currentOnly = rows.filter(row => row.public_current_only).length;
         const allFlowRows = [...incRows, ...decRows];
         const maxAbsShare = Math.max(...allFlowRows.map(row => Math.abs(Number(row.share_delta) || 0)), 1);
         const renderRow = row => {
-          const isInc = Number(row.weight_delta) >= 0 || row.is_new;
+          const isNew = rowIsNew(row);
+          const isInc = Number(row.weight_delta) >= 0 || isNew;
           const widthPct = Math.max(8, Math.min(100, Math.abs(Number(row.share_delta) || 0) / maxAbsShare * 100));
+          const deltaMain = isNew ? `+${fmtPctValue(row.weight).replace(/^\+/, "")}` : fmtSignedPct(row.weight_delta);
+          const deltaSub = isNew ? "新進權重" : fmtShareUnit(row.share_delta, row);
           return `<div class="stock-flow-row ${isInc ? "inc" : "dec"}" data-etf-code="${html(row.code)}">
-            <div class="info"><strong>${html(row.code)} ${html(row.name || "")}</strong><small>${html(row.category || "")}・${html(row.issuer || "")}${row.is_new ? `・<span class="new-tag">新進</span>` : ""}</small></div>
+            <div class="info"><strong>${html(row.code)} ${html(row.name || "")}</strong><small>${html(row.category || "")}・${html(row.issuer || "")}${isNew ? `・<span class="new-tag">新進</span>` : ""}</small></div>
             <div class="bar"><i style="width:${widthPct}%"></i></div>
-            <div class="delta ${isInc ? "pos" : "neg"}">${row.public_current_only ? fmtPctValue(row.weight) : fmtPctValue(row.weight_delta)}<small>${row.public_current_only ? "公開持有" : fmtShareUnit(row.share_delta, row)}</small></div>
+            <div class="delta ${isInc ? "pos" : "neg"}">${html(deltaMain)}<small>${html(deltaSub)}</small></div>
           </div>`;
         };
         $("activeEtfBadge").textContent = data.stock_id || stockId;
         $("activeEtfList").innerHTML = `
           ${stockFlowControlsHtml(data.stock_id || stockId)}
-          <div class="etf-hero"><h2>${html(data.stock_id || stockId)} ${html(data.stock_name || "")}</h2><p>${html(data.data_date || "")}・近 7 個交易日 ETF 持股變動統計</p><div class="etf-price-line"><strong>${rows.length} 檔 ETF</strong><span>${currentOnly ? `${currentOnly} 檔目前持有` : "含變動"}</span></div></div>
-          <div class="mini-pills"><div class="mini-pill tone-green"><small>加碼 ETF</small><strong>${increased} 檔</strong></div><div class="mini-pill tone-red"><small>減碼 ETF</small><strong>${decreased} 檔</strong></div><div class="mini-pill tone-blue"><small>新進 ETF</small><strong>${newCount} 檔</strong></div><div class="mini-pill ${netClass}"><small>淨買超金額</small><strong>${totalNetBillion >= 0 ? "+" : ""}${totalNetBillion.toFixed(1)} 億</strong></div></div>
+          <div class="etf-hero">
+            <div class="stock-flow-hero-flex">
+              <div class="stock-flow-hero-left">
+                <h2>${html(data.stock_id || stockId)} ${html(data.stock_name || "")}</h2>
+                <p>${html(data.data_date || "")}・${periodLabel} ETF 持股變動統計</p>
+              </div>
+              <div class="stock-flow-counter"><strong>${rows.length} 檔</strong><small>其中 ${currentOnly} 檔目前仍持有</small></div>
+            </div>
+            <div class="period-chips">
+              <button class="${stockFlowPeriod === "7d" ? "on" : ""}" data-stock-flow-period="7d" type="button">近 7 日</button>
+              <button class="${stockFlowPeriod === "14d" ? "on" : ""}" data-stock-flow-period="14d" type="button">近 14 日</button>
+              <button class="${stockFlowPeriod === "30d" ? "on" : ""}" data-stock-flow-period="30d" type="button">近 30 日</button>
+            </div>
+          </div>
+          <div class="stock-flow-stats">
+            <div class="sfs inc"><small>加碼 ETF</small><strong>${increased} 檔</strong>${newCount ? `<div class="subset">含新進 ${newCount} 檔</div>` : ""}</div>
+            <div class="sfs dec"><small>減碼 ETF</small><strong>${decreased} 檔</strong></div>
+            <div class="sfs net ${netClass}"><small>淨買超金額</small><strong>${html(netText)}</strong></div>
+          </div>
           ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
-          ${incRows.length ? `<div class="section-title">本週加碼 Top ${Math.min(incRows.length, 5)} <span style="color:var(--green)">合計 ${incRows.slice(0, 5).reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0).toFixed(1)} 億</span></div>${incRows.slice(0, 5).map(renderRow).join("")}` : ""}
-          ${decRows.length ? `<div class="section-title">本週減碼 Top ${Math.min(decRows.length, 3)} <span style="color:var(--red)">合計 ${decRows.slice(0, 3).reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0).toFixed(1)} 億</span></div>${decRows.slice(0, 3).map(renderRow).join("")}` : ""}
+          <div class="page-hint">來源：已快取 ETF 持股 + 前次快照（未快取者不納入）</div>
+          ${incRows.length ? `<div class="section-title">加碼 Top ${Math.min(incRows.length, 5)} <span style="color:var(--green)">合計 ${incRows.slice(0, 5).reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0).toFixed(1)} 億</span></div>${incRows.slice(0, 5).map(renderRow).join("")}` : ""}
+          ${decRows.length ? `<div class="section-title">減碼 Top ${Math.min(decRows.length, 3)} <span style="color:var(--red)">合計 ${decRows.slice(0, 3).reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0).toFixed(1)} 億</span></div>${decRows.slice(0, 3).map(renderRow).join("")}` : ""}
           ${rows.length === 0 ? `<div class="message">目前公開資料找不到 ${html(stockId)} 的 ETF 持有或變動資料。</div>` : ""}
         `;
       } catch (error) {
@@ -4912,7 +5155,7 @@
         statusPayload = usage.status === "fulfilled" ? usage.value.data : null;
         renderUsageCount();
         $("syncTitle").textContent = "已連線";
-        $("syncMeta").textContent = `${stocks.length} 檔 / ${scans.value.generated_at || ""}`;
+        $("syncMeta").textContent = `更新 ${friendlyTime(scans.value.generated_at)}`;
         renderOriginalFeed();
       } catch (error) {
         stocks = [];
@@ -5148,6 +5391,13 @@
       if (flowPeriod) {
         etfFlowPeriod = flowPeriod.dataset.etfFlowPeriod || "1m";
         await renderEtfFlowPage();
+        return;
+      }
+
+      const stockFlowPeriodChip = event.target.closest("[data-stock-flow-period]");
+      if (stockFlowPeriodChip) {
+        stockFlowPeriod = stockFlowPeriodChip.dataset.stockFlowPeriod || "7d";
+        await renderStockEtfFlowPage();
         return;
       }
 
