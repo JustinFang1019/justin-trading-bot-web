@@ -40,6 +40,13 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- RS ranking public-command backend permission fix.
+  - User reported `RS排名` returned 403 while `RS` returned 200. Render logs confirmed `/api/web/command?text=RS排名` was blocked by the backend, not by the frontend.
+  - Backend `stock_scanner/web_api.py` now treats normalized `RS排名`, `RS排行`, and `RS排行榜` as public web commands so the existing backend guard does not reject the command before generating the card.
+  - Web `index.html` was not changed; frontend already listed `RS排名` as a public trial command.
+  - Verification: portable workspace Python `.python311` ran `py_compile` for `stock_scanner/web_api.py` and `app.py`; backend `git diff --check` passed.
+  - Recommended next prompt: "Deploy 後未登入測 `RS排名`，確認 `/api/web/command?text=RS排名` 不再 403，且教學上一層仍回教學選單。"
+
 - Teaching child page back-button state made explicit.
   - User reported that web teaching child pages still had no clickable `上一層`.
   - Web `index.html` now uses an explicit `scanBackTarget` state for scan-view child pages instead of relying only on search-input/history inference. Any teaching child command sets `scanBackTarget = "教學"`, and `updateBackButton()` enables `上一層` from that state.
