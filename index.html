@@ -2297,7 +2297,7 @@
                 <strong>ETF 持股 14 日趨勢</strong>
                 <span>輸入 ETF 代號，看這檔 ETF 內成分股權重變化</span>
               </button>
-              <button class="etf-feature-card" data-etf-tool="sourceAdmin" type="button">
+              <button class="etf-feature-card" id="sourceAdminTool" data-etf-tool="sourceAdmin" type="button" hidden>
                 <strong>資料來源狀態</strong>
                 <span>即將上市 ETF 自動更新與來源監控</span>
               </button>
@@ -2526,6 +2526,15 @@
       return legacyAccessToken ? { headers: { "X-Web-Access-Token": legacyAccessToken } } : {};
     }
 
+    function isWebAdmin() {
+      return Boolean(webUser?.admin);
+    }
+
+    function refreshAdminUi() {
+      const sourceAdminTool = $("sourceAdminTool");
+      if (sourceAdminTool) sourceAdminTool.hidden = !isWebAdmin();
+    }
+
     async function postJson(url, body) {
       const res = await fetch(url, {
         cache: "no-store",
@@ -2551,6 +2560,7 @@
       if (webUser) localStorage.setItem("webUser", JSON.stringify(webUser));
       else localStorage.removeItem("webUser");
       setAuthState(webUser?.name ? `已登入 ${webUser.name}` : "已登入", true);
+      refreshAdminUi();
     }
 
     function clearSession() {
@@ -2559,11 +2569,13 @@
       localStorage.removeItem("webSessionToken");
       localStorage.removeItem("webUser");
       setAuthState(LIFF_ID ? "尚未登入 LINE" : "LIFF ID 未設定", false);
+      refreshAdminUi();
     }
 
     async function checkStoredSession() {
       if (!webSessionToken) {
         setAuthState(LIFF_ID ? "尚未登入 LINE" : "LIFF ID 未設定", false);
+        refreshAdminUi();
         return false;
       }
       try {
@@ -2571,6 +2583,7 @@
         webUser = payload.data?.user || webUser;
         if (webUser) localStorage.setItem("webUser", JSON.stringify(webUser));
         setAuthState(webUser?.name ? `已登入 ${webUser.name}` : "已登入", true);
+        refreshAdminUi();
         return true;
       } catch (_error) {
         clearSession();
@@ -4529,8 +4542,13 @@
     async function renderEtfSourceAdminPage() {
       const requestSeq = ++etfToolRequestSeq;
       setEtfToolShell("ETF 資料來源狀態", "ETF 自動更新與來源監控。", "資料");
+      if (!isWebAdmin()) {
+        $("activeEtfBadge").textContent = "管理員";
+        $("activeEtfList").innerHTML = `<div class="message">這頁僅管理員可查看。請先用管理員 LINE 帳號登入。</div>`;
+        return;
+      }
       try {
-        const payload = await getJson(`${API_BASE}/etfs/source-status`);
+        const payload = await getJson(`${API_BASE}/etfs/source-status`, commandFetchOptions());
         if (requestSeq !== etfToolRequestSeq) return;
         const data = payload.data || {};
         $("activeEtfBadge").textContent = etfSourceStatusLabel(data.ranking?.status);
@@ -4542,6 +4560,7 @@
         };
         $("activeEtfList").innerHTML = `
           <div class="mini-pills"><div class="mini-pill tone-blue"><small>ETF 清單</small><strong>${data.ranking?.count || 0}</strong></div><div class="mini-pill tone-purple"><small>指標資料</small><strong>${data.metrics_cache_count || 0}</strong></div><div class="mini-pill tone-green"><small>持股資料</small><strong>${data.holding_cache_count || 0}</strong></div><div class="mini-pill tone-amber"><small>資金流</small><strong>${data.ifa_flow_cache_count || 0}</strong></div></div>
+          <div class="upcoming-note">預設會依下方時間自動更新；若盤後資料看起來怪怪的，可在這裡手動立即更新。</div>
           <div class="source-grid">
             ${(data.sources || []).map(row => `<div class="source-card">
               <div class="source-card-top"><div class="source-name">${html(etfSourceNameLabel(row.name))}<small>${html(row.url || row.source_url || row.name || "")}</small></div><span class="source-badge ${sourceBadge(row.status)}">${html(etfSourceStatusLabel(row.status))}</span></div>
@@ -5002,20 +5021,44 @@
 
       const sourceAction = event.target.closest("[data-source-action]");
       if (sourceAction) {
+        if (!isWebAdmin()) {
+          alert("這個功能只有管理員可用。");
+          return;
+        }
         const action = sourceAction.dataset.sourceAction;
         const name = sourceAction.dataset.sourceName;
         if (action === "retry") {
           sourceAction.disabled = true;
           sourceAction.textContent = "更新中...";
           try {
-            await postJson(`${API_BASE}/etfs/source-retry`, { name });
+            await fetch(`${API_BASE}/etfs/source-retry`, {
+              cache: "no-store",
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...(commandFetchOptions().headers || {}) },
+              body: JSON.stringify({ name })
+            }).then(async res => {
+              const payload = await res.json().catch(() => null);
+              if (!res.ok) throw new Error(payload?.error || `${res.status} ${res.statusText}`);
+              return payload;
+            });
             await renderEtfSourceAdminPage();
           } catch (err) {
             sourceAction.textContent = "失敗";
             console.warn("[etf source retry]", err);
           }
         } else if (action === "view-log") {
-          window.open(`${API_BASE}/etfs/source-log?name=${encodeURIComponent(name)}`, "_blank");
+          try {
+            const res = await fetch(`${API_BASE}/etfs/source-log?name=${encodeURIComponent(name)}`, {
+              cache: "no-store",
+              ...(commandFetchOptions())
+            });
+            const text = await res.text();
+            if (!res.ok) throw new Error(text || `${res.status} ${res.statusText}`);
+            const blobUrl = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+            window.open(blobUrl, "_blank", "noopener");
+          } catch (err) {
+            alert(friendlyError(err, "無法讀取資料來源 log。"));
+          }
         }
         return;
       }

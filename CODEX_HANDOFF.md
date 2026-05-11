@@ -40,6 +40,15 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- ETF source admin access and auto-refresh plan.
+  - User asked for `ETF 資料來源狀態` to be visible/clickable only by the admin, with default automatic updates at important ETF data-change times and manual update available only when data looks wrong.
+  - Web `index.html` now hides the `資料來源狀態` feature card unless the logged-in LINE session is admin, guards direct render attempts, and sends admin auth headers for source status/retry/log actions.
+  - Backend `stock_scanner/web_api.py` now returns `admin` in web auth/session user payloads and protects `/api/web/etfs/source-status`, `/source-retry`, and `/source-log` with the admin LINE account check.
+  - Backend `stock_scanner/web_api.py` now makes source status `上次` use cache timestamps and `下次` show explicit schedules: `交易日 15:25` TWSE ETF ranking, `交易日 19:05` ETFInfo metrics / MoneyDJ holdings, and `交易日 21:05` monthly flow / official net purchase.
+  - Backend `app.py` now registers ETF cache warmup jobs at those times. Defaults are conservative: metrics 8 common ETFs, holdings 12 common ETFs, flow 12 mapped ETFs; limits can be tuned with `ETF_AUTO_METRICS_LIMIT`, `ETF_AUTO_HOLDINGS_LIMIT`, and `ETF_AUTO_FLOW_LIMIT`.
+  - Verification: web script parsed with Node `new Function(...)`; `git diff --check` passed in both repos. Python compile still could not run because this Windows environment reports `No installed Python found!`.
+  - Recommended next prompt: "部署後用非管理員帳號確認 ETF 首頁看不到 `資料來源狀態`，再用管理員登入確認卡片出現、下次時間顯示清楚，並測一次手動更新。"
+
 - ETF outage diagnosis/fix after Render logs showed `WORKER TIMEOUT` while fetching ETFInfo metrics for `00403A`.
   - Root cause: backend `stock_scanner/web_api.py` still allowed normal web requests to synchronously fetch missing ETFInfo metrics and missing holdings while rebuilding ETF ranking / compare / heatmap / reverse-flow pages. A first ETF request after cache rollover could chain many external requests and exceed Gunicorn's worker timeout.
   - Backend fix: normal web requests now use cached ETFInfo metrics and cached holdings only; missing metrics return a cache-not-ready marker instead of live-fetching. Only authorized `refresh=1` requests fetch missing ETFInfo metrics. ETFInfo request timeout is reduced via `ETFINFO_REQUEST_TIMEOUT` defaulting to 5 seconds, and normal detail responses no longer fetch ETFInfo public-change data unless explicitly refreshed.
