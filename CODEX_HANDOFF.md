@@ -40,6 +40,14 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- ETF total expense ratio gap-fill improvement.
+  - User reported that some ETF total expense ratios were still missing. Investigation showed ETFInfo often exposes `managementFee` and `custodyFee` even when `totalExpenseRatio` is null, and the backend parser already computes the sum, but the scheduled/manual ETFInfo metric warmup only refreshed a tiny common subset.
+  - Backend `stock_scanner/web_api.py` now adds fee-readiness helpers, source-status fee coverage (`費率 ready/total`), and a missing-fee-first refresh candidate list. Admin manual `ETFInfo metrics` retry now refreshes the next missing-fee batch with a time budget so it does not block the web worker indefinitely.
+  - Backend `app.py` now changes the 19:05 ETF detail warmup from the generic common-ETF list to the missing-expense-first list, with `ETF_AUTO_METRICS_LIMIT` default raised from 8 to 40.
+  - Intentionally not changed: normal public ETF page requests still do not live-fetch missing ETFInfo metrics, because that was the source of the previous Render worker timeout. Missing fees are filled by admin/manual retry and scheduled warmup instead.
+  - Verification: run backend `git diff --check`; Python compile is still expected to be unavailable on this Windows environment unless Python is installed.
+  - Recommended next prompt: "Deploy 後用管理員打開 ETF 資料來源狀態，看 `ETFInfo metrics` 的 `費率 x/225`，先按一次手動更新；如果還有缺口，等 19:05 排程或再按下一批。"
+
 - ETF compare default changed to hot inflow ranking.
   - User clarified `ETF 比較工具` defaults should also compare ETFs with the largest recent inflow because that better represents popularity.
   - Backend `stock_scanner/web_api.py` now sets `default_compare_codes` using the flow-interest ranking, matching the heatmap concept, while keeping `default_holding_trend_codes` active/rotation-first.
