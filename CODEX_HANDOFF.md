@@ -40,6 +40,13 @@ It is not yet a real backend or LINE/LIFF app.
 
 ## Latest Session Notes - 2026-05-12
 
+- Teaching child page back-button state made explicit.
+  - User reported that web teaching child pages still had no clickable `上一層`.
+  - Web `index.html` now uses an explicit `scanBackTarget` state for scan-view child pages instead of relying only on search-input/history inference. Any teaching child command sets `scanBackTarget = "教學"`, and `updateBackButton()` enables `上一層` from that state.
+  - Rendering the 說明 and 教學 pages now refreshes the button state after the content and search input are set, preventing stale disabled/enabled chrome.
+  - Verification: web script parsed with Node; `git diff --check` passed.
+  - Recommended next prompt: "Deploy 後直接從 Web 教學點 KD/RS/權證怎麼選，確認上一層按鈕可點且能回教學選單；也測從說明頁直接點 RS排名 的上一層。"
+
 - Teaching child pages always expose back navigation.
   - User clarified the issue was not only the click path: any teaching child page, including `RS排名`, had no usable `上一層` button.
   - Web `index.html` now detects when the active scan page itself is a teaching child command (`KD`, `RS`, `RS排名`, etc.) and enables `上一層` even when command history has only one item or was opened directly.

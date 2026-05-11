@@ -2670,6 +2670,7 @@
     let webUser = JSON.parse(localStorage.getItem("webUser") || "null");
     let legacyAccessToken = sessionStorage.getItem("webAccessToken") || "";
     let commandHistory = [];
+    let scanBackTarget = "";
     let activeEtfs = [];
     let activeEtfPayload = null;
     let selectedEtf = null;
@@ -2981,7 +2982,7 @@
     }
 
     function isScanEducationChildPage() {
-      return Boolean(document.querySelector("#scanView.active") && educationBackParent($("searchInput").value));
+      return Boolean(document.querySelector("#scanView.active") && (scanBackTarget || educationBackParent($("searchInput").value)));
     }
 
     function renderJoinLineBotPrompt(command) {
@@ -3244,6 +3245,7 @@
 
     function renderWebHelp() {
       selected = null;
+      scanBackTarget = "";
       $("actionNotice").innerHTML = "";
       $("cardFeed").innerHTML = `
         <article class="line-card flex-card">
@@ -3284,11 +3286,13 @@
           </div>
         </article>
       `;
+      updateBackButton();
     }
 
     function renderWebEducation() {
       selected = null;
       setPageForCommand("教學");
+      scanBackTarget = "";
       $("searchInput").value = "教學";
       $("actionNotice").innerHTML = "";
       const topics = [
@@ -3328,6 +3332,7 @@
           </div>
         </article>
       `;
+      updateBackButton();
     }
 
     function renderOriginalFeed() {
@@ -3374,6 +3379,7 @@
     }
 
     function setPageForCommand(command) {
+      scanBackTarget = educationBackParent(command);
       const text = String(command || "").trim().toUpperCase();
       let title = "個股查詢";
       let sub = "未登入可使用說明小卡上的示範指令；其它個股請加入 LINE bot。";
@@ -3385,6 +3391,7 @@
         sub = "強勢股 Top 20，點列開 K 線。";
       }
       setPageHeader(title, sub);
+      updateBackButton();
     }
 
     function renderCommandPayload(command, data) {
@@ -3421,6 +3428,7 @@
         const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`, commandFetchOptions());
         if (trackHistory) rememberCommand(text);
         renderCommandPayload(text, payload.data || {});
+        updateBackButton();
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = `更新 ${friendlyTime(payload.generated_at)}`;
       } catch (error) {
@@ -3444,6 +3452,7 @@
             $("cardFeed").innerHTML = `<div class="message">教學主題「${html(text)}」暫時無法讀取，請稍後再試。</div>`;
           }
           $("actionNotice").innerHTML = "";
+          updateBackButton();
           return;
         }
         $("cardFeed").innerHTML = `<div class="message">${html(friendly)}</div>`;
@@ -3501,9 +3510,10 @@
         updateBackButton();
         return;
       }
-      const scanParent = educationBackParent($("searchInput").value);
+      const scanParent = scanBackTarget || educationBackParent($("searchInput").value);
       if (document.querySelector("#scanView.active") && scanParent && commandHistory.length <= 1) {
         commandHistory = [scanParent];
+        scanBackTarget = "";
         $("searchInput").value = scanParent;
         renderWebEducation();
         window.scrollTo({ top: 0, behavior: "smooth" });
