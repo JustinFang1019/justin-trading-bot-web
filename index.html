@@ -4522,6 +4522,7 @@
     }
 
     function etfFlowBarsHtml(row = {}) {
+      if (!String(row.source_field || "").startsWith("ifa_net_subscription_")) return "";
       const sub = Number(row.subscription_billion);
       const red = Number(row.redemption_billion);
       if (!Number.isFinite(sub) && !Number.isFinite(red)) return "";
@@ -4738,16 +4739,26 @@
         const outflows = data.outflows || [];
         const hasFlowData = inflows.length || outflows.length;
         $("activeEtfBadge").textContent = hasFlowData ? (data.data_date || "資料") : "等待快取";
-        const flowRow = (row, index, tone) => `
-          <div class="change-row ${tone === "red" ? "decreased" : "increased"}" data-etf-code="${html(row.code)}">
-            <div class="change-main">
-              <div class="change-title"><div class="code">${index + 1}</div><div class="name">${html(row.code)} ${html(row.name || "")}</div></div>
-              <div class="change-tags"><span>${html(row.category || "")}</span><span>${html(etfFlowFieldLabel(row.source_field))}</span><span>${html(row.flow_period || data.data_date || "")}</span><span>申 ${fmtBillion(row.subscription_billion)}</span><span>贖 ${fmtBillion(row.redemption_billion)}</span></div>
-              ${etfFlowBarsHtml(row)}
+        const flowRow = (row, index, tone) => {
+          const isIfa = String(row.source_field || "").startsWith("ifa_net_subscription_");
+          const tags = [
+            row.category || "",
+            etfFlowFieldLabel(row.source_field),
+            row.flow_period_label || (isIfa ? row.flow_period : "") || data.data_date || "",
+            isIfa ? `申 ${fmtBillion(row.subscription_billion)}` : "",
+            isIfa ? `贖 ${fmtBillion(row.redemption_billion)}` : ""
+          ].filter(Boolean);
+          return `
+            <div class="change-row ${tone === "red" ? "decreased" : "increased"}" data-etf-code="${html(row.code)}">
+              <div class="change-main">
+                <div class="change-title"><div class="code">${index + 1}</div><div class="name">${html(row.code)} ${html(row.name || "")}</div></div>
+                <div class="change-tags">${tags.map(tag => `<span>${html(tag)}</span>`).join("")}</div>
+                ${etfFlowBarsHtml(row)}
+              </div>
+              <div class="delta ${tone === "red" ? "tone-red" : "tone-green"}">${html(row.flow_text || fmtBillionSigned(row.flow_billion))}<small>${tone === "red" ? "流出" : "流入"}</small></div>
             </div>
-            <div class="delta ${tone === "red" ? "tone-red" : "tone-green"}">${html(row.flow_text || fmtBillionSigned(row.flow_billion))}<small>${tone === "red" ? "流出" : "流入"}</small></div>
-          </div>
-        `;
+          `;
+        };
         $("activeEtfList").innerHTML = `
           <div class="etf-flow-summary">
             <div class="etf-period-tabs"><button class="${etfFlowPeriod === "1m" ? "active" : ""}" data-etf-flow-period="1m" type="button">近1月</button><button class="${etfFlowPeriod === "3m" ? "active" : ""}" data-etf-flow-period="3m" type="button">近3月</button><button class="${etfFlowPeriod === "12m" ? "active" : ""}" data-etf-flow-period="12m" type="button">近12月</button></div>
