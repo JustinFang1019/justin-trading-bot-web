@@ -5487,6 +5487,28 @@
     }
 
     async function renderHitRatePage() {
+      {
+        const requestSeq = ++etfToolRequestSeq;
+        setEtfToolShell("策略 hit-rate", "用後端追蹤表整理 30 日勝率、最大漲幅與後續表現。", "30 日", "正在讀取策略表現 API...");
+        try {
+          const payload = await getJson(`${API_BASE}/strategy/hit-rate?days=30`);
+          if (requestSeq !== etfToolRequestSeq) return;
+          const data = payload.data || {};
+          const rows = data.rows || [];
+          const rate = data.realized_hit_rate ?? data.estimated_hit_rate;
+          $("activeEtfBadge").textContent = Number.isFinite(Number(rate)) ? `${rate}%` : "待資料";
+          $("activeEtfList").innerHTML = `
+            <div class="mini-pills"><div class="mini-pill tone-green"><small>${data.realized_hit_rate == null ? "估算勝率" : "實際勝率"}</small><strong>${Number.isFinite(Number(rate)) ? `${rate}%` : "待資料"}</strong></div><div class="mini-pill tone-blue"><small>樣本</small><strong>${data.sample_count || 0} 筆</strong></div><div class="mini-pill tone-purple"><small>強訊號</small><strong>${data.strong_count || 0} 檔</strong></div><div class="mini-pill tone-amber"><small>觀察</small><strong>${data.watch_count || 0} 檔</strong></div></div>
+            ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
+            <div class="section-title">訊號後續表現 <span>依分數與報酬排序</span></div>
+            ${rows.map(row => `<div class="status-row" data-id="${html(row.stock_id)}"><strong>${html(row.stock_id)} ${html(row.stock_name || "")}</strong><div class="meta"><span>分數 ${html(row.score ?? "待資料")}</span><span>${html(row.strategy || "START")}</span><span>${row.current_return_pct == null ? "報酬待資料" : `目前 ${fmtSignedPct(row.current_return_pct)}`}</span><span>最高 ${row.max_up_pct == null ? "待資料" : fmtSignedPct(row.max_up_pct)}</span><span>回撤 ${row.max_drawdown_pct == null ? "待資料" : fmtSignedPct(row.max_drawdown_pct)}</span></div></div>`).join("") || `<div class="message">後端尚未回傳策略追蹤資料。</div>`}
+          `;
+        } catch (error) {
+          if (requestSeq !== etfToolRequestSeq) return;
+          $("activeEtfList").innerHTML = etfToolError(error);
+        }
+        return;
+      }
       ++etfToolRequestSeq;
       setEtfToolShell("策略 hit-rate", "用現有掃描分數先建立 30 日觀察版，後續接真回測 API。", "30 日", "正在整理策略表現...");
       const rows = [...stocks].sort((a, b) => num(b.score) - num(a.score)).slice(0, 12);
@@ -5503,6 +5525,29 @@
     }
 
     async function renderInstitutionalPage() {
+      {
+        const requestSeq = ++etfToolRequestSeq;
+        setEtfToolShell("法人籌碼", `查詢 ${institutionalStockId} 的 ETF 持有、加減碼與掃描佐證。`, institutionalStockId, "正在讀取法人籌碼 API...");
+        try {
+          const payload = await getJson(`${API_BASE}/stock/${encodeURIComponent(institutionalStockId)}/institutional`);
+          if (requestSeq !== etfToolRequestSeq) return;
+          const data = payload.data || {};
+          const summary = data.summary || {};
+          const rows = (data.etf_flow?.rows || []).slice(0, 8);
+          $("activeEtfBadge").textContent = summary.direction || institutionalStockId;
+          $("activeEtfList").innerHTML = `
+            <div class="tool-controls stock-flow-search"><div class="tool-input-row"><input id="institutionalStockInput" value="${html(institutionalStockId)}" inputmode="latin" placeholder="輸入個股代號，例如 2330"><button data-institutional-search type="button">查詢</button></div>${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}</div>
+            <div class="mini-pills">${(data.evidence || []).map(item => `<div class="mini-pill tone-${html(item.tone || "blue")}"><small>${html(item.label)}</small><strong>${html(item.value)}</strong></div>`).join("")}</div>
+            <div class="section-title">ETF 佐證 <span>來自持股快照與前次比較</span></div>
+            ${rows.map(row => `<div class="status-row"><strong>${html(row.code)} ${html(row.name || "")}</strong><div class="meta"><span>${row.is_new ? "新進" : row.is_removed ? "移除" : "變動"}</span><span>權重 ${fmtSignedPct(row.weight_delta)}</span><span>${row.share_delta ? `${Number(row.share_delta).toLocaleString("zh-TW")} 股` : "股數待資料"}</span><span>${row.share_delta_billion == null ? "金額待資料" : fmtBillionSigned(row.share_delta_billion)}</span></div></div>`).join("") || `<div class="message">目前 ETF 快照沒有 ${html(institutionalStockId)} 的加減碼資料。</div>`}
+            <div class="suggestions"><button data-etf-tool="stockFlow" type="button">看完整 ETF 加減碼</button></div>
+          `;
+        } catch (error) {
+          if (requestSeq !== etfToolRequestSeq) return;
+          $("activeEtfList").innerHTML = etfToolError(error);
+        }
+        return;
+      }
       ++etfToolRequestSeq;
       const stock = stockById(institutionalStockId);
       setEtfToolShell("法人籌碼", `查詢 ${institutionalStockId} 的 ETF 持有與訊號佐證。`, institutionalStockId, "正在整理法人籌碼...");
@@ -5556,6 +5601,25 @@
     }
 
     async function renderRebalanceRadarPage() {
+      {
+        const requestSeq = ++etfToolRequestSeq;
+        setEtfToolShell("ETF 季調雷達", "由後端用規模、資金流與動能先產生納入/剔除觀察名單。", "預測", "正在讀取季調雷達 API...");
+        try {
+          const payload = await getJson(`${API_BASE}/etfs/rebalance-radar`);
+          if (requestSeq !== etfToolRequestSeq) return;
+          const data = payload.data || {};
+          const rows = data.rows || [];
+          $("activeEtfBadge").textContent = `${rows.length} 檔`;
+          $("activeEtfList").innerHTML = `
+            ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
+            ${rows.slice(0, 12).map(row => `<div class="status-row"><strong>${html(row.code)} ${html(row.name || "")}</strong><div class="meta"><span>${html(row.signal || "觀察")}</span><span>分數 ${html(row.score ?? "-")}</span><span>規模 ${fmtBillionSigned(row.asset_delta_billion)}</span><span>5日資金 ${fmtBillionSigned(row.net_purchase_5d_billion)}</span><span>${fmtSignedPct(row.change_rate)}</span></div></div>`).join("") || `<div class="message">後端尚未回傳季調雷達資料。</div>`}
+          `;
+        } catch (error) {
+          if (requestSeq !== etfToolRequestSeq) return;
+          $("activeEtfList").innerHTML = etfToolError(error);
+        }
+        return;
+      }
       ++etfToolRequestSeq;
       setEtfToolShell("ETF 季調雷達", "用權重變化與主題集中度先預測可能納入/剔除。", "預測", "正在整理季調線索...");
       const rows = [...activeEtfs].sort((a, b) => etfRotationScore(b) - etfRotationScore(a)).slice(0, 10);
@@ -5585,6 +5649,29 @@
     }
 
     async function renderShareCardPage() {
+      {
+        const requestSeq = ++etfToolRequestSeq;
+        const etf = activeEtfs[0] || {};
+        const code = normalizeEtfCode(etf.code || "0050") || "0050";
+        setEtfToolShell("卡片分享", "由後端產生分享 payload，前端負責預覽、複製與 LINE 分享。", "分享", "正在生成分享卡...");
+        try {
+          const payload = await getJson(`${API_BASE}/share-card?type=etf&code=${encodeURIComponent(code)}`);
+          if (requestSeq !== etfToolRequestSeq) return;
+          const card = payload.data || {};
+          $("activeEtfBadge").textContent = card.code || code;
+          $("activeEtfList").innerHTML = `
+            <div class="etf-hero etf-detail-hero"><h2>${html(card.title || "ETF 分享預覽")}</h2><p>Justin ETF 研究</p><div class="etf-price-line"><div><small>${html(card.metrics?.[0]?.label || "收盤")}</small><strong>${html(card.metrics?.[0]?.value || "待資料")}</strong></div><span class="${String(card.metrics?.[1]?.value || "").includes("-") ? "dn" : "up"}">${html(card.metrics?.[1]?.value || "")}</span></div></div>
+            <div class="mini-pills">${(card.metrics || []).map(item => `<div class="mini-pill tone-blue"><small>${html(item.label)}</small><strong>${html(item.value)}</strong></div>`).join("")}</div>
+            <pre class="message" id="shareCardText">${html(card.text || "")}</pre>
+            <div class="suggestions"><button data-share-copy type="button">複製文字</button><button data-share-line type="button" data-share-url="${html(card.line_share_url || "")}">LINE 分享</button></div>
+            ${card.warning ? `<div class="message">${html(card.warning)}</div>` : ""}
+          `;
+        } catch (error) {
+          if (requestSeq !== etfToolRequestSeq) return;
+          $("activeEtfList").innerHTML = etfToolError(error);
+        }
+        return;
+      }
       ++etfToolRequestSeq;
       const etf = activeEtfs[0] || {};
       const shareText = `${etf.code || "ETF"} ${etf.name || ""}\n收盤 ${fmtPrice(etf.close_price)} / ${fmtSignedPct(etf.change_rate)}\n殖利率 ${etfDecisionMetrics(etf).yield12m}，費率 ${etfDecisionMetrics(etf).expense}`;
@@ -6427,8 +6514,10 @@
       }
 
       if (event.target.closest("[data-share-line]")) {
+        const shareButton = event.target.closest("[data-share-line]");
+        const url = shareButton?.dataset.shareUrl;
         const text = encodeURIComponent($("shareCardText")?.textContent || "");
-        window.open(`https://social-plugins.line.me/lineit/share?text=${text}`, "_blank", "noopener");
+        window.open(url || `https://social-plugins.line.me/lineit/share?text=${text}`, "_blank", "noopener");
         return;
       }
 
