@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A01 ETF 首屏資訊密度 - 實際預覽</title>
+<style>
+  :root{
+    --bg:#eef2f7; --surface:#fff; --ink:#182230; --muted:#667085;
+    --line:#d9e1ec; --navy:#17172d;
+    --blue:#1d4ed8; --blue-soft:#dbeafe;
+    --green:#047857; --green-soft:#dcfce7;
+    --red:#b42318; --red-soft:#fee2e2;
+    --amber:#a16207; --amber-soft:#fef3c7;
+    --purple:#6d28d9; --purple-soft:#ede9fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#dfe4ec;color:var(--ink);
+    font-family:"Microsoft JhengHei","Noto Sans TC","Segoe UI",Arial,sans-serif}
+  header.page{padding:26px 20px 6px;text-align:center}
+  header.page h1{margin:0 0 4px;font-size:22px}
+  header.page p{margin:0;color:#5b6573;font-size:13px}
+  .container{max-width:1180px;margin:0 auto;padding:18px}
+  .section{margin:28px 0 36px}
+  .section-head{display:flex;align-items:baseline;gap:10px;margin:0 0 6px;padding:0 4px}
+  .section-num{font-size:12px;color:#94a3b8;font-weight:800;letter-spacing:1px}
+  .section-title{margin:0;font-size:18px}
+  .section-desc{margin:4px 4px 14px;color:#475467;font-size:13px;max-width:980px;line-height:1.55}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  @media (max-width:880px){.pair{grid-template-columns:1fr}}
+  .pane h3{margin:0 0 8px;font-size:11px;letter-spacing:1.2px;font-weight:900}
+  .pane.before h3::before{content:"舊 BEFORE";color:#94a3b8}
+  .pane.after  h3::before{content:"新 AFTER";color:var(--blue)}
+
+  .phone{margin:0 auto;width:380px;max-width:100%;background:#0b0f19;
+    border-radius:34px;padding:10px;box-shadow:0 12px 30px rgba(16,24,40,.08)}
+  .screen{background:var(--bg);border-radius:26px;overflow:hidden;height:680px;
+    display:flex;flex-direction:column;position:relative}
+  .scroll{flex:1;overflow-y:auto}
+
+  /* ====== 你站上既有元件 ====== */
+  .app{padding:12px 10px 8px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:8px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);overflow:hidden}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border-bottom:1px solid var(--line);padding:12px}
+  .panel-title{font-size:16px;font-weight:900}
+  .panel-sub{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.4}
+  .panel-body{padding:10px}
+  .badge{border-radius:999px;font-size:11.5px;font-weight:800;padding:4px 8px;display:inline-flex}
+  .badge.blue{background:var(--blue-soft);color:var(--blue)}
+  .badge.green{background:var(--green-soft);color:var(--green)}
+  .badge.amber{background:var(--amber-soft);color:var(--amber)}
+
+  .search{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex}
+  .search input{border:0;outline:0;padding:9px 11px;width:100%;font:inherit;background:transparent;color:var(--ink)}
+  .filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .filters::-webkit-scrollbar{display:none}
+  .filters button{background:#fff;border:1px solid var(--line);border-radius:8px;
+    color:#475467;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .filters button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  /* ETF 工具卡 grid */
+  .etf-feature-grid{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
+  .etf-feature-card{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:9px;text-align:left;min-height:74px;cursor:pointer;display:grid;gap:3px}
+  .etf-feature-card.featured{background:#f8fbff;border-color:#bfdbfe}
+  .etf-feature-card strong{font-size:13.5px;line-height:1.25}
+  .etf-feature-card span{color:var(--muted);font-size:10.8px;line-height:1.3}
+  .etf-feature-chip{background:var(--blue-soft);color:var(--blue);border-radius:999px;
+    font-size:10.5px;font-weight:900;padding:2px 7px;width:fit-content}
+
+  /* 即將上市 */
+  .upcoming-entry{background:#fff;border:1px solid #93c5fd;border-radius:8px;padding:10px 12px;
+    display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;cursor:pointer;width:100%;text-align:left}
+  .upcoming-entry strong{font-size:14px;display:block}
+  .upcoming-entry span{font-size:11.5px;color:#475467;display:block;margin-top:2px}
+  .upcoming-entry b{background:var(--blue);color:#fff;border-radius:999px;padding:5px 9px;font-size:11.5px}
+
+  /* etf list row */
+  .etf-row{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:6px}
+  .etf-line{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .etf-line strong{font-size:13.5px}
+  .etf-line .rank{color:var(--muted);font-weight:800;margin-right:4px;font-size:11.5px}
+  .etf-row .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+  .etf-row .meta span{color:var(--muted);font-size:10.5px}
+  .etf-row .pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+  .mini-pill{border-radius:6px;padding:4px 7px;font-size:11px;display:inline-flex;flex-direction:column;line-height:1.25;min-width:54px}
+  .mini-pill small{font-size:9.5px;font-weight:700;opacity:.75}
+  .mini-pill strong{font-size:11.5px;font-weight:900}
+  .tone-blue{background:var(--blue-soft);color:#1e3a8a}
+  .tone-green{background:var(--green-soft);color:#14532d}
+  .tone-purple{background:var(--purple-soft);color:#4c1d95}
+  .tone-red{background:var(--red-soft);color:#7f1d1d}
+  .tone-amber{background:var(--amber-soft);color:#78350f}
+  .delta-bar{height:5px;border-radius:99px;background:#f1f5f9;margin-top:6px;overflow:hidden;position:relative}
+  .delta-bar > i{display:block;height:100%}
+
+  /* 詳細頁 hero */
+  .etf-hero{background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border-radius:8px;padding:14px;margin-bottom:8px}
+  .etf-hero h2{margin:0;font-size:18px}
+  .etf-hero p{margin:3px 0 0;font-size:11.5px;color:#dbeafe;line-height:1.4}
+  .etf-price-line{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px}
+  .etf-price-line small{color:#bfdbfe;font-size:11px;display:block}
+  .etf-price-line strong{font-size:24px;font-weight:900}
+  .etf-price-line .up{color:#fca5a5;font-weight:800}
+  .etf-price-line .dn{color:#86efac;font-weight:800}
+  .mini-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+  .mini-pills .mini-pill{min-height:42px;padding:6px 8px}
+
+  /* etf-detail-tabs */
+  .etf-detail-tabs{display:flex;gap:6px;margin-top:4px}
+  .etf-detail-tabs button{flex:1;border:1px solid var(--line);background:#fff;color:#475467;
+    border-radius:8px;padding:7px 4px;font-size:11.5px;font-weight:800;cursor:pointer}
+  .etf-detail-tabs button.added{background:var(--blue-soft);border-color:#bfdbfe;color:var(--blue)}
+  .etf-detail-tabs button.increased{background:var(--green-soft);border-color:#bbf7d0;color:var(--green)}
+  .etf-detail-tabs button.decreased{background:var(--red-soft);border-color:#fecaca;color:var(--red)}
+  .etf-detail-tabs button.holdings.active{background:var(--purple);border-color:var(--purple);color:#fff}
+
+  /* sticky filter */
+  .sticky-filter{position:sticky;top:0;background:rgba(239,242,247,.95);backdrop-filter:blur(6px);padding:6px 0 6px;z-index:2;margin:-2px 0 6px}
+
+  .footnote{color:#64748b;font-size:12px;padding:0 6px 4px;margin:6px 0 0;line-height:1.6}
+  .footnote code{background:#eef2f7;padding:1px 5px;border-radius:4px;font-size:11px}
+
+  .legend{display:flex;gap:14px;justify-content:center;margin:6px 0 14px;font-size:12px;color:#475467;flex-wrap:wrap}
+  .legend .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>A01 ETF 首屏資訊密度</h1>
+  <p>這頁使用你提供的 ETF 新舊對照 mockup 原始 UI，左右都是實際手機畫面。</p>
+</header>
+<div class="container">
+<section class="section">
+    <div class="section-head"><span class="section-num">01</span><h2 class="section-title">首屏「篩選 chrome」過厚，清單推到第二屏</h2></div>
+    <p class="section-desc">舊版頂部從上到下：<code>panel-head</code>(title+sub+badge) → <code>search</code> → <code>etf-flow-summary</code>（動態） → <code>etf-feature-grid</code> 8 張卡 → <code>upcoming-etf-section</code> → <code>etf-type-tabs</code>(5) → <code>etf-sort-row</code>(5) → 才到清單。手機上要捲<b>整整一屏半</b>才看到第一檔 ETF。</p>
+    <div class="pair">
+      <div class="pane before"><h3></h3>
+      <div class="phone"><div class="screen"><div class="scroll">
+        <div class="app">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">ETF 研究</div>
+                <div class="panel-sub">全部 ETF 規模排名、持股變化與共同持有查詢。</div>
+              </div>
+              <span class="badge blue">128/240 檔</span>
+            </div>
+            <div class="panel-body">
+              <div class="search" style="margin-bottom:8px"><input placeholder="搜尋 ETF 或個股代號，例如 00988A / 2330 / AVGO.US"></div>
+              <div class="etf-feature-grid" style="margin-bottom:8px">
+                <button class="etf-feature-card featured"><span class="etf-feature-chip">核心</span><strong>ETF 比較</strong><span>2-3 檔比較費用率、殖利率、折溢價與持股重疊</span></button>
+                <button class="etf-feature-card featured"><span class="etf-feature-chip">常用</span><strong>進階篩選</strong><span>規模、殖利率、費率、配息頻率、資金流向</span></button>
+                <button class="etf-feature-card"><strong>資金流向</strong><span>近月申購、贖回與淨申贖排行</span></button>
+                <button class="etf-feature-card"><strong>持股重疊</strong><span>熱力圖看高股息與科技 ETF 的重疊程度</span></button>
+                <button class="etf-feature-card"><strong>配息行事曆</strong><span>未來 30 天除息日，月曆與列表雙視圖</span></button>
+                <button class="etf-feature-card"><strong>個股 ETF 動向</strong><span>輸入 2330，看本週哪些 ETF 加碼或減碼</span></button>
+                <button class="etf-feature-card"><strong>ETF 持股 14 日趨勢</strong><span>輸入 ETF 代號，看這檔 ETF 內成分股權重變化</span></button>
+              </div>
+              <button class="upcoming-entry" style="margin-bottom:8px">
+                <span><strong>即將上市 ETF</strong><span>查看預購、募集、掛牌與資料來源</span></span>
+                <b>3 檔</b>
+              </button>
+              <div class="filters" style="margin-bottom:6px"><button class="active">全部</button><button>主動式</button><button>股票型</button><button>高股息</button><button>債券/入息</button></div>
+              <div class="filters" style="margin-bottom:6px"><button class="active">規模金額 ↓</button><button>近12月殖利率</button><button>費率</button><button>折溢價</button><button>受益人數</button></div>
+            </div>
+          </div>
+        </div>
+      </div></div></div></div>
+
+      <div class="pane after"><h3></h3>
+      <div class="phone"><div class="screen"><div class="scroll">
+        <div class="app">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">ETF 研究 <span class="badge blue" style="margin-left:6px;font-size:10.5px">128 檔</span></div>
+                <div class="panel-sub">資料日 2026-05-12 · 盤後快照</div>
+              </div>
+              <button style="border:0;background:#f1f5f9;border-radius:8px;width:36px;height:36px;font-size:18px;color:#475467;cursor:pointer">⚙</button>
+            </div>
+            <div class="panel-body">
+              <div class="search" style="margin-bottom:8px"><input placeholder="ETF / 個股代號"></div>
+              <!-- 核心工具：只露 2 大鈕 + 「更多」 -->
+              <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:8px">
+                <button class="etf-feature-card featured" style="min-height:54px"><strong>🔀 ETF 比較</strong><span>2–3 檔差異</span></button>
+                <button class="etf-feature-card featured" style="min-height:54px"><strong>🔍 進階篩選</strong><span>條件組合</span></button>
+                <button style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:0 10px;font-weight:800;color:#475467;cursor:pointer">更多<br>↓</button>
+              </div>
+              <!-- 即將上市縮成 chip line -->
+              <button class="upcoming-entry" style="padding:6px 10px;min-height:34px;margin-bottom:8px">
+                <span style="font-size:12px"><strong style="font-size:12.5px">即將上市 3 檔</strong> <span style="display:inline;margin:0;color:var(--muted)">最近 00982A 倒數 3 天</span></span>
+                <b style="padding:3px 7px;font-size:10.5px">查看</b>
+              </button>
+              <!-- 合併 type + sort 成一列下拉 -->
+              <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:6px">
+                <div class="filters" style="overflow-x:auto"><button class="active">全部</button><button>主動</button><button>高股息</button><button>債券</button></div>
+                <button style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:800;color:#475467;cursor:pointer">排序：規模 ↓</button>
+              </div>
+              <!-- 第一檔 ETF 在第一屏 -->
+              <div class="etf-row" style="margin-top:4px">
+                <div class="etf-line"><strong><span class="rank">#1</span> 0050 元大台灣50</strong><span style="font-weight:800;color:var(--red)">185.20 +1.04%</span></div>
+                <div class="meta"><span>被動式</span><span>大型股</span><span>4,820 億</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></div></div></div>
+    </div>
+    <p class="footnote">改動：① 8 張工具卡片縮成「比較 / 進階篩選」兩大鈕 + 「更多 ↓」展開（其餘 5 項放下拉抽屜）② 即將上市縮成單行 chip，省 40 px ③ <code>etf-type-tabs</code>(5) + <code>etf-sort-row</code>(5) 合併：類別 pill 一列、排序改為下拉按鈕 ④ <code>panel-head</code> 的「badge」當作標題副件，sub 改成「資料日 / 盤後快照」一行 ⑤ 結果：第一屏即可看到 #1 ETF。</p>
+  </section>
+<p class="footnote"><a href="./index.html">回預覽總覽</a>　<a href="../../index.html">回目前 Web 原型</a></p>
+</div>
+</body>
+</html>

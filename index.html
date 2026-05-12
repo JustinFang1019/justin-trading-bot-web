@@ -4534,6 +4534,7 @@
     function etfSourceNameLabel(name) {
       const labels = {
         "TWSE ETF ranking": "證交所 ETF 清單",
+        "Official issuer ETF": "投信官網第一手資料",
         "ETFInfo metrics": "ETFInfo 指標資料",
         "MoneyDJ holdings": "MoneyDJ 持股資料",
         "IFA monthly fund flow": "IFA 月申贖資料",
@@ -4549,6 +4550,8 @@
       if (etfs) return `${Number(etfs[1]).toLocaleString("zh-TW")} 檔 ETF`;
       const metrics = text.match(/^(\d+) cached metric files$/);
       if (metrics) return `${Number(metrics[1]).toLocaleString("zh-TW")} 份指標快取`;
+      const official = text.match(/^(\d+)\/(\d+) official ETF files$/);
+      if (official) return `${Number(official[1]).toLocaleString("zh-TW")}/${Number(official[2]).toLocaleString("zh-TW")} 檔官網資料`;
       const holdings = text.match(/^(\d+) cached holding files$/);
       if (holdings) return `${Number(holdings[1]).toLocaleString("zh-TW")} 份持股快取`;
       const flows = text.match(/^(\d+) cached flow files$/);
@@ -5075,7 +5078,7 @@
           return "fail";
         };
         $("activeEtfList").innerHTML = `
-          <div class="mini-pills"><div class="mini-pill tone-blue"><small>ETF 清單</small><strong>${data.ranking?.count || 0}</strong></div><div class="mini-pill tone-purple"><small>指標資料</small><strong>${data.metrics_cache_count || 0}</strong></div><div class="mini-pill tone-green"><small>持股資料</small><strong>${data.holding_cache_count || 0}</strong></div><div class="mini-pill tone-amber"><small>資金流</small><strong>${data.ifa_flow_cache_count || 0}</strong></div></div>
+          <div class="mini-pills"><div class="mini-pill tone-blue"><small>ETF 清單</small><strong>${data.ranking?.count || 0}</strong></div><div class="mini-pill tone-green"><small>官網資料</small><strong>${data.official_cache_count || 0}/${data.official_configured_count || 0}</strong></div><div class="mini-pill tone-purple"><small>指標資料</small><strong>${data.metrics_cache_count || 0}</strong></div><div class="mini-pill tone-green"><small>持股資料</small><strong>${data.holding_cache_count || 0}</strong></div><div class="mini-pill tone-amber"><small>資金流</small><strong>${data.ifa_flow_cache_count || 0}</strong></div></div>
           <div class="upcoming-note">預設會依下方時間自動更新；若盤後資料看起來怪怪的，可在這裡手動立即更新。</div>
           <div class="source-grid">
             ${(data.sources || []).map(row => `<div class="source-card">

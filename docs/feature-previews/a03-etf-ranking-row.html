@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A03 ETF 排名列決策資訊 - 實際預覽</title>
+<style>
+  :root{
+    --bg:#eef2f7; --surface:#fff; --ink:#182230; --muted:#667085;
+    --line:#d9e1ec; --navy:#17172d;
+    --blue:#1d4ed8; --blue-soft:#dbeafe;
+    --green:#047857; --green-soft:#dcfce7;
+    --red:#b42318; --red-soft:#fee2e2;
+    --amber:#a16207; --amber-soft:#fef3c7;
+    --purple:#6d28d9; --purple-soft:#ede9fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#dfe4ec;color:var(--ink);
+    font-family:"Microsoft JhengHei","Noto Sans TC","Segoe UI",Arial,sans-serif}
+  header.page{padding:26px 20px 6px;text-align:center}
+  header.page h1{margin:0 0 4px;font-size:22px}
+  header.page p{margin:0;color:#5b6573;font-size:13px}
+  .container{max-width:1180px;margin:0 auto;padding:18px}
+  .section{margin:28px 0 36px}
+  .section-head{display:flex;align-items:baseline;gap:10px;margin:0 0 6px;padding:0 4px}
+  .section-num{font-size:12px;color:#94a3b8;font-weight:800;letter-spacing:1px}
+  .section-title{margin:0;font-size:18px}
+  .section-desc{margin:4px 4px 14px;color:#475467;font-size:13px;max-width:980px;line-height:1.55}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  @media (max-width:880px){.pair{grid-template-columns:1fr}}
+  .pane h3{margin:0 0 8px;font-size:11px;letter-spacing:1.2px;font-weight:900}
+  .pane.before h3::before{content:"舊 BEFORE";color:#94a3b8}
+  .pane.after  h3::before{content:"新 AFTER";color:var(--blue)}
+
+  .phone{margin:0 auto;width:380px;max-width:100%;background:#0b0f19;
+    border-radius:34px;padding:10px;box-shadow:0 12px 30px rgba(16,24,40,.08)}
+  .screen{background:var(--bg);border-radius:26px;overflow:hidden;height:680px;
+    display:flex;flex-direction:column;position:relative}
+  .scroll{flex:1;overflow-y:auto}
+
+  /* ====== 你站上既有元件 ====== */
+  .app{padding:12px 10px 8px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:8px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);overflow:hidden}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border-bottom:1px solid var(--line);padding:12px}
+  .panel-title{font-size:16px;font-weight:900}
+  .panel-sub{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.4}
+  .panel-body{padding:10px}
+  .badge{border-radius:999px;font-size:11.5px;font-weight:800;padding:4px 8px;display:inline-flex}
+  .badge.blue{background:var(--blue-soft);color:var(--blue)}
+  .badge.green{background:var(--green-soft);color:var(--green)}
+  .badge.amber{background:var(--amber-soft);color:var(--amber)}
+
+  .search{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex}
+  .search input{border:0;outline:0;padding:9px 11px;width:100%;font:inherit;background:transparent;color:var(--ink)}
+  .filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .filters::-webkit-scrollbar{display:none}
+  .filters button{background:#fff;border:1px solid var(--line);border-radius:8px;
+    color:#475467;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .filters button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  /* ETF 工具卡 grid */
+  .etf-feature-grid{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
+  .etf-feature-card{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:9px;text-align:left;min-height:74px;cursor:pointer;display:grid;gap:3px}
+  .etf-feature-card.featured{background:#f8fbff;border-color:#bfdbfe}
+  .etf-feature-card strong{font-size:13.5px;line-height:1.25}
+  .etf-feature-card span{color:var(--muted);font-size:10.8px;line-height:1.3}
+  .etf-feature-chip{background:var(--blue-soft);color:var(--blue);border-radius:999px;
+    font-size:10.5px;font-weight:900;padding:2px 7px;width:fit-content}
+
+  /* 即將上市 */
+  .upcoming-entry{background:#fff;border:1px solid #93c5fd;border-radius:8px;padding:10px 12px;
+    display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;cursor:pointer;width:100%;text-align:left}
+  .upcoming-entry strong{font-size:14px;display:block}
+  .upcoming-entry span{font-size:11.5px;color:#475467;display:block;margin-top:2px}
+  .upcoming-entry b{background:var(--blue);color:#fff;border-radius:999px;padding:5px 9px;font-size:11.5px}
+
+  /* etf list row */
+  .etf-row{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:6px}
+  .etf-line{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .etf-line strong{font-size:13.5px}
+  .etf-line .rank{color:var(--muted);font-weight:800;margin-right:4px;font-size:11.5px}
+  .etf-row .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+  .etf-row .meta span{color:var(--muted);font-size:10.5px}
+  .etf-row .pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+  .mini-pill{border-radius:6px;padding:4px 7px;font-size:11px;display:inline-flex;flex-direction:column;line-height:1.25;min-width:54px}
+  .mini-pill small{font-size:9.5px;font-weight:700;opacity:.75}
+  .mini-pill strong{font-size:11.5px;font-weight:900}
+  .tone-blue{background:var(--blue-soft);color:#1e3a8a}
+  .tone-green{background:var(--green-soft);color:#14532d}
+  .tone-purple{background:var(--purple-soft);color:#4c1d95}
+  .tone-red{background:var(--red-soft);color:#7f1d1d}
+  .tone-amber{background:var(--amber-soft);color:#78350f}
+  .delta-bar{height:5px;border-radius:99px;background:#f1f5f9;margin-top:6px;overflow:hidden;position:relative}
+  .delta-bar > i{display:block;height:100%}
+
+  /* 詳細頁 hero */
+  .etf-hero{background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border-radius:8px;padding:14px;margin-bottom:8px}
+  .etf-hero h2{margin:0;font-size:18px}
+  .etf-hero p{margin:3px 0 0;font-size:11.5px;color:#dbeafe;line-height:1.4}
+  .etf-price-line{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px}
+  .etf-price-line small{color:#bfdbfe;font-size:11px;display:block}
+  .etf-price-line strong{font-size:24px;font-weight:900}
+  .etf-price-line .up{color:#fca5a5;font-weight:800}
+  .etf-price-line .dn{color:#86efac;font-weight:800}
+  .mini-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+  .mini-pills .mini-pill{min-height:42px;padding:6px 8px}
+
+  /* etf-detail-tabs */
+  .etf-detail-tabs{display:flex;gap:6px;margin-top:4px}
+  .etf-detail-tabs button{flex:1;border:1px solid var(--line);background:#fff;color:#475467;
+    border-radius:8px;padding:7px 4px;font-size:11.5px;font-weight:800;cursor:pointer}
+  .etf-detail-tabs button.added{background:var(--blue-soft);border-color:#bfdbfe;color:var(--blue)}
+  .etf-detail-tabs button.increased{background:var(--green-soft);border-color:#bbf7d0;color:var(--green)}
+  .etf-detail-tabs button.decreased{background:var(--red-soft);border-color:#fecaca;color:var(--red)}
+  .etf-detail-tabs button.holdings.active{background:var(--purple);border-color:var(--purple);color:#fff}
+
+  /* sticky filter */
+  .sticky-filter{position:sticky;top:0;background:rgba(239,242,247,.95);backdrop-filter:blur(6px);padding:6px 0 6px;z-index:2;margin:-2px 0 6px}
+
+  .footnote{color:#64748b;font-size:12px;padding:0 6px 4px;margin:6px 0 0;line-height:1.6}
+  .footnote code{background:#eef2f7;padding:1px 5px;border-radius:4px;font-size:11px}
+
+  .legend{display:flex;gap:14px;justify-content:center;margin:6px 0 14px;font-size:12px;color:#475467;flex-wrap:wrap}
+  .legend .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>A03 ETF 排名列決策資訊</h1>
+  <p>這頁使用你提供的 ETF 新舊對照 mockup 原始 UI，左右都是實際手機畫面。</p>
+</header>
+<div class="container">
+<section class="section">
+    <div class="section-head"><span class="section-num">03</span><h2 class="section-title">ETF 排名 row：缺價格、缺視覺主從</h2></div>
+    <p class="section-desc">舊版 <code>etf-row</code> 顯示「#1 0050 元大台灣50 / 4,820 億 / 被動式 / 大型股 / 元大 / 上市 22 年」+ metricPills + assetDeltaBar。<b>沒有當前價、漲跌、殖利率焦點</b>，使用者只看到規模排序但拿不到買賣決策資訊。</p>
+    <div class="pair">
+      <div class="pane before"><h3></h3>
+      <div class="phone"><div class="screen"><div class="scroll">
+        <div class="app">
+          <div class="etf-row">
+            <div class="etf-line"><strong><span class="rank">#1</span> 0050 元大台灣50</strong><span style="font-weight:800">4,820 億</span></div>
+            <div class="meta"><span>被動式</span><span>大型股</span><span>元大</span><span>上市 22 年</span></div>
+            <div class="pills">
+              <div class="mini-pill tone-blue"><small>費率</small><strong>0.32%</strong></div>
+              <div class="mini-pill tone-purple"><small>殖利率</small><strong>4.2%</strong></div>
+              <div class="mini-pill tone-amber"><small>折溢價</small><strong>+0.85%</strong></div>
+              <div class="mini-pill tone-blue"><small>受益人</small><strong>83.2 萬</strong></div>
+            </div>
+            <div class="delta-bar"><i style="width:62%;background:linear-gradient(90deg,#22c55e,#16a34a)"></i></div>
+          </div>
+          <div class="etf-row">
+            <div class="etf-line"><strong><span class="rank">#2</span> 0056 元大高股息</strong><span style="font-weight:800">3,210 億</span></div>
+            <div class="meta"><span>被動式</span><span>高股息</span><span>元大</span><span>上市 17 年</span></div>
+            <div class="pills">
+              <div class="mini-pill tone-blue"><small>費率</small><strong>0.35%</strong></div>
+              <div class="mini-pill tone-purple"><small>殖利率</small><strong>8.2%</strong></div>
+              <div class="mini-pill tone-red"><small>折溢價</small><strong>-1.20%</strong></div>
+              <div class="mini-pill tone-blue"><small>受益人</small><strong>132 萬</strong></div>
+            </div>
+            <div class="delta-bar"><i style="width:30%;background:linear-gradient(90deg,#22c55e,#16a34a)"></i></div>
+          </div>
+        </div>
+      </div></div></div></div>
+
+      <div class="pane after"><h3></h3>
+      <div class="phone"><div class="screen"><div class="scroll">
+        <div class="app">
+          <div class="etf-row">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <strong style="font-size:14px"><span class="rank">#1</span> 0050 元大台灣50</strong>
+              <div style="text-align:right">
+                <div style="font-size:15px;font-weight:900;color:var(--red)">185.20</div>
+                <div style="font-size:11px;color:var(--red);font-weight:800">+1.92  +1.04%</div>
+              </div>
+            </div>
+            <div class="meta" style="margin-top:4px"><span>被動·大型股</span><span>規模 4,820 億</span><span>元大</span></div>
+            <div class="pills" style="margin-top:6px">
+              <div class="mini-pill tone-purple"><small>殖利率</small><strong>4.2%</strong></div>
+              <div class="mini-pill tone-blue"><small>費率</small><strong>0.32%</strong></div>
+              <div class="mini-pill tone-amber"><small>折溢價</small><strong>+0.85%</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:10.5px;color:var(--muted)">
+              <span>近月規模變化</span>
+              <div class="delta-bar" style="flex:1;margin:0"><i style="width:62%;background:linear-gradient(90deg,#22c55e,#16a34a)"></i></div>
+              <span style="color:var(--green);font-weight:800">+8.4%</span>
+            </div>
+          </div>
+          <div class="etf-row">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <strong style="font-size:14px"><span class="rank">#2</span> 0056 元大高股息 <span class="badge green" style="margin-left:4px;font-size:9.5px;padding:1px 6px">高股息</span></strong>
+              <div style="text-align:right">
+                <div style="font-size:15px;font-weight:900;color:var(--green)">39.85</div>
+                <div style="font-size:11px;color:var(--green);font-weight:800">-0.05  -0.13%</div>
+              </div>
+            </div>
+            <div class="meta" style="margin-top:4px"><span>被動·高股息</span><span>規模 3,210 億</span><span>元大</span></div>
+            <div class="pills" style="margin-top:6px">
+              <div class="mini-pill tone-purple"><small>殖利率</small><strong>8.2%</strong></div>
+              <div class="mini-pill tone-blue"><small>費率</small><strong>0.35%</strong></div>
+              <div class="mini-pill tone-red"><small>折溢價</small><strong>-1.20%</strong></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:10.5px;color:var(--muted)">
+              <span>近月規模變化</span>
+              <div class="delta-bar" style="flex:1;margin:0"><i style="width:30%;background:linear-gradient(90deg,#22c55e,#16a34a)"></i></div>
+              <span style="color:var(--green);font-weight:800">+2.1%</span>
+            </div>
+          </div>
+        </div>
+      </div></div></div></div>
+    </div>
+    <p class="footnote">改動：① 右上角放當前價 + 漲跌（看盤族第一眼想看的） ② 移除「上市 22 年 / 受益人 83.2 萬」這類較弱資訊到詳細頁，meta 行只留 3 個 ③ mini-pill 4→3 個，焦點放「殖利率 / 費率 / 折溢價」三個決策關鍵 ④ assetDeltaBar 補上「近月規模變化」標籤 + 變化％，原本只有色條看不出含義 ⑤ 第二檔 0056 高股息加 chip 強化分類。</p>
+  </section>
+<p class="footnote"><a href="./index.html">回預覽總覽</a>　<a href="../../index.html">回目前 Web 原型</a></p>
+</div>
+</body>
+</html>

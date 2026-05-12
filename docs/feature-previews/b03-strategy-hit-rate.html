@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B03 策略 hit-rate 回顧 - 實際預覽</title>
+<style>
+  :root{
+    --bg:#eef2f7; --surface:#fff; --ink:#182230; --muted:#667085;
+    --line:#d9e1ec; --navy:#17172d;
+    --blue:#1d4ed8; --blue-soft:#dbeafe;
+    --green:#047857; --green-soft:#dcfce7;
+    --red:#b42318; --red-soft:#fee2e2;
+    --amber:#a16207; --amber-soft:#fef3c7;
+    --purple:#6d28d9; --purple-soft:#ede9fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#dfe4ec;color:var(--ink);
+    font-family:"Microsoft JhengHei","Noto Sans TC","Segoe UI",Arial,sans-serif}
+  header.page{padding:26px 20px 4px;text-align:center}
+  header.page h1{margin:0 0 4px;font-size:22px}
+  header.page p{margin:0;color:#5b6573;font-size:13px}
+  .container{max-width:1180px;margin:0 auto;padding:18px}
+
+  .group-title{font-size:13px;font-weight:900;color:#475467;letter-spacing:1px;
+    margin:24px 4px 10px;padding-bottom:6px;border-bottom:1px solid #c8d1de}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}}
+
+  .feature{background:rgba(255,255,255,.4);border-radius:14px;padding:14px 12px 18px}
+  .feature .ftitle{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+  .feature .num{font-size:11px;color:#fff;background:var(--blue);border-radius:999px;
+    padding:2px 8px;font-weight:900;letter-spacing:.5px}
+  .feature h2{margin:0;font-size:16px}
+  .feature .why{margin:4px 0 12px;color:#475467;font-size:12px;line-height:1.5}
+
+  .phone{margin:0 auto;width:360px;max-width:100%;background:#0b0f19;
+    border-radius:30px;padding:9px;box-shadow:0 10px 24px rgba(16,24,40,.1)}
+  .screen{background:var(--bg);border-radius:22px;overflow:hidden;height:600px;
+    display:flex;flex-direction:column;position:relative}
+  .scroll{flex:1;overflow-y:auto;padding:10px}
+
+  /* === 沿用你站元件 === */
+  .topbar{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;margin-bottom:8px}
+  .topbar .menu{background:transparent;border:0;font-size:20px;color:var(--blue);font-weight:900;cursor:pointer}
+  .topbar h1{margin:0;font-size:14px;flex:1}
+  .topbar .right{display:flex;align-items:center;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+    padding:3px 8px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+  .chip .dot{width:5px;height:5px;border-radius:99px;background:var(--green)}
+  .chip.blue{background:var(--blue-soft);color:var(--blue)} .chip.blue .dot{background:var(--blue)}
+  .chip.red{background:var(--red-soft);color:var(--red)} .chip.red .dot{background:var(--red)}
+  .chip.amber{background:var(--amber-soft);color:var(--amber)} .chip.amber .dot{background:var(--amber)}
+  .chip.purple{background:var(--purple-soft);color:var(--purple)} .chip.purple .dot{background:var(--purple)}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .panel-title{font-size:13px;font-weight:900;display:flex;justify-content:space-between;align-items:center}
+  .panel-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef2f7}
+  .row:last-child{border-bottom:0}
+  .row .code{font-weight:800;font-size:13px}
+  .row .name{font-size:11px;color:var(--muted)}
+  .row .right{text-align:right}
+  .up{color:var(--red)} .dn{color:var(--green)}
+
+  .filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .filters::-webkit-scrollbar{display:none}
+  .filters button{background:#fff;border:1px solid var(--line);border-radius:8px;
+    color:#475467;padding:5px 9px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .filters button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  .mini-pill{border-radius:7px;padding:7px;font-size:11px;display:flex;flex-direction:column;
+    line-height:1.2;background:var(--blue-soft);color:#1e3a8a;min-height:46px;justify-content:center}
+  .mini-pill small{font-size:10px;opacity:.8;font-weight:700}
+  .mini-pill strong{font-size:13px;font-weight:900;margin-top:2px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:8px;
+    font-size:12px;font-weight:800;padding:7px 11px;cursor:pointer;text-decoration:none}
+  .btn.ghost{background:#fff;color:var(--blue)}
+  .btn.line{background:#06C755;border-color:#06C755}
+
+  /* gauge */
+  .gauge{position:relative;width:100px;height:54px;margin:0 auto}
+  .gauge svg{width:100%;height:100%}
+
+  /* heat */
+  .heat-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .heat-cell{aspect-ratio:1;border-radius:3px;font-size:9px;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800}
+</style>
+<style>
+  .compare-page .page-actions{max-width:1180px;margin:0 auto;padding:0 18px 18px;font-size:13px}
+  .compare-page .page-actions a{color:var(--blue);font-weight:800;text-decoration:none}
+  .compare-pair{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  .before-feature{background:rgba(255,255,255,.4);border-radius:14px;padding:14px 12px 18px}
+  .before-feature .num{background:#64748b}
+  @media (max-width:880px){.compare-pair{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="compare-page">
+  <header class="page">
+    <h1>B03 策略 hit-rate 回顧 - 實際畫面預覽</h1>
+    <p>左側是目前缺口的實際 UI 狀態，右側是新功能 mockup 的實際生成畫面。</p>
+  </header>
+  <div class="container">
+    <div class="compare-pair">
+      <article class="feature before-feature">
+    <div class="ftitle"><span class="num">OLD</span><h2>目前狀態 / 缺口</h2></div>
+    <p class="why">目前 START / CONT / RS90+ 是當下訊號，尚未把近 30 日勝率整理成頁面。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>策略 hit-rate 回顧</h1><span class="chip blue">現有</span></div>
+      <div class="panel">
+        <div class="panel-title">目前可用</div>
+        <div class="row"><div><div class="code">個股查詢</div><div class="name">LINE 卡片、K 線、權證、策略訊號</div></div><span class="chip">已上線</span></div>
+        <div class="row"><div><div class="code">ETF 研究</div><div class="name">排名、比較、持股、資金流、配息日曆</div></div><span class="chip">已上線</span></div>
+      </div>
+      <div class="panel" style="background:#fff7ed;border-color:#fed7aa">
+        <div class="panel-title" style="color:#9a3412">待補功能</div>
+        <div style="font-size:12px;color:#7c2d12;line-height:1.55;margin-top:5px">目前 START / CONT / RS90+ 是當下訊號，尚未把近 30 日勝率整理成頁面。</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">建議接法</div>
+        <div class="panel-sub">前端新增 view / panel；寫入、推播、資料快取交給 Flask /api/web 後端。</div>
+      </div>
+    </div></div></div>
+  </article>
+      <article class="feature">
+    <div class="ftitle"><span class="num">03</span><h2>📈 策略 hit-rate 回顧</h2></div>
+    <p class="why">建立對訊號的信任感；也能讓你看策略真實表現。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>策略回顧</h1></div>
+      <div class="filters" style="margin-bottom:8px"><button class="active">START</button><button>CONT</button><button>RS 90+</button></div>
+      <div class="panel">
+        <div class="panel-title">START 近 30 日</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px">
+          <div class="mini-pill"><small>命中</small><strong>87 檔</strong></div>
+          <div class="mini-pill" style="background:var(--green-soft);color:#14532d"><small>5 日勝率</small><strong>67%</strong></div>
+          <div class="mini-pill" style="background:var(--purple-soft);color:#4c1d95"><small>平均</small><strong>+2.3%</strong></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">命中清單（依後續表現）</div>
+        <div class="row"><div><div class="code">2330 台積電</div><div class="name">5/2 命中</div></div><span class="up" style="font-weight:800">+5.8%</span></div>
+        <div class="row"><div><div class="code">2317 鴻海</div><div class="name">5/3 命中</div></div><span class="up" style="font-weight:800">+3.1%</span></div>
+        <div class="row"><div><div class="code">3231 緯創</div><div class="name">5/5 命中</div></div><span class="dn" style="font-weight:800">-1.2%</span></div>
+      </div>
+    </div></div></div>
+  </article>
+    </div>
+  </div>
+  <div class="page-actions"><a href="./index.html">回預覽總覽</a>　<a href="../../index.html">回目前 Web 原型</a></div>
+</div>
+</body>
+</html>

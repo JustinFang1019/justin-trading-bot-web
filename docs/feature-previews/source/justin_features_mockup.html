@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Justin Trading Bot — 13 個新功能 mockup</title>
+<style>
+  :root{
+    --bg:#eef2f7; --surface:#fff; --ink:#182230; --muted:#667085;
+    --line:#d9e1ec; --navy:#17172d;
+    --blue:#1d4ed8; --blue-soft:#dbeafe;
+    --green:#047857; --green-soft:#dcfce7;
+    --red:#b42318; --red-soft:#fee2e2;
+    --amber:#a16207; --amber-soft:#fef3c7;
+    --purple:#6d28d9; --purple-soft:#ede9fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#dfe4ec;color:var(--ink);
+    font-family:"Microsoft JhengHei","Noto Sans TC","Segoe UI",Arial,sans-serif}
+  header.page{padding:26px 20px 4px;text-align:center}
+  header.page h1{margin:0 0 4px;font-size:22px}
+  header.page p{margin:0;color:#5b6573;font-size:13px}
+  .container{max-width:1180px;margin:0 auto;padding:18px}
+
+  .group-title{font-size:13px;font-weight:900;color:#475467;letter-spacing:1px;
+    margin:24px 4px 10px;padding-bottom:6px;border-bottom:1px solid #c8d1de}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}}
+
+  .feature{background:rgba(255,255,255,.4);border-radius:14px;padding:14px 12px 18px}
+  .feature .ftitle{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+  .feature .num{font-size:11px;color:#fff;background:var(--blue);border-radius:999px;
+    padding:2px 8px;font-weight:900;letter-spacing:.5px}
+  .feature h2{margin:0;font-size:16px}
+  .feature .why{margin:4px 0 12px;color:#475467;font-size:12px;line-height:1.5}
+
+  .phone{margin:0 auto;width:360px;max-width:100%;background:#0b0f19;
+    border-radius:30px;padding:9px;box-shadow:0 10px 24px rgba(16,24,40,.1)}
+  .screen{background:var(--bg);border-radius:22px;overflow:hidden;height:600px;
+    display:flex;flex-direction:column;position:relative}
+  .scroll{flex:1;overflow-y:auto;padding:10px}
+
+  /* === 沿用你站元件 === */
+  .topbar{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;margin-bottom:8px}
+  .topbar .menu{background:transparent;border:0;font-size:20px;color:var(--blue);font-weight:900;cursor:pointer}
+  .topbar h1{margin:0;font-size:14px;flex:1}
+  .topbar .right{display:flex;align-items:center;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+    padding:3px 8px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+  .chip .dot{width:5px;height:5px;border-radius:99px;background:var(--green)}
+  .chip.blue{background:var(--blue-soft);color:var(--blue)} .chip.blue .dot{background:var(--blue)}
+  .chip.red{background:var(--red-soft);color:var(--red)} .chip.red .dot{background:var(--red)}
+  .chip.amber{background:var(--amber-soft);color:var(--amber)} .chip.amber .dot{background:var(--amber)}
+  .chip.purple{background:var(--purple-soft);color:var(--purple)} .chip.purple .dot{background:var(--purple)}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .panel-title{font-size:13px;font-weight:900;display:flex;justify-content:space-between;align-items:center}
+  .panel-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef2f7}
+  .row:last-child{border-bottom:0}
+  .row .code{font-weight:800;font-size:13px}
+  .row .name{font-size:11px;color:var(--muted)}
+  .row .right{text-align:right}
+  .up{color:var(--red)} .dn{color:var(--green)}
+
+  .filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .filters::-webkit-scrollbar{display:none}
+  .filters button{background:#fff;border:1px solid var(--line);border-radius:8px;
+    color:#475467;padding:5px 9px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .filters button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  .mini-pill{border-radius:7px;padding:7px;font-size:11px;display:flex;flex-direction:column;
+    line-height:1.2;background:var(--blue-soft);color:#1e3a8a;min-height:46px;justify-content:center}
+  .mini-pill small{font-size:10px;opacity:.8;font-weight:700}
+  .mini-pill strong{font-size:13px;font-weight:900;margin-top:2px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:8px;
+    font-size:12px;font-weight:800;padding:7px 11px;cursor:pointer;text-decoration:none}
+  .btn.ghost{background:#fff;color:var(--blue)}
+  .btn.line{background:#06C755;border-color:#06C755}
+
+  /* gauge */
+  .gauge{position:relative;width:100px;height:54px;margin:0 auto}
+  .gauge svg{width:100%;height:100%}
+
+  /* heat */
+  .heat-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .heat-cell{aspect-ratio:1;border-radius:3px;font-size:9px;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800}
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Justin Trading Bot — 13 個新功能 mockup</h1>
+  <p>沿用你站上 CSS 變數與元件；每張是「最關鍵那一屏」</p>
+</header>
+
+<div class="container">
+
+<!-- ============ 🔥 立即高 ROI ============ -->
+<div class="group-title">🔥 立即高 ROI</div>
+<div class="grid">
+
+  <!-- 01 自選 + 推播 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">01</span><h2>⭐ 自選 + 客製推播</h2></div>
+    <p class="why">自選股 / ETF 跨頁同步，搭配 LINE bot 客製化推播條件。LINE bot 最大優勢。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>推播設定</h1><span class="chip"><span class="dot"></span>已連線</span></div>
+      <div class="panel">
+        <div class="panel-title">我的自選 <span class="chip blue">12 檔</span></div>
+        <div class="row"><div><div class="code">⭐ 2330 台積電</div><div class="name">短波 · 已推播 3 次</div></div><label style="font-size:11px"><input type="checkbox" checked> 推播</label></div>
+        <div class="row"><div><div class="code">⭐ 0056 元大高股息</div><div class="name">長持</div></div><label style="font-size:11px"><input type="checkbox" checked> 推播</label></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">觸發條件</div>
+        <div style="display:grid;gap:5px;margin-top:6px;font-size:12px">
+          <label><input type="checkbox" checked> START 命中</label>
+          <label><input type="checkbox" checked> RS 突破 90</label>
+          <label><input type="checkbox"> 跌破 20MA</label>
+          <label><input type="checkbox" checked> ETF 配息日 D-3</label>
+          <label><input type="checkbox"> ETF 折溢價 &gt; 1%</label>
+          <label><input type="checkbox" checked> 即將上市 ETF 倒數</label>
+        </div>
+      </div>
+      <div class="panel" style="background:#f0fdf4;border-color:#bbf7d0">
+        <div style="font-size:11.5px;color:#065f46"><b>📲 預覽推播</b><br>「2330 台積電 RS 突破 90，價 1085 +2.36%，START 命中」</div>
+      </div>
+      <button class="btn line" style="width:100%">儲存並開啟 LINE 推播</button>
+    </div></div></div>
+  </article>
+
+  <!-- 02 大盤儀表板 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">02</span><h2>🌡️ 首頁大盤儀表板</h2></div>
+    <p class="why">進站第一屏就掌握盤勢，重用既有掃描結果。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>今日盤勢</h1><span class="chip"><span class="dot"></span>11:43</span></div>
+      <div class="panel" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:0">
+        <div style="font-size:11px;opacity:.8">大盤情緒</div>
+        <div style="display:flex;justify-content:space-between;align-items:end;margin-top:4px">
+          <div style="font-size:24px;font-weight:900">偏多 72</div>
+          <div style="font-size:11px;opacity:.85">RS 90+ : 23 檔<br>START 命中 : 12 檔</div>
+        </div>
+        <div style="background:rgba(255,255,255,.2);height:5px;border-radius:99px;margin-top:8px;overflow:hidden">
+          <div style="width:72%;height:100%;background:#86efac"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🔥 今日強勢 Top 5</div>
+        <div class="row"><div class="code">2330 台積電</div><span class="up" style="font-weight:800;font-size:12px">+2.36%</span></div>
+        <div class="row"><div class="code">2317 鴻海</div><span class="up" style="font-weight:800;font-size:12px">+1.21%</span></div>
+        <div class="row"><div class="code">2454 聯發科</div><span class="up" style="font-weight:800;font-size:12px">+1.05%</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📅 配息倒數</div>
+        <div class="row"><div class="code">0056</div><div class="right"><span class="chip amber">D-3</span> 5/15</div></div>
+        <div class="row"><div class="code">00878</div><div class="right"><span class="chip amber">D-7</span> 5/19</div></div>
+      </div>
+    </div></div></div>
+  </article>
+
+  <!-- 03 hit-rate -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">03</span><h2>📈 策略 hit-rate 回顧</h2></div>
+    <p class="why">建立對訊號的信任感；也能讓你看策略真實表現。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>策略回顧</h1></div>
+      <div class="filters" style="margin-bottom:8px"><button class="active">START</button><button>CONT</button><button>RS 90+</button></div>
+      <div class="panel">
+        <div class="panel-title">START 近 30 日</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px">
+          <div class="mini-pill"><small>命中</small><strong>87 檔</strong></div>
+          <div class="mini-pill" style="background:var(--green-soft);color:#14532d"><small>5 日勝率</small><strong>67%</strong></div>
+          <div class="mini-pill" style="background:var(--purple-soft);color:#4c1d95"><small>平均</small><strong>+2.3%</strong></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">命中清單（依後續表現）</div>
+        <div class="row"><div><div class="code">2330 台積電</div><div class="name">5/2 命中</div></div><span class="up" style="font-weight:800">+5.8%</span></div>
+        <div class="row"><div><div class="code">2317 鴻海</div><div class="name">5/3 命中</div></div><span class="up" style="font-weight:800">+3.1%</span></div>
+        <div class="row"><div><div class="code">3231 緯創</div><div class="name">5/5 命中</div></div><span class="dn" style="font-weight:800">-1.2%</span></div>
+      </div>
+    </div></div></div>
+  </article>
+
+</div>
+
+<!-- ============ ⭐ 中期差異化 ============ -->
+<div class="group-title">⭐ 中期差異化</div>
+<div class="grid">
+
+  <!-- 04 投組模擬器 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">04</span><h2>🎯 投組模擬器</h2></div>
+    <p class="why">輸入 ETF 配比，算總殖利率、加權費率、持股重疊。把「ETF 比較」延伸到「組合」。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>投組模擬</h1></div>
+      <div class="panel">
+        <div class="panel-title">我的配比</div>
+        <div class="row"><div class="code">0050</div><div style="display:flex;gap:6px;align-items:center"><input type="range" value="50" style="width:80px"><b style="font-size:12px">50%</b></div></div>
+        <div class="row"><div class="code">0056</div><div style="display:flex;gap:6px;align-items:center"><input type="range" value="30" style="width:80px"><b style="font-size:12px">30%</b></div></div>
+        <div class="row"><div class="code">00878</div><div style="display:flex;gap:6px;align-items:center"><input type="range" value="20" style="width:80px"><b style="font-size:12px">20%</b></div></div>
+        <button class="btn ghost" style="width:100%;margin-top:6px">+ 加入 ETF</button>
+      </div>
+      <div class="panel" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:0">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div><div style="font-size:10.5px;opacity:.8">加權殖利率</div><div style="font-size:18px;font-weight:900">5.8%</div></div>
+          <div><div style="font-size:10.5px;opacity:.8">加權費率</div><div style="font-size:18px;font-weight:900">0.34%</div></div>
+          <div><div style="font-size:10.5px;opacity:.8">持股重疊</div><div style="font-size:18px;font-weight:900">42%</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">⚠️ 重疊警告</div>
+        <div style="font-size:11.5px;color:#475467;margin-top:4px">0050 與 0056 共同持有：2330、2454、2317（合計 28%），分散度有限。</div>
+      </div>
+    </div></div></div>
+  </article>
+
+  <!-- 05 法人籌碼 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">05</span><h2>📰 法人籌碼整合</h2></div>
+    <p class="why">外資/投信連買連賣 + 主力買賣超，與 START 訊號交叉佐證。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>2330 台積電</h1></div>
+      <div class="panel" style="background:var(--navy);color:#fff;border:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div style="font-size:16px;font-weight:900">2330 台積電</div>
+          <div style="font-size:16px;font-weight:900;color:#fca5a5">1,085 +2.36%</div>
+        </div>
+        <div style="color:#c7d2fe;font-size:11.5px;margin-top:3px">START · RS 94 · 進場 1,062</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📊 法人籌碼 · 近 5 日</div>
+        <div class="row"><div>外資</div><div class="right"><span class="chip">連買 5 日</span> <b class="up" style="font-size:12px">+24,500 張</b></div></div>
+        <div class="row"><div>投信</div><div class="right"><span class="chip blue">連買 3 日</span> <b class="up" style="font-size:12px">+3,200 張</b></div></div>
+        <div class="row"><div>自營商</div><div class="right"><span class="chip red">連賣 2 日</span> <b class="dn" style="font-size:12px">-820 張</b></div></div>
+      </div>
+      <div class="panel" style="background:#fef3c7;border-color:#fde68a">
+        <div style="font-size:11.5px;color:#78350f"><b>💡 交叉佐證：</b>外資 + 投信同步買超 + START 命中，籌碼面強。</div>
+      </div>
+    </div></div></div>
+  </article>
+
+  <!-- 06 季調換股 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">06</span><h2>🔄 ETF 季調換股雷達</h2></div>
+    <p class="why">下次成分股調整日，預測納入/剔除清單。長線投資者剛需。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>季調雷達</h1></div>
+      <div class="panel" style="background:#fef3c7;border-color:#fde68a">
+        <div style="font-size:13px;font-weight:900;color:#78350f">📅 0050 下次季調 · 6/21</div>
+        <div style="font-size:11px;color:#92400e;margin-top:2px">距今 40 天</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title" style="color:var(--green)">✅ 預計納入</div>
+        <div class="row"><div><div class="code">3711 日月光投控</div><div class="name">市值排名上升至 #45</div></div><span class="chip">高機率</span></div>
+        <div class="row"><div><div class="code">8046 南電</div><div class="name">市值排名上升至 #48</div></div><span class="chip blue">中機率</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title" style="color:var(--red)">⚠️ 預計剔除</div>
+        <div class="row"><div><div class="code">2347 聯強</div><div class="name">跌出市值 Top 60</div></div><span class="chip red">高機率</span></div>
+      </div>
+      <button class="btn" style="width:100%">📲 訂閱 0050 季調通知</button>
+    </div></div></div>
+  </article>
+
+  <!-- 07 配息試算 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">07</span><h2>💸 配息試算 + 填息歷史</h2></div>
+    <p class="why">輸入股數 → 預估入帳；過去 5 年填息天數中位數。每年除息潮流量爆。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>配息試算</h1></div>
+      <div class="panel">
+        <div class="panel-title">0056 元大高股息</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div><div style="font-size:10.5px;color:var(--muted)">持有股數</div><input value="10,000" style="width:100%;font-size:14px;font-weight:800;border:1px solid var(--line);border-radius:6px;padding:6px"></div>
+          <div><div style="font-size:10.5px;color:var(--muted)">預估配息</div><div style="font-size:18px;font-weight:900;color:var(--red);margin-top:5px">$ 1.85</div></div>
+        </div>
+      </div>
+      <div class="panel" style="background:linear-gradient(135deg,#047857,#10b981);color:#fff;border:0">
+        <div style="font-size:11px;opacity:.85">預估入帳金額</div>
+        <div style="font-size:28px;font-weight:900">$ 18,500</div>
+        <div style="font-size:11px;opacity:.85;margin-top:2px">發放日：7/22（D-71）</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📊 填息歷史 · 5 年</div>
+        <div class="row"><div>2024</div><div class="right"><b>14 天</b> 填息</div></div>
+        <div class="row"><div>2023</div><div class="right"><b>22 天</b> 填息</div></div>
+        <div class="row"><div>2022</div><div class="right"><b style="color:var(--red)">未填息</b></div></div>
+        <div class="row"><div style="font-weight:800">中位數</div><div class="right" style="color:var(--green);font-weight:800">18 天</div></div>
+      </div>
+    </div></div></div>
+  </article>
+
+</div>
+
+<!-- ============ 🎁 加值小功能 ============ -->
+<div class="group-title">🎁 加值小功能</div>
+<div class="grid">
+
+  <!-- 08 卡片分享 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">08</span><h2>📤 卡片一鍵分享</h2></div>
+    <p class="why">line-card → PNG + 短網址；引流到 LINE bot。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>2330 台積電</h1></div>
+      <div class="panel" style="background:var(--navy);color:#fff;border:0;position:relative">
+        <div style="display:flex;justify-content:space-between"><b style="font-size:15px">2330 台積電</b><span style="color:#facc15;font-weight:800">RS 94</span></div>
+        <div style="color:#c7d2fe;font-size:11.5px;margin-top:4px">START · 進場 1,062</div>
+        <div style="margin-top:8px;background:#f8fafc;color:var(--ink);border-radius:6px;padding:7px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:11px">
+          <div><div style="opacity:.6">價</div><b>1,085</b></div>
+          <div><div style="opacity:.6">漲跌</div><b style="color:var(--red)">+2.36%</b></div>
+          <div><div style="opacity:.6">量</div><b>38.4K</b></div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px;box-shadow:0 -10px 24px rgba(0,0,0,.1)">
+        <div style="text-align:center;color:var(--muted);font-size:11px;margin-bottom:8px">▬</div>
+        <div style="font-weight:900;margin-bottom:8px">分享這張卡</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11px;text-align:center">
+          <div><div style="font-size:24px">💚</div>LINE</div>
+          <div><div style="font-size:24px">📋</div>連結</div>
+          <div><div style="font-size:24px">🖼️</div>圖片</div>
+          <div><div style="font-size:24px">📱</div>IG 限</div>
+        </div>
+        <div style="margin-top:10px;background:#f3f4f6;border-radius:8px;padding:7px;font-size:11px;color:#475467">justin.tw/c/2330-rs94-start <button class="btn ghost" style="padding:3px 7px;font-size:10.5px;margin-left:6px">複製</button></div>
+      </div>
+    </div></div></div>
+  </article>
+
+  <!-- 09 自選分組 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">09</span><h2>🏷️ 自選分組</h2></div>
+    <p class="why">短波 / 長持 / 觀察 三組，每組獨立推播設定。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>我的自選</h1><span class="chip blue">23</span></div>
+      <div class="filters" style="margin-bottom:8px">
+        <button class="active">全部 23</button>
+        <button>📈 短波 8</button>
+        <button>💎 長持 10</button>
+        <button>👀 觀察 5</button>
+        <button>+ 新增</button>
+      </div>
+      <div class="panel">
+        <div style="font-size:11px;color:var(--muted);font-weight:800;margin-bottom:6px">📈 短波（推播：START + RS 突破）</div>
+        <div class="row"><div><div class="code">2330 台積電</div><div class="name">START · RS 94</div></div><span class="up" style="font-weight:800">+2.36%</span></div>
+        <div class="row"><div><div class="code">2317 鴻海</div><div class="name">CONT · RS 78</div></div><span class="up" style="font-weight:800">+1.21%</span></div>
+      </div>
+      <div class="panel">
+        <div style="font-size:11px;color:var(--muted);font-weight:800;margin-bottom:6px">💎 長持（推播：配息 D-3 + 折溢價）</div>
+        <div class="row"><div><div class="code">0050</div><div class="name">下次配息 6/18</div></div><span class="up" style="font-weight:800">+1.04%</span></div>
+        <div class="row"><div><div class="code">0056</div><div class="name">下次配息 7/22</div></div><span class="dn" style="font-weight:800">-0.13%</span></div>
+      </div>
+    </div></div></div>
+  </article>
+
+  <!-- 10 深色模式 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">10</span><h2>🌙 深色模式</h2></div>
+    <p class="why">盯盤族剛需；既有 CSS variables 切換成本低。</p>
+    <div class="phone" style="background:#000"><div class="screen" style="background:#0b0f19;color:#e5e7eb"><div class="scroll">
+      <div class="topbar" style="background:#1a1f2e;border-color:#2d3548">
+        <button class="menu" style="color:#60a5fa">≡</button>
+        <h1 style="color:#fff">個股查詢</h1>
+        <span class="chip" style="background:#064e3b;color:#86efac"><span class="dot" style="background:#10b981"></span>已連線</span>
+      </div>
+      <div class="panel" style="background:#1a1f2e;border-color:#2d3548">
+        <div style="display:flex;justify-content:space-between"><b style="font-size:15px;color:#fff">2330 台積電</b><span style="color:#facc15;font-weight:800">RS 94</span></div>
+        <div style="color:#94a3b8;font-size:11.5px;margin-top:4px">START · 進場 1,062</div>
+        <div style="margin-top:8px;background:#0b0f19;border-radius:6px;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:11px">
+          <div><div style="color:#64748b">價</div><b style="color:#fca5a5">1,085</b></div>
+          <div><div style="color:#64748b">漲跌</div><b style="color:#fca5a5">+2.36%</b></div>
+          <div><div style="color:#64748b">量</div><b style="color:#fff">38.4K</b></div>
+        </div>
+      </div>
+      <div class="panel" style="background:#1a1f2e;border-color:#2d3548">
+        <div style="display:flex;justify-content:space-between"><b style="font-size:15px;color:#fff">0056 元大高股息</b></div>
+        <div style="color:#94a3b8;font-size:11.5px;margin-top:4px">高股息 ETF</div>
+      </div>
+      <div class="panel" style="background:#1a1f2e;border-color:#2d3548;display:flex;justify-content:space-between;align-items:center">
+        <span style="color:#94a3b8;font-size:12px">🌙 深色模式</span>
+        <span style="background:#2563eb;width:36px;height:20px;border-radius:99px;position:relative;display:inline-block"><span style="position:absolute;right:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:99px"></span></span>
+      </div>
+    </div></div></div>
+  </article>
+
+  <!-- 11 部位試算器 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">11</span><h2>🧮 部位試算器</h2></div>
+    <p class="why">資金 × 風險% → 建議買幾張 + 停損價，配 START 進場價自動計算。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>部位試算 · 2330</h1></div>
+      <div class="panel">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><div style="font-size:10.5px;color:var(--muted)">資金</div><input value="500,000" style="width:100%;font-size:14px;font-weight:800;border:1px solid var(--line);border-radius:6px;padding:6px"></div>
+          <div><div style="font-size:10.5px;color:var(--muted)">單筆風險</div><input value="2%" style="width:100%;font-size:14px;font-weight:800;border:1px solid var(--line);border-radius:6px;padding:6px"></div>
+        </div>
+        <div style="margin-top:8px;font-size:11.5px;color:var(--muted)">
+          <div>進場價 <b style="color:var(--ink)">1,062</b>（自 START 訊號）</div>
+          <div>停損價 <b style="color:var(--ink)">1,015</b>（-4.4%，依 ATR）</div>
+        </div>
+      </div>
+      <div class="panel" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:0">
+        <div style="font-size:11px;opacity:.85">建議部位</div>
+        <div style="display:flex;justify-content:space-between;align-items:end;margin-top:4px">
+          <div><div style="font-size:28px;font-weight:900">2 張</div><div style="font-size:11px;opacity:.85">200 股 · 約 21.2 萬</div></div>
+          <div style="text-align:right">
+            <div style="font-size:10.5px;opacity:.85">最大虧損</div>
+            <div style="font-size:14px;font-weight:900;color:#fca5a5">- $ 9,400</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div style="font-size:11.5px;color:#475467">R = 47 元 · 若達 +1R 出場可賺 $ 9,400 / +2R = $ 18,800</div>
+      </div>
+    </div></div></div>
+  </article>
+
+</div>
+
+<!-- ============ 🧪 實驗性 ============ -->
+<div class="group-title">🧪 實驗性</div>
+<div class="grid">
+
+  <!-- 12 自然語言 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">12</span><h2>🤖 自然語言查詢</h2></div>
+    <p class="why">「殖利率 &gt;6% 費率&lt;0.5%」LLM 翻譯成既有 filter。進階篩選的懶人入口。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>AI 篩選</h1><span class="chip purple"><span class="dot"></span>Claude</span></div>
+      <div class="panel" style="background:#f5f3ff;border-color:#c4b5fd">
+        <div style="font-size:11px;color:#5b21b6;margin-bottom:6px">💬 你問：</div>
+        <div style="font-size:13px;color:#1e1b4b">幫我找殖利率超過 6%、費率低於 0.5%、近一個月有淨流入的高股息 ETF</div>
+      </div>
+      <div class="panel">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">🤖 解析條件：</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <span class="chip blue">殖利率 ≥ 6%</span>
+          <span class="chip blue">費率 ≤ 0.5%</span>
+          <span class="chip blue">近月淨流入 &gt; 0</span>
+          <span class="chip blue">分類：高股息</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">符合條件 3 檔</div>
+        <div class="row"><div><div class="code">0056</div><div class="name">殖 8.2% · 費 0.35% · 流入 +12 億</div></div><span class="up" style="font-weight:800">★</span></div>
+        <div class="row"><div><div class="code">00878</div><div class="name">殖 7.1% · 費 0.40% · 流入 +8 億</div></div><span class="up" style="font-weight:800">★</span></div>
+        <div class="row"><div><div class="code">00919</div><div class="name">殖 6.5% · 費 0.45% · 流入 +5 億</div></div></div>
+      </div>
+      <button class="btn ghost" style="width:100%">儲存為自選篩選</button>
+    </div></div></div>
+  </article>
+
+  <!-- 13 主題輪動 -->
+  <article class="feature">
+    <div class="ftitle"><span class="num">13</span><h2>🔗 同主題輪動雷達</h2></div>
+    <p class="why">半導體 / AI / 高股息 / 金融 主題分組，看資金近 5/20 日往哪流動。</p>
+    <div class="phone"><div class="screen"><div class="scroll">
+      <div class="topbar"><button class="menu">≡</button><h1>主題輪動</h1></div>
+      <div class="filters" style="margin-bottom:8px"><button class="active">近 5 日</button><button>近 20 日</button><button>近 60 日</button></div>
+      <div class="panel" style="background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:0">
+        <div style="font-size:11px;opacity:.85">🔥 最強主題</div>
+        <div style="font-size:20px;font-weight:900;margin-top:2px">AI / 雲端運算</div>
+        <div style="font-size:11.5px;opacity:.9;margin-top:2px">近 5 日 +6.4% · 8 檔同類 ETF 平均</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">主題排名</div>
+        <div class="row"><div><b>AI / 雲端</b><div class="name">00891 / 00757 / 00875</div></div><span class="up" style="font-weight:800;font-size:13px">+6.4%</span></div>
+        <div class="row"><div><b>半導體</b><div class="name">00692 / 00881 / 00904</div></div><span class="up" style="font-weight:800;font-size:13px">+3.2%</span></div>
+        <div class="row"><div><b>高股息</b><div class="name">0056 / 00878 / 00919</div></div><span class="up" style="font-weight:800;font-size:13px">+0.8%</span></div>
+        <div class="row"><div><b>金融</b><div class="name">0055 / 00713</div></div><span class="dn" style="font-weight:800;font-size:13px">-0.4%</span></div>
+        <div class="row"><div><b>ESG / 永續</b><div class="name">00850 / 00930</div></div><span class="dn" style="font-weight:800;font-size:13px">-1.2%</span></div>
+      </div>
+      <div class="panel" style="background:#eff6ff">
+        <div style="font-size:11.5px;color:#1e3a8a"><b>💡 提示：</b>AI 主題連續 5 日領漲，是否考慮加碼？</div>
+      </div>
+    </div></div></div>
+  </article>
+
+</div>
+
+</div>
+
+</body>
+</html>

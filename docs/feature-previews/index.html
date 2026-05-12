@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Justin Trading Bot - 實際新舊預覽</title>
+<style>
+  :root{--bg:#eef2f7;--surface:#fff;--ink:#182230;--muted:#667085;--line:#d9e1ec;--blue:#1d4ed8;--amber:#a16207;--amber-soft:#fef3c7;--green:#047857;--green-soft:#dcfce7}
+  *{box-sizing:border-box}
+  body{margin:0;background:#dfe4ec;color:var(--ink);font-family:"Microsoft JhengHei","Noto Sans TC","Segoe UI",Arial,sans-serif}
+  header,main{max-width:1120px;margin:0 auto;padding:26px 18px 0}
+  h1{margin:0 0 6px;font-size:26px}
+  p{margin:0;color:#475467;line-height:1.6}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:18px 0 30px}
+  .card{display:block;background:#fff;border:1px solid var(--line);border-radius:8px;padding:13px;min-height:124px;color:inherit;text-decoration:none;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .card:hover{border-color:#93c5fd;transform:translateY(-1px)}
+  .card.new{border-color:#86efac;background:#f8fffb}
+  .code{color:var(--blue);font-size:12px;font-weight:900;letter-spacing:.7px}
+  .new .code{color:var(--green)}
+  h2{margin:7px 0 7px;font-size:16px;line-height:1.35}
+  .group{display:inline-flex;padding:2px 7px;border-radius:999px;background:var(--amber-soft);color:var(--amber);font-size:11px;font-weight:900}
+  .new .group{background:var(--green-soft);color:var(--green)}
+  .desc{margin-top:8px;color:var(--muted);font-size:12.5px;line-height:1.5}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){header,main{padding-left:14px;padding-right:14px}.grid{grid-template-columns:1fr}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Justin Trading Bot - 實際新舊預覽</h1>
+  <p>這版不是文字說明卡，而是實際手機 UI 預覽。ETF 官網更新已新增成可看的預覽頁，手動更新入口也放進去了。</p>
+</header>
+<main>
+  <section class="grid">
+    <a class="card" href="./a01-etf-first-screen-density.html"><span class="code">A01</span><h2>ETF 首屏資訊密度</h2><span class="group">ETF UI 重構</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./a02-etf-tool-grid-hierarchy.html"><span class="code">A02</span><h2>ETF 工具網格分層</h2><span class="group">ETF UI 重構</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./a03-etf-ranking-row.html"><span class="code">A03</span><h2>ETF 排名列決策資訊</h2><span class="group">ETF UI 重構</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./a04-etf-detail-hero.html"><span class="code">A04</span><h2>ETF 詳細頁 Hero</h2><span class="group">ETF UI 重構</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card new" href="./a05-etf-official-source.html"><span class="code">A05</span><h2>ETF 官網自動更新</h2><span class="group">已開始實作</span><p class="desc">投信官網第一手資料卡、手動更新按鈕、00403A 更新結果預覽。</p></a>
+    <a class="card" href="./b01-watchlist-push.html"><span class="code">B01</span><h2>自選 + 客製推播</h2><span class="group">保留空間</span><p class="desc">先保留入口與資訊架構，暫不實作。</p></a>
+    <a class="card" href="./b02-market-dashboard.html"><span class="code">B02</span><h2>首頁大盤儀表板</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b03-strategy-hit-rate.html"><span class="code">B03</span><h2>策略 hit-rate 回顧</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b04-portfolio-simulator.html"><span class="code">B04</span><h2>投組模擬器</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b05-institutional-flow.html"><span class="code">B05</span><h2>法人籌碼整合</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b06-etf-rebalance-radar.html"><span class="code">B06</span><h2>ETF 季調換股雷達</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b07-dividend-calculator.html"><span class="code">B07</span><h2>配息試算 + 填息歷史</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b08-card-share.html"><span class="code">B08</span><h2>卡片一鍵分享</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b09-watchlist-groups.html"><span class="code">B09</span><h2>自選分組</h2><span class="group">保留空間</span><p class="desc">先保留入口與資訊架構，暫不實作。</p></a>
+    <a class="card" href="./b10-dark-mode.html"><span class="code">B10</span><h2>深色模式</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b11-position-calculator.html"><span class="code">B11</span><h2>部位試算器</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b12-natural-language-query.html"><span class="code">B12</span><h2>自然語言查詢</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+    <a class="card" href="./b13-theme-rotation-radar.html"><span class="code">B13</span><h2>同主題輪動雷達</h2><span class="group">13 個新功能</span><p class="desc">打開看 before / after 實際手機畫面。</p></a>
+  </section>
+</main>
+</body>
+</html>
