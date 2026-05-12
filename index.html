@@ -1525,6 +1525,108 @@
     .etf-price-line span.up { color: var(--red); }
     .etf-price-line span.dn { color: var(--green); }
 
+    .etf-detail-hero {
+      background: linear-gradient(135deg, #2451e6 0%, #3b82f6 100%);
+      border: 0;
+      border-radius: 10px;
+      color: #fff;
+      padding: 18px;
+    }
+
+    .etf-detail-head {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .etf-detail-hero h2 {
+      color: #fff;
+      font-size: clamp(24px, 6vw, 32px);
+      line-height: 1.15;
+    }
+
+    .etf-detail-hero p {
+      color: rgba(239, 246, 255, .88);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .etf-watch-btn {
+      align-items: center;
+      background: rgba(255, 255, 255, .16);
+      border: 1px solid rgba(255, 255, 255, .42);
+      border-radius: 999px;
+      color: #fff;
+      display: inline-flex;
+      flex: 0 0 auto;
+      font-size: 13px;
+      font-weight: 900;
+      gap: 5px;
+      opacity: 1;
+      padding: 8px 12px;
+    }
+
+    .etf-detail-price {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 18px;
+    }
+
+    .etf-detail-price small {
+      color: rgba(219, 234, 254, .9);
+      font-size: 13px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .detail-price-main {
+      align-items: baseline;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .detail-price-main strong {
+      color: #fff;
+      font-size: clamp(38px, 12vw, 54px);
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .detail-price-main span {
+      color: rgba(255, 255, 255, .8);
+      font-size: clamp(18px, 5vw, 24px);
+      font-weight: 900;
+      text-align: left;
+    }
+
+    .detail-price-main span.up { color: #fecaca; }
+    .detail-price-main span.dn { color: #86efac; }
+
+    .etf-detail-facts {
+      align-items: center;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin: 8px 0 10px;
+      text-align: center;
+    }
+
+    .etf-detail-facts span {
+      color: var(--muted);
+      display: inline-block;
+      font-size: 13px;
+      margin-right: 4px;
+    }
+
+    .etf-detail-facts strong {
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 900;
+    }
+
     .watchlist-reserved {
       background: var(--green-soft);
       border: 1px dashed rgba(4, 120, 87, .35);
@@ -2347,6 +2449,15 @@
         grid-column: 1 / -1;
         margin-top: 0;
       }
+
+      .etf-detail-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .etf-watch-btn {
+        align-self: flex-start;
+      }
     }
 
     @media (max-width: 540px) {
@@ -2360,6 +2471,10 @@
 
       .stock-flow-stats {
         grid-template-columns: 1fr;
+      }
+
+      .etf-detail-facts {
+        text-align: left;
       }
     }
 
@@ -4129,6 +4244,19 @@
       return n.toLocaleString("zh-TW", { maximumFractionDigits: 1 });
     }
 
+    function fmtPrice(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-";
+      return n.toLocaleString("zh-TW", { maximumFractionDigits: 2 });
+    }
+
+    function fmtSignedNumber(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "";
+      const sign = n > 0 ? "+" : "";
+      return `${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 2 })}`;
+    }
+
     function fmtHolders(value) {
       const n = Number(value);
       if (!Number.isFinite(n) || n <= 1) return "待公布";
@@ -4675,6 +4803,9 @@
       const heroSub = [rank.issuer, rank.manager_type, rank.category, rank.index_name].filter(Boolean).join("・");
       const heroMetrics = etfDecisionMetrics(rank);
       const chgClass = Number(rank.change_rate) > 0 ? "up" : Number(rank.change_rate) < 0 ? "dn" : "";
+      const priceDate = selectedEtf.data_date || activeEtfPayload?.data_date || "";
+      const priceChangeText = [fmtSignedNumber(rank.change_price), fmtSignedPct(rank.change_rate)].filter(text => text && text !== "-%").join(" ");
+      const nextDividend = firstValue(rank.next_dividend_date, rank.next_ex_dividend_date, rank.ex_dividend_date, rank.dividend_date, rank.payment_date, "待資料");
       const premiumTone = Math.abs(Number(rank.nav_premium ?? 0)) > 0.5 ? "tone-red" : "tone-amber";
       const yieldBadge = Number(rank.yield_12m) >= 7 ? ` <span class="badge-mini">高</span>` : "";
       const unavailable = selectedEtf.detail_unavailable ? `<div class="message">這檔 ETF 的持股明細來源尚未抓到或尚未公布。${selectedEtf.detail_error ? `<br>${html(selectedEtf.detail_error)}` : ""}</div>` : "";
@@ -4690,24 +4821,31 @@
       ` : "";
       const officialSourceButton = official.source_url ? `<button data-action="external" data-url="${html(official.source_url)}">官網</button>` : "";
       $("activeEtfList").innerHTML = `
-        <div class="etf-hero">
-          <h2>${html(selectedEtf.code || rank.code || "")} ${html(heroName)}</h2>
-          <p>${html(heroSub || "ETF 持股明細")}・${html(selectedEtf.data_date || activeEtfPayload?.data_date || "")}</p>
-          <div class="etf-price-line"><div><small>收盤價</small><strong>${fmtNumber(rank.close_price)}</strong></div><span class="${chgClass}">${fmtSignedPct(rank.change_rate)}</span></div>
+        <div class="etf-hero etf-detail-hero">
+          <div class="etf-detail-head">
+            <div>
+              <h2>${html(selectedEtf.code || rank.code || "")} ${html(heroName)}</h2>
+              <p>${html(heroSub || "ETF 持股明細")}</p>
+            </div>
+            <button class="etf-watch-btn" type="button" disabled><span>★</span>加自選</button>
+          </div>
+          <div class="etf-price-line etf-detail-price">
+            <small>收盤價${priceDate ? `・${html(priceDate)}` : ""}</small>
+            <div class="detail-price-main"><strong>${fmtPrice(rank.close_price)}</strong><span class="${chgClass}">${html(priceChangeText || fmtSignedPct(rank.change_rate))}</span></div>
+          </div>
         </div>
         <div class="decision-metrics">
-          <div class="mini-pill tone-blue"><small>費率</small><strong>${html(heroMetrics.expense)}</strong></div>
           <div class="mini-pill tone-purple"><small>近12月殖利率${yieldBadge}</small><strong>${html(heroMetrics.yield12m)}</strong></div>
+          <div class="mini-pill tone-blue"><small>費率</small><strong>${html(heroMetrics.expense)}</strong></div>
           <div class="mini-pill ${premiumTone}"><small>折溢價</small><strong>${html(heroMetrics.premium)}</strong></div>
         </div>
-        <div class="mini-pills secondary">
-          <div class="mini-pill tone-blue"><small>規模</small><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
-          <div class="mini-pill tone-purple"><small>受益人</small><strong>${fmtHolders(rank.holders)}</strong></div>
-          <div class="mini-pill tone-green"><small>近5日淨流入</small><strong>${html(heroMetrics.flow5d)}</strong></div>
+        <div class="etf-detail-facts">
+          <div><span>規模</span><strong>${fmtBillion(rank.asset_size_billion)}</strong></div>
+          <div><span>受益人</span><strong>${fmtHolders(rank.holders)}</strong></div>
+          <div><span>下次配息</span><strong>${html(nextDividend)}</strong></div>
         </div>
         <div class="meta"><span>${html(rank.issuer || "")}</span><span>${html(rank.manager_type || "")}</span><span>${html(rank.category || "")}</span><span>${html(rank.index_name || "")}</span></div>
         <div class="suggestions">
-          <button class="watchlist-reserved" type="button" disabled>加入自選</button>
           ${officialSourceButton}
           ${rank.twse_url ? `<button data-action="external" data-url="${html(rank.twse_url)}">TWSE</button>` : ""}
           ${rank.moneydj_url ? `<button data-action="external" data-url="${html(rank.moneydj_url)}">MoneyDJ</button>` : ""}
