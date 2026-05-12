@@ -69,8 +69,6 @@
     [data-theme="dark"] .drawer,
     [data-theme="dark"] .menu-btn,
     [data-theme="dark"] .status-pill,
-    [data-theme="dark"] .etf-more-panel,
-    [data-theme="dark"] .etf-more-tools summary,
     [data-theme="dark"] .etf-sort-select {
       background: var(--surface);
       border-color: var(--line);
@@ -754,97 +752,66 @@
       margin: 0 0 10px;
     }
 
-    .etf-home-compact-tools {
+    .etf-feature-groups {
       display: grid;
-      gap: 6px;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    }
-
-    .etf-home-compact-tools > .etf-feature-card {
-      min-height: 56px;
-      padding: 9px;
-    }
-
-    .etf-home-compact-tools > .etf-feature-card span {
-      font-size: 10px;
-    }
-
-    .etf-more-tools {
-      min-width: 70px;
-      position: relative;
-    }
-
-    .etf-more-tools summary {
-      align-items: center;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      color: #475467;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      font-size: 12px;
-      font-weight: 900;
-      gap: 2px;
-      height: 100%;
-      justify-content: center;
-      line-height: 1.2;
-      list-style: none;
-      min-height: 56px;
-      padding: 8px 10px;
-      text-align: center;
-    }
-
-    .etf-more-tools summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .etf-more-tools[open] summary {
-      border-color: var(--blue);
-      color: var(--blue);
-    }
-
-    .etf-more-panel {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      display: grid;
-      gap: 7px;
-      left: 0;
-      margin-top: 6px;
-      padding: 9px;
-      position: absolute;
-      right: 0;
-      top: 100%;
-      width: min(314px, calc(100vw - 48px));
-      z-index: 5;
+      gap: 10px;
     }
 
     .etf-tool-section-label {
       color: var(--muted);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 900;
       letter-spacing: .6px;
+      margin: 2px 0 -2px;
     }
 
-    .etf-more-grid {
+    .etf-decision-grid {
       display: grid;
-      gap: 6px;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .etf-monitor-grid {
+      display: grid;
+      gap: 7px;
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .etf-more-grid .etf-feature-card {
-      min-height: 62px;
+    .etf-reserved-grid {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .etf-monitor-grid .etf-feature-card,
+    .etf-reserved-grid .etf-feature-card {
+      min-height: 66px;
       padding: 8px;
     }
 
-    .etf-more-grid .etf-feature-card strong {
+    .etf-decision-grid .etf-feature-card {
+      min-height: 78px;
+      padding: 11px;
+    }
+
+    .etf-monitor-grid .etf-feature-card strong {
       font-size: 12px;
     }
 
-    .etf-more-grid .etf-feature-card span {
-      font-size: 10px;
+    .etf-monitor-grid .etf-feature-card span,
+    .etf-reserved-grid .etf-feature-card span {
+      font-size: 10.5px;
+    }
+
+    .etf-tool-emoji {
+      display: inline-block;
+      font-size: 17px;
+      line-height: 1;
+      margin-right: 5px;
+    }
+
+    .etf-reserved-grid .etf-feature-card {
+      flex: 1 1 132px;
     }
 
     .etf-rank-controls {
@@ -994,7 +961,7 @@
       border-color: #bfdbfe;
     }
 
-    .etf-home-compact-tools > .etf-feature-card.featured {
+    .etf-decision-grid > .etf-feature-card.featured {
       background: linear-gradient(135deg, #dbeafe, #eff6ff);
       border-color: #93c5fd;
     }
@@ -2878,59 +2845,59 @@
               <input id="activeEtfSearch" placeholder="搜尋 ETF 或個股代號，例如 00988A / 2330 / AVGO.US">
             </label>
             <div id="activeEtfFlowSummary"></div>
-            <div class="etf-home-compact-tools" id="activeEtfFeatureGrid">
-              <button class="etf-feature-card featured" data-etf-tool="compare" type="button">
-                <strong>ETF 比較</strong>
-                <span>2-3 檔差異</span>
-              </button>
-              <button class="etf-feature-card featured" data-etf-tool="filter" type="button">
-                <strong>進階篩選</strong>
-                <span>條件組合</span>
-              </button>
-              <details class="etf-more-tools">
-                <summary>更多<span>↓</span></summary>
-                <div class="etf-more-panel">
-                  <div class="etf-tool-section-label">查詢與監控</div>
-                  <div class="etf-more-grid">
-                    <button class="etf-feature-card" data-etf-tool="flow" type="button">
-                      <strong>資金流</strong>
-                      <span>月申贖排行</span>
-                    </button>
-                    <button class="etf-feature-card" data-etf-tool="heatmap" type="button">
-                      <strong>持股重疊</strong>
-                      <span>熱力圖</span>
-                    </button>
-                    <button class="etf-feature-card" data-etf-tool="calendar" type="button">
-                      <strong>配息日曆</strong>
-                      <span>30 天除息</span>
-                    </button>
-                    <button class="etf-feature-card" data-etf-tool="stockFlow" type="button">
-                      <strong>個股動向</strong>
-                      <span>誰加碼 2330</span>
-                    </button>
-                    <button class="etf-feature-card" data-etf-tool="holdingTrend" type="button">
-                      <strong>14 日趨勢</strong>
-                      <span>權重變化</span>
-                    </button>
-                    <button class="etf-feature-card" data-upcoming-list type="button">
-                      <strong>即將上市</strong>
-                      <span>倒數與來源</span>
-                    </button>
-                    <button class="etf-feature-card reserved" type="button" disabled>
-                      <strong>自選 + 推播</strong>
-                      <span>B01 保留</span>
-                    </button>
-                    <button class="etf-feature-card reserved" type="button" disabled>
-                      <strong>自選分組</strong>
-                      <span>B09 保留</span>
-                    </button>
-                    <button class="etf-feature-card" id="sourceAdminTool" data-etf-tool="sourceAdmin" type="button" hidden>
-                      <strong>來源狀態</strong>
-                      <span>管理員</span>
-                    </button>
-                  </div>
-                </div>
-              </details>
+            <div class="etf-feature-groups" id="activeEtfFeatureGrid">
+              <div class="etf-tool-section-label">決策工具</div>
+              <div class="etf-decision-grid">
+                <button class="etf-feature-card featured" data-etf-tool="compare" type="button">
+                  <strong><span class="etf-tool-emoji">🔀</span>ETF 比較</strong>
+                  <span>2-3 檔費率、殖利率、折溢價、重疊</span>
+                </button>
+                <button class="etf-feature-card featured" data-etf-tool="filter" type="button">
+                  <strong><span class="etf-tool-emoji">🔍</span>進階篩選</strong>
+                  <span>規模/殖利率/費率/配息頻率</span>
+                </button>
+              </div>
+              <div class="etf-tool-section-label">查詢與監控</div>
+              <div class="etf-monitor-grid">
+                <button class="etf-feature-card" data-etf-tool="flow" type="button">
+                  <strong><span class="etf-tool-emoji">💰</span>資金流</strong>
+                  <span>月申贖排行</span>
+                </button>
+                <button class="etf-feature-card" data-etf-tool="heatmap" type="button">
+                  <strong><span class="etf-tool-emoji">🧬</span>持股重疊</strong>
+                  <span>熱力圖</span>
+                </button>
+                <button class="etf-feature-card" data-etf-tool="calendar" type="button">
+                  <strong><span class="etf-tool-emoji">🗓️</span>配息日曆</strong>
+                  <span>30 天除息</span>
+                </button>
+                <button class="etf-feature-card" data-etf-tool="stockFlow" type="button">
+                  <strong><span class="etf-tool-emoji">📈</span>個股動向</strong>
+                  <span>誰加碼 2330</span>
+                </button>
+                <button class="etf-feature-card" data-etf-tool="holdingTrend" type="button">
+                  <strong><span class="etf-tool-emoji">📊</span>14 日趨勢</strong>
+                  <span>權重變化</span>
+                </button>
+                <button class="etf-feature-card" data-upcoming-list type="button">
+                  <strong><span class="etf-tool-emoji">🆕</span>即將上市</strong>
+                  <span>3 檔倒數</span>
+                </button>
+              </div>
+              <div class="etf-reserved-grid" aria-label="保留功能">
+                <button class="etf-feature-card reserved" type="button" disabled>
+                  <strong>自選 + 推播</strong>
+                  <span>B01 保留</span>
+                </button>
+                <button class="etf-feature-card reserved" type="button" disabled>
+                  <strong>自選分組</strong>
+                  <span>B09 保留</span>
+                </button>
+                <button class="etf-feature-card" id="sourceAdminTool" data-etf-tool="sourceAdmin" type="button" hidden>
+                  <strong>來源狀態</strong>
+                  <span>管理員</span>
+                </button>
+              </div>
             </div>
             <section class="upcoming-etf-section" id="upcomingEtfSection">
               <button class="upcoming-entry compact" data-upcoming-list type="button">
