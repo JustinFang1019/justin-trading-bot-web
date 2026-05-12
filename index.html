@@ -5393,10 +5393,11 @@
         const maxAbsShare = Math.max(...allFlowRows.map(row => Math.abs(Number(row.share_delta) || 0)), 1);
         const renderRow = row => {
           const isNew = rowIsNew(row);
-          const isInc = Number(row.weight_delta) >= 0 || isNew;
-          const widthPct = Math.max(8, Math.min(100, Math.abs(Number(row.share_delta) || 0) / maxAbsShare * 100));
-          const deltaMain = isNew ? `+${fmtPctValue(row.weight).replace(/^\+/, "")}` : fmtSignedPct(row.weight_delta);
-          const deltaSub = isNew ? "新進權重" : fmtShareUnit(row.share_delta, row);
+          const shareDelta = Number(row.share_delta);
+          const isInc = shareDelta > 0 || isNew;
+          const widthPct = Math.max(8, Math.min(100, Math.abs(shareDelta || 0) / maxAbsShare * 100));
+          const deltaMain = isNew ? `+${fmtPctValue(row.weight).replace(/^\+/, "")}` : fmtShareUnit(row.share_delta, row, true);
+          const deltaSub = isNew ? "新進權重" : `權重 ${fmtSignedPct(row.weight_delta)}`;
           return `<div class="stock-flow-row ${isInc ? "inc" : "dec"}" data-etf-code="${html(row.code)}">
             <div class="info"><strong>${html(row.code)} ${html(row.name || "")}</strong><small>${html(row.category || "")}・${html(row.issuer || "")}${isNew ? `・<span class="new-tag">新進</span>` : ""}</small></div>
             <div class="bar"><i style="width:${widthPct}%"></i></div>
