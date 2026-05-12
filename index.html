@@ -4634,7 +4634,7 @@
 
     function etfAssetDeltaBarHtml(etf = {}, maxAbs = 0) {
       const delta = Number(etf.asset_delta_billion);
-      if (!Number.isFinite(delta)) {
+      if (!Number.isFinite(delta) || Math.abs(delta) < 0.01 || etf.asset_delta_available === false) {
         return `
           <div class="asset-delta-wrap">
             <div class="asset-delta-head"><span>規模變化</span><strong>${html(etfAssetTrendText(etf))}</strong></div>
