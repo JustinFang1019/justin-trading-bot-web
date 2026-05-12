@@ -1511,11 +1511,12 @@
     .etf-price-line span.dn { color: var(--green); }
 
     .etf-detail-hero {
-      background: linear-gradient(135deg, #2451e6 0%, #3b82f6 100%);
-      border: 0;
-      border-radius: 10px;
-      color: #fff;
-      padding: 18px;
+      background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--blue);
+      border-radius: 8px;
+      color: var(--ink);
+      padding: 14px;
     }
 
     .etf-detail-head {
@@ -1526,23 +1527,23 @@
     }
 
     .etf-detail-hero h2 {
-      color: #fff;
-      font-size: clamp(24px, 6vw, 32px);
-      line-height: 1.15;
+      color: var(--ink);
+      font-size: clamp(22px, 6vw, 30px);
+      line-height: 1.2;
     }
 
     .etf-detail-hero p {
-      color: rgba(239, 246, 255, .88);
+      color: var(--muted);
       font-size: 14px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .etf-watch-btn {
       align-items: center;
-      background: rgba(255, 255, 255, .16);
-      border: 1px solid rgba(255, 255, 255, .42);
+      background: #fff;
+      border: 1px solid rgba(29, 78, 216, .32);
       border-radius: 999px;
-      color: #fff;
+      color: var(--blue);
       display: inline-flex;
       flex: 0 0 auto;
       font-size: 13px;
@@ -1556,11 +1557,11 @@
       align-items: flex-start;
       flex-direction: column;
       gap: 4px;
-      margin-top: 18px;
+      margin-top: 14px;
     }
 
     .etf-detail-price small {
-      color: rgba(219, 234, 254, .9);
+      color: var(--muted);
       font-size: 13px;
       font-weight: 800;
       margin: 0;
@@ -1574,21 +1575,21 @@
     }
 
     .detail-price-main strong {
-      color: #fff;
-      font-size: clamp(38px, 12vw, 54px);
+      color: var(--ink);
+      font-size: clamp(34px, 11vw, 48px);
       font-weight: 500;
       letter-spacing: 0;
     }
 
     .detail-price-main span {
-      color: rgba(255, 255, 255, .8);
+      color: var(--muted);
       font-size: clamp(18px, 5vw, 24px);
       font-weight: 900;
       text-align: left;
     }
 
-    .detail-price-main span.up { color: #fecaca; }
-    .detail-price-main span.dn { color: #86efac; }
+    .detail-price-main span.up { color: var(--red); }
+    .detail-price-main span.dn { color: var(--green); }
 
     .etf-detail-facts {
       align-items: center;
