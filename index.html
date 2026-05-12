@@ -5641,6 +5641,30 @@
     }
 
     async function renderThemeRadarPage() {
+      {
+        const requestSeq = ++etfToolRequestSeq;
+        setEtfToolShell("主題輪動雷達", "依 ETF 持股與名稱 mapping 出明確題材，觀察資金、漲跌與代表成分股。", "主題", "正在讀取主題雷達 API...");
+        try {
+          const payload = await getJson(`${API_BASE}/etfs/theme-radar`);
+          if (requestSeq !== etfToolRequestSeq) return;
+          const data = payload.data || {};
+          const rows = data.rows || [];
+          $("activeEtfBadge").textContent = `${rows.length} 題材`;
+          $("activeEtfList").innerHTML = `
+            ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
+            <div class="mini-pills"><div class="mini-pill tone-blue"><small>主題池</small><strong>${html((data.themes || []).slice(0, 3).join(" / "))}</strong></div><div class="mini-pill tone-green"><small>資料來源</small><strong>ETF 持股 + 排名</strong></div></div>
+            ${rows.map((row, index) => {
+              const etfs = (row.representative_etfs || []).map(item => item.code).filter(Boolean).slice(0, 5).join(" / ");
+              const holdings = (row.representative_holdings || []).map(item => `${item.stock_id || ""} ${item.stock_name || ""}`.trim()).filter(Boolean).slice(0, 4).join("、");
+              return `<div class="status-row"><strong><span class="rank">#${index + 1}</span> ${html(row.theme)} <span class="${num(row.score) >= 0 ? "up" : "dn"}">${html(row.signal || "")}</span></strong><div class="meta"><span>分數 ${html(row.score ?? "-")}</span><span>平均 ${fmtSignedPct(row.avg_change)}</span><span>資金 ${fmtBillionSigned(row.flow_billion)}</span><span>規模 ${fmtBillionSigned(row.asset_delta_billion)}</span><span>${html(row.etf_count)} 檔 ETF</span></div><div class="meta"><span>ETF：${html(etfs || "待資料")}</span><span>成分：${html(holdings || "待資料")}</span></div></div>`;
+            }).join("") || `<div class="message">目前沒有足夠資料建立主題。</div>`}
+          `;
+        } catch (error) {
+          if (requestSeq !== etfToolRequestSeq) return;
+          $("activeEtfList").innerHTML = etfToolError(error);
+        }
+        return;
+      }
       ++etfToolRequestSeq;
       setEtfToolShell("主題輪動雷達", "把 ETF 依主題分組，觀察漲跌、資金與規模變化。", "主題", "正在計算主題輪動...");
       const grouped = activeEtfs.reduce((acc, row) => {
