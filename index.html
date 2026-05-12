@@ -25,6 +25,26 @@
       --shadow: 0 12px 30px rgba(16, 24, 40, .08);
     }
 
+    [data-theme="dark"] {
+      --bg: #111827;
+      --surface: #1f2937;
+      --ink: #f8fafc;
+      --muted: #a7b0bf;
+      --line: #374151;
+      --navy: #e5e7eb;
+      --blue: #60a5fa;
+      --blue-soft: rgba(96, 165, 250, .18);
+      --green: #34d399;
+      --green-soft: rgba(52, 211, 153, .16);
+      --red: #f87171;
+      --red-soft: rgba(248, 113, 113, .16);
+      --amber: #fbbf24;
+      --amber-soft: rgba(251, 191, 36, .16);
+      --purple: #a78bfa;
+      --purple-soft: rgba(167, 139, 250, .18);
+      --shadow: 0 14px 30px rgba(0, 0, 0, .28);
+    }
+
     * { box-sizing: border-box; }
 
     body {
@@ -33,6 +53,30 @@
       color: var(--ink);
       font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
       letter-spacing: 0;
+    }
+
+    [data-theme="dark"] .panel,
+    [data-theme="dark"] .line-card,
+    [data-theme="dark"] .status-row,
+    [data-theme="dark"] .etf-row,
+    [data-theme="dark"] .change-row,
+    [data-theme="dark"] .message,
+    [data-theme="dark"] .search,
+    [data-theme="dark"] .source-card,
+    [data-theme="dark"] .etf-feature-card,
+    [data-theme="dark"] .upcoming-entry,
+    [data-theme="dark"] .bottom-nav,
+    [data-theme="dark"] .drawer,
+    [data-theme="dark"] .menu-btn,
+    [data-theme="dark"] .status-pill {
+      background: var(--surface);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] input,
+    [data-theme="dark"] button {
+      color: inherit;
     }
 
     button, input { font: inherit; }
@@ -836,6 +880,18 @@
       border-color: #bfdbfe;
     }
 
+    .etf-feature-card.reserved {
+      background: #f8fafc;
+      border-style: dashed;
+      cursor: default;
+      opacity: .82;
+    }
+
+    .etf-feature-card.reserved .etf-feature-chip {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
     .etf-feature-card strong {
       font-size: 14px;
       line-height: 1.25;
@@ -845,6 +901,20 @@
       color: var(--muted);
       font-size: 11px;
       line-height: 1.35;
+    }
+
+    .official-mini-badge {
+      background: var(--green-soft);
+      border: 1px solid rgba(4, 120, 87, .22);
+      border-radius: 999px;
+      color: var(--green);
+      display: inline-flex;
+      font-size: 10px;
+      font-weight: 900;
+      margin-left: 5px;
+      padding: 2px 6px;
+      vertical-align: middle;
+      white-space: nowrap;
     }
 
     .etf-feature-chip {
@@ -2603,6 +2673,16 @@
                 <strong>資料來源狀態</strong>
                 <span>即將上市 ETF 自動更新與來源監控</span>
               </button>
+              <button class="etf-feature-card reserved" type="button" disabled>
+                <span class="etf-feature-chip">保留</span>
+                <strong>自選 + 推播</strong>
+                <span>B01 入口先保留，等 watchlist 寫入與 LINE 推播規則一起開。</span>
+              </button>
+              <button class="etf-feature-card reserved" type="button" disabled>
+                <span class="etf-feature-chip">保留</span>
+                <strong>自選分組</strong>
+                <span>B09 入口先保留，後續和自選清單資料表一起啟用。</span>
+              </button>
             </div>
             <section class="upcoming-etf-section" id="upcomingEtfSection">
               <button class="upcoming-entry" data-upcoming-list type="button">
@@ -2641,6 +2721,7 @@
       <button class="menu-item" data-menu-view="activeEtfView"><strong>02</strong><strong>ETF 研究</strong><span>規模排名、持股變化、共同異動</span></button>
       <button class="menu-item" data-menu-command="教學"><strong>03</strong><strong>教學</strong><span>策略與權證教學</span></button>
       <button class="menu-item" data-menu-view="statusView"><strong>04</strong><strong>管理狀態</strong><span>管理員限定</span></button>
+      <button class="menu-item" id="themeToggle" type="button"><strong>夜</strong><strong>深色模式</strong><span>適合收盤後長時間看 ETF 與小卡</span></button>
     </aside>
   </div>
 
@@ -2669,6 +2750,7 @@
     let webSessionToken = localStorage.getItem("webSessionToken") || "";
     let webUser = JSON.parse(localStorage.getItem("webUser") || "null");
     let legacyAccessToken = sessionStorage.getItem("webAccessToken") || "";
+    let currentTheme = localStorage.getItem("webTheme") || "";
     let commandHistory = [];
     let scanBackTarget = "";
     let activeEtfs = [];
@@ -2782,6 +2864,22 @@
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       }[ch]));
     }
+
+    function applyTheme(theme = currentTheme) {
+      currentTheme = theme === "dark" ? "dark" : "";
+      document.documentElement.dataset.theme = currentTheme;
+      if (currentTheme) localStorage.setItem("webTheme", currentTheme);
+      else localStorage.removeItem("webTheme");
+      const btn = $("themeToggle");
+      if (btn) {
+        btn.classList.toggle("active", currentTheme === "dark");
+        const label = currentTheme === "dark" ? "深色模式開啟" : "深色模式";
+        const hint = currentTheme === "dark" ? "點一下切回淺色" : "適合收盤後長時間看 ETF 與小卡";
+        btn.innerHTML = `<strong>夜</strong><strong>${label}</strong><span>${hint}</span>`;
+      }
+    }
+
+    applyTheme(currentTheme);
 
     function getVisitorId() {
       let id = localStorage.getItem("webVisitorId");
@@ -4203,6 +4301,10 @@
       `;
     }
 
+    function officialBadgeHtml(etf = {}) {
+      return etf.official_first ? `<span class="official-mini-badge">官網</span>` : "";
+    }
+
     function metricPillsHtml(etf = {}) {
       const m = etfDecisionMetrics(etf);
       return `
@@ -4239,7 +4341,7 @@
         return `
           <div class="etf-row" data-etf-code="${html(etf.code)}">
             <div class="etf-line">
-              <strong><span class="rank">#${html(index + 1)}</span> ${html(etf.code)} ${html(etf.name || "")}</strong>
+              <strong><span class="rank">#${html(index + 1)}</span> ${html(etf.code)} ${html(etf.name || "")}${officialBadgeHtml(etf)}</strong>
               <span>${fmtBillion(etf.asset_size_billion)}</span>
             </div>
             <div class="meta"><span>${html(etf.manager_type || "")}</span><span>${html(etf.category || "")}</span><span>${html(etf.issuer || "")}</span><span>${listingAge(etf.listing_date)}</span></div>
@@ -4316,6 +4418,17 @@
       const premiumTone = Math.abs(Number(rank.nav_premium ?? 0)) > 0.5 ? "tone-red" : "tone-amber";
       const yieldBadge = Number(rank.yield_12m) >= 7 ? ` <span class="badge-mini">高</span>` : "";
       const unavailable = selectedEtf.detail_unavailable ? `<div class="message">這檔 ETF 的持股明細來源尚未抓到或尚未公布。${selectedEtf.detail_error ? `<br>${html(selectedEtf.detail_error)}` : ""}</div>` : "";
+      const official = selectedEtf.official || {};
+      const officialStamp = selectedEtf.official_source_updated_at || official.source_updated_at || official.fetched_at || "";
+      const officialDate = selectedEtf.official_source_tran_date || official.source_tran_date || "";
+      const officialNotice = selectedEtf.official_first ? `
+        <div class="message">
+          官網優先：${html(official.issuer_name || rank.issuer || "投信官網")} ${selectedEtf.official_holdings_applied ? `持股 ${Number((selectedEtf.holdings || []).length).toLocaleString("zh-TW")} 檔` : "費率資料"}
+          ${officialDate ? `・資料日 ${html(officialDate)}` : ""}
+          ${officialStamp ? `・更新 ${html(officialStamp)}` : ""}
+        </div>
+      ` : "";
+      const officialSourceButton = official.source_url ? `<button data-action="external" data-url="${html(official.source_url)}">官網</button>` : "";
       $("activeEtfList").innerHTML = `
         <div class="etf-hero">
           <h2>${html(selectedEtf.code || rank.code || "")} ${html(heroName)}</h2>
@@ -4332,10 +4445,12 @@
         </div>
         <div class="meta"><span>${html(rank.issuer || "")}</span><span>${html(rank.manager_type || "")}</span><span>${html(rank.category || "")}</span><span>${html(rank.index_name || "")}</span></div>
         <div class="suggestions">
+          ${officialSourceButton}
           ${rank.twse_url ? `<button data-action="external" data-url="${html(rank.twse_url)}">TWSE</button>` : ""}
           ${rank.moneydj_url ? `<button data-action="external" data-url="${html(rank.moneydj_url)}">MoneyDJ</button>` : ""}
           ${rank.etfinfo_url ? `<button data-action="external" data-url="${html(rank.etfinfo_url)}">ETFInfo</button>` : ""}
         </div>
+        ${officialNotice}
         ${unavailable}
         <div class="filters etf-detail-tabs">
           ${Object.entries(groups).map(([key, group]) => `<button class="${key} ${activeEtfTab === key ? "active" : ""}" data-etf-tab="${key}">${group.title.replace("今日", "")} ${group.rows.length}</button>`).join("")}
@@ -5413,6 +5528,9 @@
         $("drawerOverlay").classList.remove("open");
         $("drawerOverlay").setAttribute("aria-hidden", "true");
       }
+    });
+    $("themeToggle")?.addEventListener("click", () => {
+      applyTheme(currentTheme === "dark" ? "" : "dark");
     });
 
     document.addEventListener("click", async event => {

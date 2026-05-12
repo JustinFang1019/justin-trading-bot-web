@@ -1,8 +1,15 @@
 # New Feature Feasibility Check
 
-Last updated: 2026-05-12 Asia/Taipei
+Last updated: 2026-05-13 Asia/Taipei
 
 This document confirms that every proposed feature has an implementable path. The web repo is a static/LIFF frontend, so any secret, Google Sheets write, LINE push, external paid token, or admin operation must stay in the `justin-trading-bot` Flask backend under `/api/web/...`.
+
+## Current Implementation Status
+
+- Official ETF data is the first implementation lane because it directly affects same-day research accuracy.
+- EzMoney official-source parsing is feasible and has started for `00403A` / `00981A`; other issuers need registry entries and parser modules before they can be marked official-first.
+- Dark mode is frontend-only and can ship independently.
+- B01 / B09 are feasible but intentionally not enabled yet; they need authenticated watchlist writes and LINE push rules in the backend.
 
 ## Existing Building Blocks
 
