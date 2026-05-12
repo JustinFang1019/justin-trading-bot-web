@@ -2294,7 +2294,7 @@
       cursor: pointer;
       display: grid;
       gap: 12px;
-      grid-template-columns: 50px minmax(0, 1fr) 80px 90px;
+      grid-template-columns: 50px minmax(0, 1fr) minmax(190px, 260px) 96px;
       margin-top: 6px;
       padding: 9px 12px;
     }
@@ -2310,6 +2310,37 @@
     .holding-trend-row .ht-tag.new { background: var(--blue-soft); color: var(--blue); }
     .holding-trend-row .ht-tag.removed { background: var(--amber-soft); color: var(--amber); }
     .holding-trend-row .ht-tag.flat { background: #f0f3f7; color: var(--muted); }
+    .holding-trend-row .ht-change {
+      align-items: center;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+    .holding-trend-row .ht-point {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .holding-trend-row .ht-point small {
+      color: var(--muted);
+      display: block;
+      font-size: 9.5px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+    .holding-trend-row .ht-point strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .holding-trend-row .ht-arrow {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 900;
+    }
     .holding-trend-row .ht-weight { text-align: right; }
     .holding-trend-row .ht-weight strong { display: block; font-size: 14px; font-weight: 900; }
     .holding-trend-row .ht-weight small { display: block; font-size: 10px; font-weight: 700; }
@@ -2341,11 +2372,11 @@
       }
 
       .holding-trend-row {
-        grid-template-columns: 48px minmax(0, 1fr) 78px;
+        grid-template-columns: 48px minmax(0, 1fr) 88px;
         gap: 8px;
       }
 
-      .holding-trend-row .etf-spark {
+      .holding-trend-row .ht-change {
         grid-column: 1 / -1;
         margin-top: 0;
       }
@@ -4493,6 +4524,25 @@
       }).join("")}</div>`;
     }
 
+    function holdingTrendChangeHtml(row = {}) {
+      const current = Number(row.weight);
+      const previous = Number(row.old_weight);
+      return `
+        <div class="ht-change" aria-label="14 日權重變化">
+          <div class="ht-point"><small>14 日前</small><strong>${fmtPctValue(previous)}</strong></div>
+          <div class="ht-arrow">→</div>
+          <div class="ht-point"><small>現在</small><strong>${fmtPctValue(current)}</strong></div>
+        </div>
+      `;
+    }
+
+    function holdingTrendDeltaText(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n) || Math.abs(n) < 0.005) return "持平";
+      const action = n > 0 ? "增加" : "減少";
+      return `${action} ${Math.abs(n).toLocaleString("zh-TW", { maximumFractionDigits: 2 })} 個百分點`;
+    }
+
     function holdingStatus(row) {
       const points = row.trend_points || [];
       const values = points.map(point => Number(point.weight)).filter(Number.isFinite);
@@ -5446,8 +5496,8 @@
             return `<div class="holding-trend-row" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}">
               <div class="ht-code">${html(row.stock_id)}</div>
               <div class="ht-name"><strong>${html(row.stock_name || "")}</strong>${st ? `<div class="ht-tags"><span class="ht-tag ${st.tone}">${st.label}</span></div>` : ""}</div>
-              ${etfTrendSparkHtml(row.trend_points)}
-              <div class="ht-weight"><strong>${fmtPctValue(row.weight)}</strong><small class="${deltaClass}">${fmtPctValue(row.weight_delta)} / 14d</small></div>
+              ${holdingTrendChangeHtml(row)}
+              <div class="ht-weight"><strong>${fmtPctValue(row.weight)}</strong><small class="${deltaClass}">${html(holdingTrendDeltaText(row.weight_delta))}</small></div>
             </div>`;
           }).join("") || `<div class="message">目前沒有持股趨勢資料。</div>`}
         `;
