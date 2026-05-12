@@ -68,8 +68,7 @@
     [data-theme="dark"] .bottom-nav,
     [data-theme="dark"] .drawer,
     [data-theme="dark"] .menu-btn,
-    [data-theme="dark"] .status-pill,
-    [data-theme="dark"] .etf-sort-select {
+    [data-theme="dark"] .status-pill {
       background: var(--surface);
       border-color: var(--line);
       color: var(--ink);
@@ -815,21 +814,7 @@
     }
 
     .etf-rank-controls {
-      display: grid;
-      gap: 6px;
-      grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    .etf-sort-select {
-      appearance: none;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      color: #475467;
-      font-size: 12px;
-      font-weight: 900;
-      padding: 6px 26px 6px 10px;
-      white-space: nowrap;
+      display: block;
     }
 
     .upcoming-etf-section {
@@ -3028,20 +3013,12 @@
                 <button data-etf-filter="highDividend">高股息</button>
                 <button data-etf-filter="bond">債券</button>
               </div>
-              <select class="etf-sort-select" id="etfSortSelect" aria-label="ETF 排序">
-                <option value="asset_size_billion:desc">排序：規模 ↓</option>
-                <option value="yield_12m:desc">排序：殖利率 ↓</option>
-                <option value="expense_ratio:asc">排序：費率 ↑</option>
-                <option value="nav_premium:asc">排序：折溢價 ↑</option>
-                <option value="holders:desc">排序：受益人 ↓</option>
-              </select>
             </div>
-            <div class="etf-sort-row" id="etfSortRow" aria-label="ETF 排序" hidden>
+            <div class="etf-sort-row" id="etfSortRow" aria-label="ETF 排序">
               <button class="active" data-etf-sort="asset_size_billion" type="button">規模金額 <span>↓</span></button>
               <button data-etf-sort="yield_12m" type="button">近12月殖利率 <span></span></button>
               <button data-etf-sort="expense_ratio" type="button">費率 <span></span></button>
               <button data-etf-sort="nav_premium" type="button">折溢價 <span></span></button>
-              <button data-etf-sort="holders" type="button">受益人數 <span></span></button>
             </div>
           </div>
           <div class="status-grid" id="activeEtfList" style="margin-top:10px;"></div>
@@ -4340,7 +4317,6 @@
     }
 
     function sortMetricValue(etf = {}, key = activeEtfSortKey) {
-      if (key === "holders") return Number(etf.holders ?? etf.beneficiaries);
       return Number(etf[key]);
     }
 
@@ -4364,11 +4340,6 @@
         const arrow = button.querySelector("span");
         if (arrow) arrow.textContent = active ? (activeEtfSortDir === "asc" ? "↑" : "↓") : "";
       });
-      const select = $("etfSortSelect");
-      if (select) {
-        const value = `${activeEtfSortKey}:${activeEtfSortDir}`;
-        if ([...select.options].some(option => option.value === value)) select.value = value;
-      }
     }
 
     function upcomingSortKey(etf = {}) {
@@ -4718,7 +4689,8 @@
       setEtfTypeTabsVisible(true);
       setPageHeader("ETF 研究", "全部 ETF 規模排名、持股變化與共同持有查詢。");
       $("activeEtfTitle").textContent = "ETF 研究";
-      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}；可依規模、殖利率、費率、折溢價與受益人排序。` : "盤後每日更新，Web 只讀快照。";
+      if (!["asset_size_billion", "yield_12m", "expense_ratio", "nav_premium"].includes(activeEtfSortKey)) activeEtfSortKey = "asset_size_billion";
+      $("activeEtfSub").textContent = activeEtfPayload?.data_date ? `資料日 ${activeEtfPayload.data_date}；可依規模、殖利率、費率與折溢價排序。` : "盤後每日更新，Web 只讀快照。";
       const rows = visibleActiveEtfs();
       $("activeEtfBadge").textContent = `${rows.length || 0}/${activeEtfs.length || 0} 檔`;
       updateEtfSortButtons();
@@ -5847,13 +5819,6 @@
       if (!btn) return;
       activeEtfFilter = btn.dataset.etfFilter;
       document.querySelectorAll("[data-etf-filter]").forEach(b => b.classList.toggle("active", b === btn));
-      renderActiveEtfRanking();
-      updateBackButton();
-    });
-    $("etfSortSelect")?.addEventListener("change", event => {
-      const [key, dir] = String(event.target.value || "asset_size_billion:desc").split(":");
-      activeEtfSortKey = key || "asset_size_billion";
-      activeEtfSortDir = dir === "asc" ? "asc" : "desc";
       renderActiveEtfRanking();
       updateBackButton();
     });
