@@ -3548,6 +3548,40 @@
       return document.querySelector(".view.active")?.id || "scanView";
     }
 
+    const APP_ROUTE_KEY = "justinWebRoute";
+    function saveAppRoute(route = {}) {
+      try {
+        localStorage.setItem(APP_ROUTE_KEY, JSON.stringify({ view: activeViewId(), ...route, savedAt: Date.now() }));
+      } catch (err) {
+        console.warn("[route save]", err);
+      }
+    }
+
+    function readAppRoute() {
+      try {
+        const route = JSON.parse(localStorage.getItem(APP_ROUTE_KEY) || "null");
+        if (!route || !route.savedAt || Date.now() - Number(route.savedAt) > 7 * 24 * 60 * 60 * 1000) return null;
+        return route;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    async function restoreAppRoute() {
+      const route = readAppRoute();
+      if (!route || route.view !== "activeEtfView") return false;
+      activate("activeEtfView", { skipLoad: true, skipRouteSave: true });
+      await loadActiveEtfs({ skipRouteSave: true });
+      if (route.level === "detail" && route.code) {
+        await loadActiveEtfDetail(route.code, { skipRouteSave: true });
+      } else if (route.level === "tool" && route.tool) {
+        await renderEtfToolPage(route.tool, { skipRouteSave: true });
+      } else {
+        saveAppRoute({ view: "activeEtfView", level: "ranking" });
+      }
+      return true;
+    }
+
     function goTopicHome() {
       const viewId = activeViewId();
       if (viewId === "activeEtfView") {
@@ -3559,6 +3593,7 @@
         });
         if (activeEtfs.length) renderActiveEtfRanking();
         else loadActiveEtfs();
+        saveAppRoute({ view: "activeEtfView", level: "ranking" });
       } else if (viewId === "scanView") {
         const scanParent = scanBackTarget || educationBackParent($("searchInput").value);
         if (scanParent) {
@@ -3596,7 +3631,7 @@
       lookupTimer = window.setTimeout(renderOriginalFeed, 450);
     }
 
-    function activate(viewId) {
+    function activate(viewId, options = {}) {
       document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === viewId));
       document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.view === viewId));
       document.querySelectorAll("[data-menu-view]").forEach(b => b.classList.toggle("active", b.dataset.menuView === viewId));
@@ -3614,7 +3649,8 @@
       };
       setPageHeader(titleMap[viewId][0], titleMap[viewId][1]);
       setActiveEtfNestedChrome(viewId === "activeEtfView" && activeEtfLevel !== "ranking");
-      if (viewId === "activeEtfView" && !activeEtfs.length) loadActiveEtfs();
+      if (!options.skipRouteSave) saveAppRoute({ view: viewId, level: viewId === "activeEtfView" ? activeEtfLevel : "" });
+      if (viewId === "activeEtfView" && !activeEtfs.length && !options.skipLoad) loadActiveEtfs();
       if (viewId === "chartView") drawChart();
       if (viewId === "statusView") loadStatus();
       updateBackButton();
@@ -4767,10 +4803,11 @@
       `;
     }
 
-    async function renderEtfToolPage(tool) {
+    async function renderEtfToolPage(tool, options = {}) {
       activeEtfLevel = `tool:${tool}`;
       selectedEtf = null;
       selectedUpcomingEtfCode = "";
+      if (!options.skipRouteSave) saveAppRoute({ view: "activeEtfView", level: "tool", tool });
       setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
@@ -5099,7 +5136,7 @@
       }
     }
 
-    async function loadActiveEtfs() {
+    async function loadActiveEtfs(options = {}) {
       setUpcomingEntryVisible(true);
       $("activeEtfList").innerHTML = `<div class="message">正在讀取 ETF 快照...</div>`;
       try {
@@ -5111,6 +5148,7 @@
         etfHoldingTrendCode = normalizeEtfCode((activeEtfPayload.default_holding_trend_codes || [])[0]) || etfHoldingTrendCode;
         activeEtfTab = "added";
         renderActiveEtfRanking();
+        if (!options.skipRouteSave) saveAppRoute({ view: "activeEtfView", level: "ranking" });
         updateBackButton();
       } catch (error) {
         $("activeEtfBadge").textContent = "失敗";
@@ -5119,7 +5157,7 @@
       }
     }
 
-    async function loadActiveEtfDetail(code) {
+    async function loadActiveEtfDetail(code, options = {}) {
       const etf = activeEtfs.find(item => item.code === code);
       setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
@@ -5132,6 +5170,7 @@
         const rank = selectedEtf.ranking || {};
         activeEtfTab = isActiveManagedEtf(rank) ? (activeEtfTab === "ranking" ? "added" : activeEtfTab) : "holdings";
         renderActiveEtfDetail();
+        if (!options.skipRouteSave) saveAppRoute({ view: "activeEtfView", level: "detail", code: selectedEtf.code || code });
         window.scrollTo({ top: 0, behavior: "smooth" });
         updateBackButton();
       } catch (error) {
@@ -5242,6 +5281,7 @@
         $("syncTitle").textContent = "已連線";
         $("syncMeta").textContent = `更新 ${friendlyTime(scans.value.generated_at)}`;
         renderOriginalFeed();
+        await restoreAppRoute();
       } catch (error) {
         stocks = [];
         selected = null;
