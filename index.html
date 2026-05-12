@@ -5359,8 +5359,8 @@
         const data = payload.data || {};
         const rows = data.rows || [];
         const rowIsNew = row => Boolean(row.is_new) || ((row.old_weight == null || Number(row.old_weight) === 0) && Number(row.weight) > 0 && Number(row.weight_delta) >= 0);
-        const incRows = rows.filter(row => Number(row.weight_delta) > 0 || rowIsNew(row));
-        const decRows = rows.filter(row => Number(row.weight_delta) < 0);
+        const incRows = rows.filter(row => Number(row.share_delta) > 0 || rowIsNew(row));
+        const decRows = rows.filter(row => Number(row.share_delta) < 0 || Boolean(row.is_removed));
         const increased = incRows.length;
         const decreased = decRows.length;
         const newCount = rows.filter(rowIsNew).length;
@@ -5371,6 +5371,7 @@
         const netClass = !hasNetBillion || totalNetBillion === 0 ? "neutral" : totalNetBillion < 0 ? "negative" : "";
         const periodLabel = { "7d": "近 7 個交易日", "14d": "近 14 個交易日", "30d": "近 30 個交易日" }[stockFlowPeriod] || "近 7 個交易日";
         const currentOnly = rows.filter(row => row.public_current_only).length;
+        const weightOnlyCount = Number(data.weight_only_count || 0);
         const allFlowRows = [...incRows, ...decRows];
         const maxAbsShare = Math.max(...allFlowRows.map(row => Math.abs(Number(row.share_delta) || 0)), 1);
         const renderRow = row => {
@@ -5407,7 +5408,7 @@
             <div class="sfs dec"><small>減碼 ETF</small><strong>${decreased} 檔</strong></div>
             <div class="sfs net ${netClass}"><small>淨買超金額</small><strong>${html(netText)}</strong></div>
           </div>
-          ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
+          ${data.warning ? `<div class="message">${html(data.warning)}${weightOnlyCount ? ` 已排除 ${weightOnlyCount} 筆只有權重變動、股數未變的資料。` : ""}</div>` : ""}
           <div class="page-hint">來源：已快取 ETF 持股 + 前次快照（未快取者不納入）</div>
           ${incRows.length ? `<div class="section-title">加碼 Top ${Math.min(incRows.length, 5)} <span style="color:var(--green)">合計 ${incRows.slice(0, 5).reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0).toFixed(1)} 億</span></div>${incRows.slice(0, 5).map(renderRow).join("")}` : ""}
           ${decRows.length ? `<div class="section-title">減碼 Top ${Math.min(decRows.length, 3)} <span style="color:var(--red)">合計 ${decRows.slice(0, 3).reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0).toFixed(1)} 億</span></div>${decRows.slice(0, 3).map(renderRow).join("")}` : ""}
