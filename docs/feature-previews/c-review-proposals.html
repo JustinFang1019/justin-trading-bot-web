@@ -1,0 +1,1311 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C - Review 提案新舊比對</title>
+<style>
+  :root{
+    --bg:#eef2f7; --surface:#fff; --ink:#182230; --muted:#667085;
+    --line:#d9e1ec; --navy:#17172d;
+    --blue:#1d4ed8; --blue-soft:#dbeafe;
+    --green:#047857; --green-soft:#dcfce7;
+    --red:#b42318; --red-soft:#fee2e2;
+    --amber:#a16207; --amber-soft:#fef3c7;
+    --purple:#6d28d9; --purple-soft:#ede9fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#dfe4ec;color:var(--ink);
+    font-family:"Microsoft JhengHei","Noto Sans TC","Segoe UI",Arial,sans-serif}
+  header.page{padding:30px 20px 14px;text-align:center;background:#fff;border-bottom:1px solid var(--line)}
+  header.page h1{margin:0 0 6px;font-size:24px}
+  header.page p{margin:0;color:#5b6573;font-size:13px;line-height:1.55;max-width:780px;margin:0 auto}
+  .tocbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--line);
+    padding:10px 14px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+  .tocbar a{flex:0 0 auto;background:#f1f5f9;border:1px solid var(--line);
+    color:#334155;border-radius:999px;padding:6px 12px;font-size:12px;
+    font-weight:800;text-decoration:none;white-space:nowrap}
+  .tocbar a.bug{background:#fee2e2;border-color:#fecaca;color:#7f1d1d}
+  .tocbar a.ui{background:#e0e7ff;border-color:#c7d2fe;color:#3730a3}
+  .tocbar a.func{background:#fef3c7;border-color:#fde68a;color:#78350f}
+  .tocbar a.struct{background:#ede9fe;border-color:#ddd6fe;color:#5b21b6}
+  .container{max-width:1280px;margin:0 auto;padding:18px 18px 80px}
+  .section{margin:30px 0 44px}
+  .section-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 6px;padding:0 2px}
+  .section-num{display:inline-flex;align-items:center;justify-content:center;
+    min-width:38px;height:24px;background:#fff;border:1px solid var(--line);
+    border-radius:6px;font-size:11px;font-weight:900;color:#475467;letter-spacing:.5px}
+  .section-title{margin:0;font-size:18px;line-height:1.3}
+  .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;
+    font-size:11px;font-weight:900;letter-spacing:.4px}
+  .tag.bug{background:#fee2e2;color:#7f1d1d}
+  .tag.ui{background:#e0e7ff;color:#3730a3}
+  .tag.func{background:#fef3c7;color:#78350f}
+  .tag.struct{background:#ede9fe;color:#5b21b6}
+  .tag.a11y{background:#cffafe;color:#155e75}
+  .section-desc{margin:4px 4px 14px;color:#475467;font-size:13px;line-height:1.6;max-width:1080px}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  @media (max-width:900px){.pair{grid-template-columns:1fr}}
+  .pane{min-width:0}
+  .pane-label{font-size:11px;letter-spacing:1.2px;font-weight:900;margin:0 0 6px;
+    display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px}
+  .pane.before .pane-label{background:#fee2e2;color:#7f1d1d}
+  .pane.after  .pane-label{background:#dcfce7;color:#14532d}
+  .pane-note{font-size:11.5px;color:#64748b;margin-top:8px;line-height:1.5;padding:0 4px}
+
+  /* phone frame (重用 a01 風格) */
+  .phone{margin:0 auto;width:380px;max-width:100%;background:#0b0f19;
+    border-radius:34px;padding:10px;box-shadow:0 12px 30px rgba(16,24,40,.08)}
+  .phone.dark{background:#020617}
+  .screen{background:var(--bg);border-radius:26px;overflow:hidden;
+    display:flex;flex-direction:column;position:relative}
+  .screen.dark{background:#111827}
+  .screen.short{height:420px}
+  .screen.tall{height:640px}
+  .scroll{flex:1;overflow-y:auto;padding:0 2px}
+
+  /* ===== 原專案元件 (簡化版) ===== */
+  .app-inner{padding:12px 10px}
+  .topbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+    gap:10px;align-items:center;margin-bottom:10px}
+  .topbar.mobile{grid-template-columns:auto minmax(0,1fr)}
+  .menu-btn{width:42px;height:42px;background:#fff;border:1px solid var(--line);
+    border-radius:8px;color:var(--blue);font-size:22px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .title-h1{margin:0;font-size:18px;line-height:1.25}
+  .sub{color:var(--muted);font-size:11px;line-height:1.4;margin:3px 0 0}
+  .status-pill{background:#fff;border:1px solid var(--line);border-radius:6px;
+    padding:5px 12px;display:flex;gap:8px;align-items:center;min-width:0}
+  .status-pill strong{font-size:11px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .status-pill strong::before{content:"";width:6px;height:6px;border-radius:99px;background:var(--green)}
+  .status-pill span{color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .status-pill .usage{color:var(--blue);font-size:10px;font-weight:900;white-space:nowrap}
+  .status-pill.mobile{grid-column:1/-1;width:100%}
+
+  .toolbar{display:grid;gap:8px;margin-bottom:10px}
+  .controls{display:grid;gap:8px;grid-template-columns:minmax(0,1fr) 50px 70px}
+  .auth-panel{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:7px 9px;display:flex;justify-content:space-between;align-items:center;
+    gap:6px;color:var(--muted);font-size:11px;min-width:0}
+  .auth-panel span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .auth-panel button{background:var(--blue);border:1px solid var(--blue);color:#fff;
+    border-radius:6px;font-size:11px;font-weight:900;padding:5px 8px;cursor:pointer}
+  .home-btn,.back-btn{background:#fff;border:1px solid var(--line);
+    border-radius:8px;color:var(--blue);font-weight:900;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:12px}
+  .home-btn{padding:8px}
+  .back-btn{background:var(--blue);color:#fff;border-color:var(--blue);padding:8px 6px}
+  .back-btn.disabled{background:#fff;color:#cbd5e1;border-color:var(--line);opacity:.6}
+
+  .search-box{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:9px 11px;font-size:12px;color:var(--muted);overflow:hidden;
+    white-space:nowrap;text-overflow:ellipsis}
+  .filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .filters button{background:#fff;border:1px solid var(--line);border-radius:8px;
+    color:#475467;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer;
+    white-space:nowrap;position:relative}
+  .filters button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+  .filters button[title]:hover::after{content:attr(title);position:absolute;
+    bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);
+    background:#0f172a;color:#fff;padding:4px 8px;border-radius:6px;
+    font-size:10.5px;font-weight:600;white-space:nowrap;z-index:5}
+
+  /* card / panel */
+  .panel{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .panel-body{padding:10px}
+  .card-head{background:var(--navy);color:#fff;padding:9px 11px;border-radius:8px 8px 0 0}
+  .card-title{font-size:13px;font-weight:900;display:flex;justify-content:space-between}
+  .card-body-mock{padding:10px 11px;font-size:12px;color:#334155;line-height:1.5}
+  .message{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:14px;color:var(--muted);font-size:12px;text-align:center}
+
+  /* bottom nav */
+  .bottom-nav{background:rgba(255,255,255,.97);border-top:1px solid var(--line);
+    box-shadow:0 -8px 22px rgba(16,24,40,.08);
+    display:grid;grid-template-columns:repeat(4,1fr);z-index:2}
+  .bottom-nav.hidden{display:none}
+  .bottom-nav button{background:transparent;border:0;cursor:pointer;
+    color:var(--muted);font-size:10.5px;padding:9px 4px}
+  .bottom-nav button strong{display:block;font-size:14px;line-height:1;margin-bottom:3px}
+  .bottom-nav button.active{color:var(--blue);font-weight:900}
+
+  /* drawer */
+  .drawer-mock{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:12px 10px;max-width:280px;margin:0 auto}
+  .drawer-mock .drawer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .drawer-mock .drawer-head strong{font-size:14px}
+  .drawer-mock .menu-item{display:grid;grid-template-columns:28px 1fr;
+    gap:4px 8px;background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:8px 10px;margin-bottom:6px;text-align:left;font-size:12px;cursor:pointer}
+  .drawer-mock .menu-item strong:first-child{color:var(--blue);font-weight:900;font-size:12px}
+  .drawer-mock .menu-item strong{font-size:12.5px;line-height:1.3}
+  .drawer-mock .menu-item span{grid-column:2;color:var(--muted);font-size:10.5px;line-height:1.3}
+  .drawer-mock .menu-item.active{background:#eff6ff;border-color:#93c5fd}
+
+  /* ETF feature cards */
+  .etf-feature-grid{display:grid;gap:7px;grid-template-columns:repeat(2,1fr)}
+  .etf-feature-card{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:8px;text-align:left;min-height:62px;display:grid;gap:2px;cursor:pointer}
+  .etf-feature-card.featured{background:#f8fbff;border-color:#bfdbfe}
+  .etf-feature-card.reserved{opacity:.55}
+  .etf-feature-card strong{font-size:12px;line-height:1.25}
+  .etf-feature-card span{color:var(--muted);font-size:10px;line-height:1.3}
+  .etf-tool-section-label{font-size:11.5px;font-weight:900;color:#334155;margin:8px 0 4px}
+  .etf-more-btn{background:#f1f5f9;border:1px dashed var(--line);border-radius:8px;
+    padding:8px;font-size:11px;color:var(--blue);font-weight:900;cursor:pointer;
+    width:100%;text-align:center;margin-top:6px}
+
+  /* change row */
+  .change-row{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:9px 10px 9px 14px;margin-bottom:6px;display:grid;
+    grid-template-columns:1fr 80px;gap:8px;position:relative;overflow:hidden}
+  .change-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:8px 0 0 8px}
+  .change-row.added::before{background:var(--blue)}
+  .change-row strong{font-size:12px}
+  .change-row span{font-size:10.5px;color:var(--muted)}
+  .change-row .delta{color:var(--blue);font-weight:900;font-size:11.5px;text-align:right}
+
+  /* K 線 chart mock */
+  .chart-wrap{border:1px solid var(--line);border-radius:8px;height:170px;overflow:hidden}
+  .chart-wrap.light{background:#fff}
+  .chart-wrap.dark-broken{background:#fff}
+  .chart-wrap.dark-themed{background:#1f2937}
+  .chart-svg{width:100%;height:100%;display:block}
+
+  /* dark mode demo */
+  .dark .panel,.dark .change-row,.dark .etf-feature-card,
+  .dark .drawer-mock,.dark .drawer-mock .menu-item,
+  .dark .search-box,.dark .menu-btn,.dark .home-btn,
+  .dark .status-pill,.dark .filters button,.dark .auth-panel,
+  .dark .message,.dark .bottom-nav,.dark .panel-body,
+  .dark .etf-more-btn,.dark .back-btn.disabled{
+    background:#1f2937;border-color:#374151;color:#e5e7eb}
+  .dark .status-pill span,.dark .sub,.dark .etf-feature-card span,
+  .dark .menu-item span,.dark .change-row span{color:#94a3b8}
+  .dark .filters button.active{background:#60a5fa;border-color:#60a5fa;color:#0b1220}
+  .dark .home-btn{color:#60a5fa}.dark .menu-btn{color:#60a5fa}
+  .dark .title-h1,.dark .drawer-head strong,.dark .change-row strong,
+  .dark .etf-feature-card strong,.dark .filters button{color:#e5e7eb}
+
+  /* code diff */
+  .codecmp{display:grid;gap:0;grid-template-columns:1fr 1fr;
+    background:#0f172a;border-radius:8px;overflow:hidden;margin-top:6px;font-size:12px}
+  @media (max-width:900px){.codecmp{grid-template-columns:1fr}}
+  .codecmp pre{margin:0;padding:14px;color:#cbd5e1;font-family:"Cascadia Code","Consolas","Menlo",monospace;
+    font-size:11.5px;line-height:1.55;overflow-x:auto;white-space:pre}
+  .codecmp .before{background:#1c1917;border-right:1px solid #292524}
+  .codecmp .after{background:#0c1410}
+  .codecmp .before::before{content:"舊";position:sticky;top:0;display:inline-block;
+    background:#7f1d1d;color:#fff;padding:2px 9px;border-radius:0 0 8px 0;font-size:10px;font-weight:900;font-family:inherit}
+  .codecmp .after::before{content:"新";position:sticky;top:0;display:inline-block;
+    background:#14532d;color:#fff;padding:2px 9px;border-radius:0 0 8px 0;font-size:10px;font-weight:900;font-family:inherit}
+  .codecmp .add{color:#86efac}
+  .codecmp .del{color:#fca5a5;text-decoration:line-through;opacity:.85}
+  .codecmp .com{color:#64748b}
+
+  /* file tree */
+  .tree{background:#0f172a;color:#cbd5e1;border-radius:8px;padding:14px 18px;
+    font-family:"Cascadia Code",Consolas,Menlo,monospace;font-size:12px;line-height:1.7}
+  .tree .add{color:#86efac}.tree .del{color:#fca5a5;text-decoration:line-through;opacity:.7}
+  .tree .com{color:#64748b}
+
+  /* checklist */
+  .checklist{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:14px;font-size:13px;line-height:1.6}
+  .checklist li{margin:2px 0}
+  .checklist ul{margin:0;padding-left:20px}
+
+  /* footer hint */
+  .footer{margin-top:50px;padding-top:20px;border-top:1px dashed #cbd5e1;
+    font-size:12px;color:#64748b;text-align:center;line-height:1.6}
+
+  /* highlight ring for callouts */
+  .ring-warn{outline:2px dashed #f59e0b;outline-offset:2px;border-radius:8px}
+  .ring-good{outline:2px dashed #10b981;outline-offset:2px;border-radius:8px}
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Review 提案新舊比對 (C01–C20)</h1>
+  <p>把先前 review 中提到的全部 20 項建議用 <b>舊（現況）</b> vs <b>新（建議）</b> 並排呈現。視覺類用手機 frame 還原；行為 / 結構類用程式碼對照。</p>
+</header>
+
+<nav class="tocbar">
+  <a class="bug" href="#c01">C01 底部 nav</a>
+  <a class="bug" href="#c02">C02 篩選器</a>
+  <a class="bug" href="#c03">C03 選單對齊</a>
+  <a class="bug" href="#c04">C04 ETF 預設過期</a>
+  <a class="ui" href="#c05">C05 K 線深色</a>
+  <a class="ui" href="#c06">C06 K 線 retina</a>
+  <a class="ui" href="#c07">C07 status pill</a>
+  <a class="ui" href="#c08">C08 保留功能</a>
+  <a class="ui" href="#c09">C09 ETF 卡片密度</a>
+  <a class="ui" href="#c10">C10 hardcoded #fff</a>
+  <a class="ui" href="#c11">C11 篩選器行話</a>
+  <a class="ui" href="#c12">C12 搜尋 placeholder</a>
+  <a class="ui" href="#c13">C13 抽屜 a11y</a>
+  <a class="func" href="#c14">C14 Render 冷啟動</a>
+  <a class="func" href="#c15">C15 搜尋取消</a>
+  <a class="func" href="#c16">C16 偏好持久化</a>
+  <a class="ui" href="#c17">C17 上一層按鈕</a>
+  <a class="struct" href="#c18">C18 拆檔</a>
+  <a class="struct" href="#c19">C19 lint</a>
+  <a class="struct" href="#c20">C20 innerHTML</a>
+</nav>
+
+<div class="container">
+
+<!-- =================== C01 =================== -->
+<section class="section" id="c01">
+  <div class="section-head">
+    <span class="section-num">C01</span>
+    <h2 class="section-title">底部導覽列 — display:none 沒被改回，整條 nav 完全看不見</h2>
+    <span class="tag bug">Bug</span>
+  </div>
+  <p class="section-desc">
+    <code>.bottom-nav{display:none}</code>（index.html:3214）在任何 media query 都沒被改回，但 HTML 還是渲染了 <code>&lt;nav class="bottom-nav"&gt;</code>。手機版理應靠它導覽，現在實際上所有人只能從左上的 ≡ 抽屜進去。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="phone"><div class="screen tall">
+        <div class="app-inner">
+          <div class="topbar mobile">
+            <button class="menu-btn">≡</button>
+            <div><h1 class="title-h1">個股查詢</h1><p class="sub">未登入可使用說明小卡示範指令</p></div>
+            <div class="status-pill mobile"><strong>已連線</strong><span>更新 14:35</span><span class="usage">今日 12 人</span></div>
+          </div>
+          <div class="message">小卡內容區...</div>
+        </div>
+        <div class="bottom-nav hidden"></div>
+      </div></div>
+      <p class="pane-note">▲ 手機底部什麼都沒有，只剩左上 ≡。HTML 裡 `<nav class="bottom-nav">` 是 dead code。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="phone"><div class="screen tall">
+        <div class="app-inner" style="padding-bottom:60px">
+          <div class="topbar mobile">
+            <button class="menu-btn">≡</button>
+            <div><h1 class="title-h1">個股查詢</h1><p class="sub">未登入可使用說明小卡示範指令</p></div>
+            <div class="status-pill mobile"><strong>已連線</strong><span>更新 14:35</span><span class="usage">今日 12 人</span></div>
+          </div>
+          <div class="message">小卡內容區...</div>
+        </div>
+        <nav class="bottom-nav ring-good" style="position:absolute;bottom:0;left:0;right:0">
+          <button class="active"><strong>📊</strong>個股</button>
+          <button><strong>📈</strong>ETF</button>
+          <button><strong>📚</strong>教學</button>
+          <button><strong>⚙️</strong>狀態</button>
+        </nav>
+      </div></div>
+      <p class="pane-note">▲ 在 ≤720px 時切回 display:grid；桌機 ≥760px 保持隱藏（已有桌機側 toolbar）。</p>
+    </div>
+  </div>
+  <div class="codecmp">
+    <pre class="before"><br>.bottom-nav {
+  display: none;   <span class="com">/* &lt;-- 永遠隱藏 */</span>
+  grid-template-columns: repeat(4, 1fr);
+  position: fixed; bottom: 0;
+}</pre>
+    <pre class="after"><br>.bottom-nav {
+  display: none;
+  grid-template-columns: repeat(4, 1fr);
+  position: fixed; bottom: 0;
+}
+<span class="add">@media (max-width: 720px) {
+  .bottom-nav { display: grid; }
+}</span></pre>
+  </div>
+</section>
+
+<!-- =================== C02 =================== -->
+<section class="section" id="c02">
+  <div class="section-head">
+    <span class="section-num">C02</span>
+    <h2 class="section-title">快速篩選列 — 全部 / START / CONT / RS 90+ / 連續 永遠隱藏</h2>
+    <span class="tag bug">Bug</span>
+  </div>
+  <p class="section-desc">
+    <code>.filters{display:none}</code>（index.html:304）也是只有預設值、沒被任何 media query 改回顯示。JS 已綁了點擊事件（index.html:6838）但按鈕永遠 render 不出。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="phone"><div class="screen short">
+        <div class="app-inner">
+          <div class="toolbar">
+            <div class="controls">
+              <div class="auth-panel"><span>LINE 登入檢查中</span><button>登入</button></div>
+              <button class="home-btn">🏠</button>
+              <button class="back-btn disabled">上一層</button>
+            </div>
+            <div class="search-box">輸入說明小卡指令，例如 2330</div>
+          </div>
+          <div class="message">小卡 1...</div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 搜尋框下方應該有 5 顆 chip，現在完全沒出現。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="phone"><div class="screen short">
+        <div class="app-inner">
+          <div class="toolbar">
+            <div class="controls">
+              <div class="auth-panel"><span>LINE 登入檢查中</span><button>登入</button></div>
+              <button class="home-btn">🏠</button>
+              <button class="back-btn disabled">上一層</button>
+            </div>
+            <div class="search-box">輸入說明小卡指令，例如 2330</div>
+            <div class="filters ring-good">
+              <button class="active">全部</button>
+              <button>首次訊號</button>
+              <button>連續訊號</button>
+              <button>RS 90+</button>
+              <button>連續</button>
+            </div>
+          </div>
+          <div class="message">小卡 1...</div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 顯示出來且文字本地化（搭配 C11）。</p>
+    </div>
+  </div>
+  <div class="codecmp">
+    <pre class="before"><br>.filters {
+  display: none;   <span class="com">/* &lt;-- 永遠隱藏 */</span>
+  gap: 8px;
+  overflow-x: auto;
+}</pre>
+    <pre class="after"><br>.filters {
+  display: <span class="add">flex</span>;
+  gap: 8px;
+  overflow-x: auto;
+}
+<span class="com">/* 只在 scanView 顯示 — 用 [data-view] 切換 */</span>
+<span class="add">.app:not([data-view="scanView"]) .filters { display: none; }</span></pre>
+  </div>
+</section>
+
+<!-- =================== C03 =================== -->
+<section class="section" id="c03">
+  <div class="section-head">
+    <span class="section-num">C03</span>
+    <h2 class="section-title">抽屜 vs 底部導覽選單對不上</h2>
+    <span class="tag bug">Bug</span>
+  </div>
+  <p class="section-desc">
+    抽屜 5 項：個股 / ETF / 教學 / 管理狀態 / 深色模式。底部 nav 4 項：個股 / ETF / K 線 / 狀態。
+    K 線跟教學在兩處不同步，「狀態」字面意思也不一樣。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="drawer-mock">
+        <div class="drawer-head"><strong>功能選單</strong><span>×</span></div>
+        <div class="menu-item active"><strong>01</strong><strong>個股查詢</strong><span>原 LINE bot 小卡網頁版</span></div>
+        <div class="menu-item"><strong>02</strong><strong>ETF 研究</strong><span>規模排名、持股變化</span></div>
+        <div class="menu-item"><strong>03</strong><strong>教學</strong><span>策略與權證教學</span></div>
+        <div class="menu-item"><strong>04</strong><strong>管理狀態</strong><span>管理員限定</span></div>
+        <div class="menu-item"><strong>夜</strong><strong>深色模式</strong><span>適合收盤後長時間看</span></div>
+      </div>
+      <div style="height:18px"></div>
+      <nav class="bottom-nav" style="max-width:300px;margin:0 auto;border-radius:8px;border:1px solid var(--line)">
+        <button class="active"><strong>01</strong>個股</button>
+        <button><strong>02</strong>ETF</button>
+        <button><strong>03</strong>K線</button>
+        <button><strong>04</strong>狀態</button>
+      </nav>
+      <p class="pane-note">▲ 抽屜有「教學/深色」、底部有「K 線」，互相找不到對方。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="drawer-mock">
+        <div class="drawer-head"><strong>功能選單</strong><span>×</span></div>
+        <div class="menu-item active"><strong>01</strong><strong>個股查詢</strong><span>原 LINE bot 小卡網頁版</span></div>
+        <div class="menu-item"><strong>02</strong><strong>ETF 研究</strong><span>規模排名、持股變化</span></div>
+        <div class="menu-item"><strong>03</strong><strong>教學</strong><span>策略與權證教學</span></div>
+        <div class="menu-item"><strong>04</strong><strong>管理狀態</strong><span>管理員限定</span></div>
+        <div class="menu-item" style="background:#f1f5f9;border-color:#cbd5e1">
+          <strong>夜</strong><strong>深色模式 (toggle)</strong>
+          <span>抽屜下方獨立區塊，不算選單項</span></div>
+      </div>
+      <div style="height:18px"></div>
+      <nav class="bottom-nav ring-good" style="max-width:300px;margin:0 auto;border-radius:8px;border:1px solid var(--line)">
+        <button class="active"><strong>📊</strong>個股</button>
+        <button><strong>📈</strong>ETF</button>
+        <button><strong>📚</strong>教學</button>
+        <button><strong>⚙️</strong>狀態</button>
+      </nav>
+      <p class="pane-note">▲ 兩處 4 項一致；K 線改成從個股小卡點進去（已經是現有路徑）。深色模式抽走變成 toggle。</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== C04 =================== -->
+<section class="section" id="c04">
+  <div class="section-head">
+    <span class="section-num">C04</span>
+    <h2 class="section-title">「即將上市 ETF」寫死且日期過期</h2>
+    <span class="tag bug">Bug</span>
+  </div>
+  <p class="section-desc">
+    <code>upcomingEtfs</code>（index.html:3565+）3 檔全寫死在 JS 裡。00403A 掛牌日 2026-05-12 對今天（2026-05-14）已過去，但仍顯示在「即將上市」。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="panel">
+        <div class="panel-body">
+          <div class="change-row added"><div><strong>00403A 統一台股升級50</strong><br><span>掛牌 2026-05-12 ・ 統一投信</span></div><div class="delta">待掛牌</div></div>
+          <div class="change-row added"><div><strong>00405A 富邦台灣龍耀</strong><br><span>募集 2026-05-18 ・ 富邦投信</span></div><div class="delta">即將募集</div></div>
+        </div>
+      </div>
+      <p class="pane-note">▲ 今天 2026-05-14，00403A 顯示「待掛牌」但其實已過期。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="panel">
+        <div class="panel-body">
+          <div class="change-row added"><div><strong>00405A 富邦台灣龍耀</strong><br><span>募集 2026-05-18 ・ 富邦投信</span></div><div class="delta">即將募集</div></div>
+          <div class="change-row added"><div><strong>00402A 安聯美國科技</strong><br><span>募集 2026-05-22 ・ 安聯投信</span></div><div class="delta">即將募集</div></div>
+        </div>
+      </div>
+      <p class="pane-note">▲ runtime 自動過濾 listingDate &lt; today；或從 <code>data/upcoming-etfs.json</code> 讀，由 GitHub Actions 每週更新。</p>
+    </div>
+  </div>
+  <div class="codecmp">
+    <pre class="before"><br>const upcomingEtfs = [
+  { code: "00403A", listingDate: "2026-05-12", ... },
+  { code: "00405A", listingDate: "...", ... },
+  { code: "00402A", listingDate: "2026-06", ... },
+];</pre>
+    <pre class="after"><br><span class="com">// 1. 移到 data/upcoming-etfs.json</span>
+<span class="add">const upcomingEtfs = await fetch('./data/upcoming-etfs.json')
+  .then(r =&gt; r.json());</span>
+
+<span class="com">// 2. 視覺層自動過濾過期項</span>
+<span class="add">const today = new Date().toISOString().slice(0,10);
+const visible = upcomingEtfs.filter(e =&gt;
+  !e.listingDate || e.listingDate &gt;= today);</span></pre>
+  </div>
+</section>
+
+<!-- =================== C05 =================== -->
+<section class="section" id="c05">
+  <div class="section-head">
+    <span class="section-num">C05</span>
+    <h2 class="section-title">K 線在深色模式下變成一塊白色長方形</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    <code>drawChart()</code> 把背景寫死 <code>#fff</code>、格線 <code>#e5e7eb</code>、文字 <code>#475467</code>（index.html:4586-4644）。深色模式切換時整張圖會「亮島」。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="phone dark"><div class="screen dark short">
+        <div class="app-inner dark">
+          <div class="card-head" style="background:#0b1220">
+            <div class="card-title">2330 台積電<span style="color:#86efac">+1.2%</span></div>
+          </div>
+          <div class="panel-body">
+            <div class="chart-wrap dark-broken ring-warn">
+              <svg class="chart-svg" viewBox="0 0 320 170">
+                <rect width="320" height="170" fill="#fff"/>
+                <line x1="20" y1="40" x2="300" y2="40" stroke="#e5e7eb"/>
+                <line x1="20" y1="80" x2="300" y2="80" stroke="#e5e7eb"/>
+                <line x1="20" y1="120" x2="300" y2="120" stroke="#e5e7eb"/>
+                <line x1="20" y1="60" x2="300" y2="60" stroke="#1d4ed8" stroke-dasharray="5 4"/>
+                <g>
+                  <line x1="40" y1="55" x2="40" y2="115" stroke="#b42318"/><rect x="36" y="65" width="8" height="35" fill="#fee2e2" stroke="#b42318"/>
+                  <line x1="65" y1="45" x2="65" y2="125" stroke="#047857"/><rect x="61" y="70" width="8" height="40" fill="#dcfce7" stroke="#047857"/>
+                  <line x1="90" y1="60" x2="90" y2="105" stroke="#b42318"/><rect x="86" y="70" width="8" height="25" fill="#fee2e2" stroke="#b42318"/>
+                  <line x1="115" y1="50" x2="115" y2="120" stroke="#b42318"/><rect x="111" y="60" width="8" height="50" fill="#fee2e2" stroke="#b42318"/>
+                  <line x1="140" y1="40" x2="140" y2="100" stroke="#b42318"/><rect x="136" y="50" width="8" height="40" fill="#fee2e2" stroke="#b42318"/>
+                  <line x1="165" y1="65" x2="165" y2="130" stroke="#047857"/><rect x="161" y="80" width="8" height="35" fill="#dcfce7" stroke="#047857"/>
+                  <line x1="190" y1="55" x2="190" y2="100" stroke="#b42318"/><rect x="186" y="65" width="8" height="30" fill="#fee2e2" stroke="#b42318"/>
+                </g>
+                <text x="22" y="15" font-size="11" fill="#475467">2330 台積電 / bot Kbar cache</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 整頁深色，獨獨一塊白色 K 線「亮島」刺眼。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="phone dark"><div class="screen dark short">
+        <div class="app-inner dark">
+          <div class="card-head" style="background:#0b1220">
+            <div class="card-title">2330 台積電<span style="color:#86efac">+1.2%</span></div>
+          </div>
+          <div class="panel-body">
+            <div class="chart-wrap dark-themed ring-good">
+              <svg class="chart-svg" viewBox="0 0 320 170">
+                <rect width="320" height="170" fill="#1f2937"/>
+                <line x1="20" y1="40" x2="300" y2="40" stroke="#374151"/>
+                <line x1="20" y1="80" x2="300" y2="80" stroke="#374151"/>
+                <line x1="20" y1="120" x2="300" y2="120" stroke="#374151"/>
+                <line x1="20" y1="60" x2="300" y2="60" stroke="#60a5fa" stroke-dasharray="5 4"/>
+                <g>
+                  <line x1="40" y1="55" x2="40" y2="115" stroke="#f87171"/><rect x="36" y="65" width="8" height="35" fill="rgba(248,113,113,.2)" stroke="#f87171"/>
+                  <line x1="65" y1="45" x2="65" y2="125" stroke="#34d399"/><rect x="61" y="70" width="8" height="40" fill="rgba(52,211,153,.2)" stroke="#34d399"/>
+                  <line x1="90" y1="60" x2="90" y2="105" stroke="#f87171"/><rect x="86" y="70" width="8" height="25" fill="rgba(248,113,113,.2)" stroke="#f87171"/>
+                  <line x1="115" y1="50" x2="115" y2="120" stroke="#f87171"/><rect x="111" y="60" width="8" height="50" fill="rgba(248,113,113,.2)" stroke="#f87171"/>
+                  <line x1="140" y1="40" x2="140" y2="100" stroke="#f87171"/><rect x="136" y="50" width="8" height="40" fill="rgba(248,113,113,.2)" stroke="#f87171"/>
+                  <line x1="165" y1="65" x2="165" y2="130" stroke="#34d399"/><rect x="161" y="80" width="8" height="35" fill="rgba(52,211,153,.2)" stroke="#34d399"/>
+                  <line x1="190" y1="55" x2="190" y2="100" stroke="#f87171"/><rect x="186" y="65" width="8" height="30" fill="rgba(248,113,113,.2)" stroke="#f87171"/>
+                </g>
+                <text x="22" y="15" font-size="11" fill="#a7b0bf">2330 台積電 / bot Kbar cache</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 從 CSS variables 讀色，深色模式同主題。applyTheme 切換時順手 drawChart()。</p>
+    </div>
+  </div>
+  <div class="codecmp">
+    <pre class="before"><br>function drawChart() {
+  ...
+  <span class="del">ctx.fillStyle = "#fff";</span>
+  ctx.fillRect(0, 0, w, h);
+  <span class="del">ctx.strokeStyle = "#e5e7eb";</span>
+  ...
+  <span class="del">ctx.fillStyle = "#475467";</span>
+  ctx.fillText(`${selected.id} ${selected.name}`, 30, 20);
+}</pre>
+    <pre class="after"><br><span class="add">function chartColors() {
+  const css = getComputedStyle(document.documentElement);
+  return {
+    bg:   css.getPropertyValue('--surface'),
+    line: css.getPropertyValue('--line'),
+    text: css.getPropertyValue('--muted'),
+    up:   css.getPropertyValue('--red'),
+    dn:   css.getPropertyValue('--green'),
+  };
+}
+function drawChart() {
+  const c = chartColors();
+  ctx.fillStyle = c.bg; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = c.line; ...
+  ctx.fillStyle = c.text; ...
+}
+<span class="com">// applyTheme() 結尾呼叫</span>
+applyTheme = function(t){ ...; drawChart(); }</span></pre>
+  </div>
+</section>
+
+<!-- =================== C06 =================== -->
+<section class="section" id="c06">
+  <div class="section-head">
+    <span class="section-num">C06</span>
+    <h2 class="section-title">K 線在 retina / 手機上模糊</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    Canvas buffer 固定 <code>width="720" height="360"</code>，CSS 卻把它撐成 100% width。在 DPR ≥ 2 的螢幕上會用 720 像素的 buffer 拉伸顯示在實際 760–800px 的物理像素上，整張圖糊。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">手機 (DPR 3) 看到的 K 線</div>
+        <svg viewBox="0 0 320 130" style="width:100%;height:130px;filter:blur(.5px)">
+          <rect width="320" height="130" fill="#fff"/>
+          <line x1="20" y1="100" x2="40" y2="40" stroke="#b42318" stroke-width="3"/>
+          <line x1="60" y1="80" x2="80" y2="50" stroke="#047857" stroke-width="3"/>
+          <line x1="100" y1="90" x2="120" y2="35" stroke="#b42318" stroke-width="3"/>
+          <text x="40" y="20" font-size="14" fill="#475467">2330 / 邊緣鋸齒、文字糊</text>
+        </svg>
+      </div>
+      <p class="pane-note">▲ buffer = 720×360，DPR 3 螢幕需要 1140×570 才清晰。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">同樣手機，DPR scaling 後</div>
+        <svg viewBox="0 0 320 130" style="width:100%;height:130px">
+          <rect width="320" height="130" fill="#fff"/>
+          <line x1="20" y1="100" x2="40" y2="40" stroke="#b42318" stroke-width="1.5"/>
+          <line x1="60" y1="80" x2="80" y2="50" stroke="#047857" stroke-width="1.5"/>
+          <line x1="100" y1="90" x2="120" y2="35" stroke="#b42318" stroke-width="1.5"/>
+          <text x="40" y="20" font-size="13" fill="#475467">2330 / 線條銳利、文字清晰</text>
+        </svg>
+      </div>
+      <p class="pane-note">▲ 用 devicePixelRatio 動態調 buffer，CSS size 不變。</p>
+    </div>
+  </div>
+  <div class="codecmp">
+    <pre class="before"><br>&lt;canvas id="chart" width="720" height="360"&gt;&lt;/canvas&gt;
+<span class="com">/* CSS: width:100%; height:100% */</span>
+
+function drawChart() {
+  const canvas = $("chart");
+  const ctx = canvas.getContext("2d");
+  <span class="del">const w = canvas.width;</span>
+  <span class="del">const h = canvas.height;</span>
+  ...
+}</pre>
+    <pre class="after"><br>&lt;canvas id="chart"&gt;&lt;/canvas&gt;
+<span class="com">/* CSS: width:100%; height:320px */</span>
+
+function drawChart() {
+  const canvas = $("chart");
+  const ctx = canvas.getContext("2d");
+  <span class="add">const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  canvas.width  = cssW * dpr;
+  canvas.height = cssH * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const w = cssW, h = cssH;</span>
+  ...
+}
+<span class="com">// 視窗 resize 時重畫</span>
+<span class="add">window.addEventListener('resize', drawChart);</span></pre>
+  </div>
+</section>
+
+<!-- =================== C07 =================== -->
+<section class="section" id="c07">
+  <div class="section-head">
+    <span class="section-num">C07</span>
+    <h2 class="section-title">status-pill 三塊資訊擠在一條</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    <code>min-width: 288px</code> 塞「已連線 / 更新 14:35 / 今日使用 12 人」三塊。在 540px 以下 flex-wrap 後又跟主標題卡住。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="phone"><div class="screen short">
+        <div class="app-inner">
+          <div class="topbar mobile">
+            <button class="menu-btn">≡</button>
+            <div><h1 class="title-h1">個股查詢</h1><p class="sub">未登入可使用說明小卡示範指令；其它個股請加入 LINE bot。</p></div>
+            <div class="status-pill mobile" style="flex-wrap:wrap">
+              <strong>已連線</strong><span>更新 2026-05-14 14:35 上次掃描</span><span class="usage">今日使用 12 人</span>
+            </div>
+          </div>
+          <div class="message">小卡內容...</div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 三段塞同一條，標題訊息也太長。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="phone"><div class="screen short">
+        <div class="app-inner">
+          <div class="topbar mobile">
+            <button class="menu-btn">≡</button>
+            <div><h1 class="title-h1">個股查詢</h1><p class="sub">輸入代號或加入 LINE bot 使用完整功能</p></div>
+            <div class="status-pill mobile ring-good" title="更新 2026-05-14 14:35" style="justify-content:space-between">
+              <strong>已連線</strong><span class="usage">今日 12 人</span>
+            </div>
+          </div>
+          <div class="message">小卡內容...</div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 只留狀態 + 使用量；更新時間移到 hover title。</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== C08 =================== -->
+<section class="section" id="c08">
+  <div class="section-head">
+    <span class="section-num">C08</span>
+    <h2 class="section-title">「保留功能」內部代碼 B01 / B09 漏給使用者看</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    <code>&lt;button class="etf-feature-card reserved" disabled&gt;B01 保留&lt;/button&gt;</code>（index.html:3438-3446）對使用者沒意義，看起來像未完成的 dev artifact。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="panel">
+        <div class="panel-body">
+          <div class="etf-tool-section-label">保留功能</div>
+          <div class="etf-feature-grid ring-warn">
+            <div class="etf-feature-card reserved"><strong>自選 + 推播</strong><span>B01 保留</span></div>
+            <div class="etf-feature-card reserved"><strong>自選分組</strong><span>B09 保留</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="pane-note">▲ 「B01 保留」這種內部編碼不該被看到。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER (選一)</div>
+      <div class="panel">
+        <div class="panel-body">
+          <div class="etf-tool-section-label">即將推出</div>
+          <div class="etf-feature-grid ring-good">
+            <div class="etf-feature-card reserved"><strong>自選 + 推播</strong><span>下一階段加入</span></div>
+            <div class="etf-feature-card reserved"><strong>自選分組</strong><span>下一階段加入</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px">或：整組移除，等實作前再開放。</div>
+        </div>
+      </div>
+      <p class="pane-note">▲ 對外用人話寫；或乾脆隱藏，避免讓主畫面看起來「半完成」。</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== C09 =================== -->
+<section class="section" id="c09">
+  <div class="section-head">
+    <span class="section-num">C09</span>
+    <h2 class="section-title">ETF 工具卡塞太滿，「查詢與監控」一次 11 張卡</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    手機 2 欄等於 6 行卡片連續滑，使用者找特定工具像在 maze。建議分組折疊，每組 4 張內，其餘收進「更多工具」。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="phone"><div class="screen tall">
+        <div class="scroll"><div class="app-inner">
+          <div class="etf-tool-section-label">決策工具</div>
+          <div class="etf-feature-grid">
+            <div class="etf-feature-card featured"><strong>🔀 ETF 比較</strong><span>2-3 檔費率、殖利率</span></div>
+            <div class="etf-feature-card featured"><strong>🔍 進階篩選</strong><span>規模/殖利率/費率</span></div>
+            <div class="etf-feature-card featured"><strong>🧮 投組模擬</strong><span>比例算殖利率</span></div>
+            <div class="etf-feature-card featured"><strong>🎯 部位試算</strong><span>張數與最大風險</span></div>
+          </div>
+          <div class="etf-tool-section-label">查詢與監控</div>
+          <div class="etf-feature-grid ring-warn">
+            <div class="etf-feature-card"><strong>🌡️ 大盤儀表板</strong><span>情緒與 Top 5</span></div>
+            <div class="etf-feature-card"><strong>💰 資金流</strong><span>月申贖排行</span></div>
+            <div class="etf-feature-card"><strong>🏦 法人籌碼</strong><span>個股佐證</span></div>
+            <div class="etf-feature-card"><strong>🧬 持股重疊</strong><span>熱力圖</span></div>
+            <div class="etf-feature-card"><strong>🗓️ 配息日曆</strong><span>30 天除息</span></div>
+            <div class="etf-feature-card"><strong>💵 配息試算</strong><span>張數入帳估算</span></div>
+            <div class="etf-feature-card"><strong>📈 個股動向</strong><span>誰加碼 2330</span></div>
+            <div class="etf-feature-card"><strong>📊 14 日趨勢</strong><span>權重變化</span></div>
+            <div class="etf-feature-card"><strong>📡 季調雷達</strong><span>預測納入/剔除</span></div>
+            <div class="etf-feature-card"><strong>🧭 主題輪動</strong><span>資金與題材</span></div>
+            <div class="etf-feature-card"><strong>💬 自然語言</strong><span>中文轉篩選</span></div>
+          </div>
+        </div></div>
+      </div></div>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="phone"><div class="screen tall">
+        <div class="scroll"><div class="app-inner">
+          <div class="etf-tool-section-label">決策工具</div>
+          <div class="etf-feature-grid">
+            <div class="etf-feature-card featured"><strong>🔀 ETF 比較</strong><span>2-3 檔費率、殖利率</span></div>
+            <div class="etf-feature-card featured"><strong>🔍 進階篩選</strong><span>規模/殖利率/費率</span></div>
+            <div class="etf-feature-card featured"><strong>🧮 投組模擬</strong><span>比例算殖利率</span></div>
+            <div class="etf-feature-card featured"><strong>🎯 部位試算</strong><span>張數與最大風險</span></div>
+          </div>
+          <div class="etf-tool-section-label">市場 ・ 籌碼</div>
+          <div class="etf-feature-grid ring-good">
+            <div class="etf-feature-card"><strong>🌡️ 大盤儀表板</strong><span>情緒與 Top 5</span></div>
+            <div class="etf-feature-card"><strong>💰 資金流</strong><span>月申贖排行</span></div>
+            <div class="etf-feature-card"><strong>🏦 法人籌碼</strong><span>個股佐證</span></div>
+            <div class="etf-feature-card"><strong>🧬 持股重疊</strong><span>熱力圖</span></div>
+          </div>
+          <div class="etf-tool-section-label">配息 ・ 趨勢</div>
+          <div class="etf-feature-grid ring-good">
+            <div class="etf-feature-card"><strong>🗓️ 配息日曆</strong><span>30 天除息</span></div>
+            <div class="etf-feature-card"><strong>💵 配息試算</strong><span>張數入帳估算</span></div>
+            <div class="etf-feature-card"><strong>📊 14 日趨勢</strong><span>權重變化</span></div>
+            <div class="etf-feature-card"><strong>📈 個股動向</strong><span>誰加碼 2330</span></div>
+          </div>
+          <button class="etf-more-btn ring-good">▾ 更多 (季調雷達 / 主題輪動 / 自然語言)</button>
+        </div></div>
+      </div></div>
+      <p class="pane-note">▲ 4 + 4 + 4 + 「更多」收摺，每屏視覺壓力降低約 ⅓。</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== C10 =================== -->
+<section class="section" id="c10">
+  <div class="section-head">
+    <span class="section-num">C10</span>
+    <h2 class="section-title">多處寫死 #fff 破壞深色模式</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    <code>.change-row</code> bg #fff（line 2831）、<code>.etf-sort-row button</code> bg #fff（line 360）、<code>.home-btn</code> bg #fff（line 299）。深色模式下這些區塊全變亮塊。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE (深色模式)</div>
+      <div class="phone dark"><div class="screen dark short">
+        <div class="app-inner">
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <div class="filters" style="flex:1"><button class="active" style="background:#60a5fa;color:#0b1220">規模 ↓</button><button style="background:#fff;color:#475467" class="ring-warn">殖利率</button><button style="background:#fff;color:#475467" class="ring-warn">費率</button></div>
+            <button class="home-btn ring-warn" style="background:#fff;color:var(--blue)">🏠</button>
+          </div>
+          <div class="change-row added ring-warn" style="background:#fff;color:#334155"><div><strong>00878 國泰</strong><br><span>規模 3,200 億</span></div><div class="delta">+1.2%</div></div>
+          <div class="change-row added ring-warn" style="background:#fff;color:#334155"><div><strong>00919 群益</strong><br><span>規模 2,100 億</span></div><div class="delta">+0.8%</div></div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 排序按鈕、ETF row、home button 都跳出亮塊。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER (深色模式)</div>
+      <div class="phone dark"><div class="screen dark short">
+        <div class="app-inner dark">
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <div class="filters" style="flex:1"><button class="active">規模 ↓</button><button>殖利率</button><button>費率</button></div>
+            <button class="home-btn">🏠</button>
+          </div>
+          <div class="change-row added"><div><strong>00878 國泰</strong><br><span>規模 3,200 億</span></div><div class="delta">+1.2%</div></div>
+          <div class="change-row added"><div><strong>00919 群益</strong><br><span>規模 2,100 億</span></div><div class="delta">+0.8%</div></div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 全改 var(--surface)，跟主題一致。</p>
+    </div>
+  </div>
+  <div class="codecmp">
+    <pre class="before"><br>.change-row { background: <span class="del">#fff</span>; ... }
+.etf-sort-row button { background: <span class="del">#fff</span>; ... }
+.home-btn { background: <span class="del">#fff</span>; ... }
+.etf-row { background: <span class="del">#fff</span>; ... }
+<span class="com">/* 還有 ~10 處 hardcoded #fff */</span></pre>
+    <pre class="after"><br>.change-row { background: <span class="add">var(--surface)</span>; ... }
+.etf-sort-row button { background: <span class="add">var(--surface)</span>; ... }
+.home-btn { background: <span class="add">var(--surface)</span>; ... }
+.etf-row { background: <span class="add">var(--surface)</span>; ... }
+<span class="com">/* 一次性 sed 替換所有純 #fff */</span></pre>
+  </div>
+</section>
+
+<!-- =================== C11 =================== -->
+<section class="section" id="c11">
+  <div class="section-head">
+    <span class="section-num">C11</span>
+    <h2 class="section-title">篩選器標籤是行話：START / CONT / RS 90+</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    新使用者完全不知道 START / CONT 是什麼。改成中文 + hover tooltip 或副標。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="phone"><div class="screen short">
+        <div class="app-inner"><div class="filters" style="display:flex">
+          <button class="active">全部</button>
+          <button>START</button>
+          <button>CONT</button>
+          <button>RS 90+</button>
+          <button>連續</button>
+        </div></div>
+      </div></div>
+      <p class="pane-note">▲ START / CONT 是什麼？沒人知道。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="phone"><div class="screen short">
+        <div class="app-inner"><div class="filters ring-good" style="display:flex">
+          <button class="active">全部</button>
+          <button title="首次出現訊號的股票">首次</button>
+          <button title="連續出現訊號的股票">連續</button>
+          <button title="RS 排名 90 以上 (強勢股)">RS 90+</button>
+          <button title="連續 3 日以上發出訊號">3 日+</button>
+        </div></div>
+        <div style="text-align:center;margin-top:14px;font-size:11px;color:var(--muted)">滑鼠移上按鈕看 tooltip</div>
+      </div></div>
+      <p class="pane-note">▲ 中文標籤 + title tooltip；觸控裝置改長按彈出說明。</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== C12 =================== -->
+<section class="section" id="c12">
+  <div class="section-head">
+    <span class="section-num">C12</span>
+    <h2 class="section-title">搜尋框 placeholder 過長，手機被截斷</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    現況：<code>輸入說明小卡指令，例如 2330 / 即時 2330</code> 一共 18 字。380px 寬會被截掉一半。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE (寬 380)</div>
+      <div class="phone"><div class="screen" style="height:120px">
+        <div class="app-inner">
+          <div class="search-box ring-warn" style="margin-bottom:0">輸入說明小卡指令，例如 2330 / 即時 233...</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">▲ 右側被截斷</div>
+        </div>
+      </div></div>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="phone"><div class="screen" style="height:120px">
+        <div class="app-inner">
+          <div class="search-box ring-good" style="margin-bottom:0">輸入代號或指令，例：2330</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">▲ 9 字內，完整顯示</div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== C13 =================== -->
+<section class="section" id="c13">
+  <div class="section-head">
+    <span class="section-num">C13</span>
+    <h2 class="section-title">抽屜選單沒鍵盤無障礙處理</h2>
+    <span class="tag a11y">A11y</span>
+  </div>
+  <p class="section-desc">
+    開啟後沒有 focus trap，沒監聽 Escape，關閉後 focus 沒回到 ≡ 按鈕。鍵盤使用者與螢幕閱讀器使用者體驗不完整。
+  </p>
+  <div class="codecmp">
+    <pre class="before"><br>$("menuButton").addEventListener("click", () =&gt; {
+  $("drawerOverlay").classList.add("open");
+  $("drawerOverlay").setAttribute("aria-hidden","false");
+});
+$("drawerClose").addEventListener("click", () =&gt; {
+  $("drawerOverlay").classList.remove("open");
+  $("drawerOverlay").setAttribute("aria-hidden","true");
+});
+<span class="com">// 沒監聽 Escape，沒 focus trap，沒還原 focus</span></pre>
+    <pre class="after"><br>function openDrawer() {
+  $("drawerOverlay").classList.add("open");
+  $("drawerOverlay").setAttribute("aria-hidden","false");
+  <span class="add">// 把 focus 移到第一個選項
+  $("drawerOverlay").querySelector(".menu-item").focus();
+  document.addEventListener("keydown", drawerKeys);</span>
+}
+function closeDrawer() {
+  $("drawerOverlay").classList.remove("open");
+  $("drawerOverlay").setAttribute("aria-hidden","true");
+  <span class="add">document.removeEventListener("keydown", drawerKeys);
+  $("menuButton").focus(); // 還原 focus</span>
+}
+<span class="add">function drawerKeys(e) {
+  if (e.key === "Escape") closeDrawer();
+  if (e.key === "Tab") trapFocus(e, "#drawerOverlay");
+}</span></pre>
+  </div>
+</section>
+
+<!-- =================== C14 =================== -->
+<section class="section" id="c14">
+  <div class="section-head">
+    <span class="section-num">C14</span>
+    <h2 class="section-title">Render 免費實例冷啟動沒提示</h2>
+    <span class="tag func">功能</span>
+  </div>
+  <p class="section-desc">
+    <code>onrender.com</code> free tier ~15 分鐘無流量會 sleep，下一次 request 常需 30–60 秒。目前只顯示「正在讀取原 LINE bot 小卡...」，使用者以為網站壞了。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="message" style="text-align:left">
+        <div style="font-size:13px;color:#334155">正在讀取原 LINE bot 小卡...</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">(等了 45 秒還在轉)</div>
+      </div>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="message ring-good" style="text-align:left">
+        <div style="font-size:13px;color:#334155">⏳ 伺服器喚醒中</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">
+          後端用 Render 免費實例，閒置後第一次請求約需 30–60 秒。<br>
+          <span style="color:var(--blue)">已嘗試喚醒，預計剩 ~25 秒...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="codecmp">
+    <pre class="before"><br>$("cardFeed").innerHTML =
+  `&lt;div class="message"&gt;正在讀取原 LINE bot 小卡...&lt;/div&gt;`;
+const res = await fetch(API_BASE + "/scans");
+<span class="com">// 慢就慢，使用者沒任何 hint</span></pre>
+    <pre class="after"><br>$("cardFeed").innerHTML =
+  `&lt;div class="message"&gt;正在讀取原 LINE bot 小卡...&lt;/div&gt;`;
+<span class="add">const slowHint = setTimeout(() =&gt; {
+  $("cardFeed").innerHTML = `&lt;div class="message"&gt;
+    ⏳ 伺服器喚醒中，第一次請求約需 30-60 秒...
+  &lt;/div&gt;`;
+}, 5000);
+const ctrl = new AbortController();
+const timeout = setTimeout(() =&gt; ctrl.abort(), 60000);
+try {
+  const res = await fetch(API_BASE + "/scans", { signal: ctrl.signal });
+  ...
+} finally {
+  clearTimeout(slowHint);
+  clearTimeout(timeout);
+}</span></pre>
+  </div>
+</section>
+
+<!-- =================== C15 =================== -->
+<section class="section" id="c15">
+  <div class="section-head">
+    <span class="section-num">C15</span>
+    <h2 class="section-title">搜尋競態：沒取消 in-flight 請求</h2>
+    <span class="tag func">功能</span>
+  </div>
+  <p class="section-desc">
+    <code>queueLookup</code> 只有 setTimeout 450ms debounce，快速打字會送多個 request，後送的反而可能先回 → 畫面顯示錯誤股票。
+  </p>
+  <div class="codecmp">
+    <pre class="before"><br>let lookupTimer = null;
+function queueLookup() {
+  clearTimeout(lookupTimer);
+  lookupTimer = setTimeout(renderOriginalFeed, 450);
+}
+async function renderOriginalFeed() {
+  const q = $("searchInput").value.trim();
+  const data = await fetch(API_BASE + "/lookup?q=" + q);
+  $("cardFeed").innerHTML = render(data);
+  <span class="com">// 1. 打 "23" → 啟動 request A
+   // 2. 打 "2330" → 啟動 request B
+   // 3. A 比 B 慢回 → 蓋掉 B 的結果</span>
+}</pre>
+    <pre class="after"><br>let lookupTimer = null;
+<span class="add">let lookupCtrl = null;</span>
+function queueLookup() {
+  clearTimeout(lookupTimer);
+  lookupTimer = setTimeout(renderOriginalFeed, 450);
+}
+async function renderOriginalFeed() {
+  <span class="add">lookupCtrl?.abort();
+  lookupCtrl = new AbortController();</span>
+  const q = $("searchInput").value.trim();
+  <span class="add">try {</span>
+    const data = await fetch(API_BASE + "/lookup?q=" + q<span class="add">,
+      { signal: lookupCtrl.signal }</span>);
+    $("cardFeed").innerHTML = render(data);
+  <span class="add">} catch (e) {
+    if (e.name !== "AbortError") throw e;
+  }</span>
+}</pre>
+  </div>
+</section>
+
+<!-- =================== C16 =================== -->
+<section class="section" id="c16">
+  <div class="section-head">
+    <span class="section-num">C16</span>
+    <h2 class="section-title">使用者偏好沒持久化</h2>
+    <span class="tag func">功能</span>
+  </div>
+  <p class="section-desc">
+    <code>etfCompareCodes / etfHeatmapCodes / etfPortfolioText / dividendCalcCode / positionCalcCode</code> 都是 JS 全域變數（index.html:3534-3548），重新整理就回到預設。
+  </p>
+  <div class="codecmp">
+    <pre class="before"><br>let etfCompareCodes  = ["00878","00919","00929","00940"];
+let etfPortfolioText = "0050 40\n00878 30\n00919 30";
+let dividendCalcLots = 10;
+let positionBudget   = 300000;
+<span class="com">// 使用者改完一刷新就清空</span></pre>
+    <pre class="after"><br><span class="add">const PREFS = {
+  load: () =&gt; JSON.parse(localStorage.getItem("webPrefs")||"{}"),
+  save: (k,v) =&gt; {
+    const cur = PREFS.load();
+    cur[k] = v;
+    localStorage.setItem("webPrefs", JSON.stringify(cur));
+  },
+};
+const _p = PREFS.load();
+let etfCompareCodes  = _p.compareCodes  ?? ["00878","00919","00929","00940"];
+let etfPortfolioText = _p.portfolioText ?? "0050 40\n00878 30\n00919 30";
+let dividendCalcLots = _p.dividendLots  ?? 10;
+let positionBudget   = _p.positionBudget?? 300000;
+
+// 每個 setter 處呼叫 PREFS.save("compareCodes", etfCompareCodes)</span></pre>
+  </div>
+</section>
+
+<!-- =================== C17 =================== -->
+<section class="section" id="c17">
+  <div class="section-head">
+    <span class="section-num">C17</span>
+    <h2 class="section-title">「上一層」按鈕在不需要時也常駐</h2>
+    <span class="tag ui">UI</span>
+  </div>
+  <p class="section-desc">
+    home + 上一層兩顆並列佔位，但只在 ETF 巢狀層級才會用到 back。disabled 樣式仍占空間，讓 toolbar 看起來擁擠。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="phone"><div class="screen short">
+        <div class="app-inner">
+          <div class="controls">
+            <div class="auth-panel"><span>JustinFang1019</span><button>登出</button></div>
+            <button class="home-btn">🏠</button>
+            <button class="back-btn disabled">上一層</button>
+          </div>
+          <div class="search-box" style="margin-top:8px">輸入代號</div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 上一層永遠占空間。</p>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER</div>
+      <div class="phone"><div class="screen short">
+        <div class="app-inner">
+          <div class="controls ring-good" style="grid-template-columns:1fr 50px">
+            <div class="auth-panel"><span>JustinFang1019</span><button>登出</button></div>
+            <button class="home-btn">🏠</button>
+          </div>
+          <div class="search-box" style="margin-top:8px">輸入代號</div>
+        </div>
+      </div></div>
+      <p class="pane-note">▲ 只有在 activeEtfLevel ≠ "ranking" 時才注入 back，搜尋框視覺更寬鬆。</p>
+    </div>
+  </div>
+  <div class="codecmp">
+    <pre class="before"><br>&lt;div class="controls"&gt;
+  &lt;div class="auth-panel"&gt;...&lt;/div&gt;
+  &lt;button class="home-btn"&gt;🏠&lt;/button&gt;
+  &lt;button class="back-btn" id="backButton" disabled&gt;上一層&lt;/button&gt;
+&lt;/div&gt;</pre>
+    <pre class="after"><br>&lt;div class="controls" id="controls"&gt;
+  &lt;div class="auth-panel"&gt;...&lt;/div&gt;
+  &lt;button class="home-btn"&gt;🏠&lt;/button&gt;
+&lt;/div&gt;
+
+<span class="com">/* updateBackButton() */</span>
+<span class="add">function updateBackButton() {
+  const needed = activeEtfLevel &amp;&amp; activeEtfLevel !== "ranking";
+  let btn = $("backButton");
+  if (needed &amp;&amp; !btn) {
+    btn = document.createElement("button");
+    btn.id = "backButton";
+    btn.className = "back-btn";
+    btn.textContent = "上一層";
+    $("controls").appendChild(btn);
+  } else if (!needed &amp;&amp; btn) {
+    btn.remove();
+  }
+}</span></pre>
+  </div>
+</section>
+
+<!-- =================== C18 =================== -->
+<section class="section" id="c18">
+  <div class="section-head">
+    <span class="section-num">C18</span>
+    <h2 class="section-title">單檔 7368 行 → 拆成多檔</h2>
+    <span class="tag struct">結構</span>
+  </div>
+  <p class="section-desc">
+    現況：<code>index.html</code> 含 ~3,250 行 CSS 與 ~3,860 行 JS。對 Codex / future-you 都太重。建議純多檔 static，不需要 build pipeline。
+  </p>
+  <div class="pair">
+    <div class="pane before">
+      <div class="pane-label">舊 BEFORE</div>
+      <div class="tree">
+.<br>
+├── <span class="del">index.html  (7,368 lines)</span><br>
+│   ├── &lt;style&gt;        3,248 lines<br>
+│   ├── &lt;body&gt;          222 lines<br>
+│   └── &lt;script&gt;      3,863 lines<br>
+├── data/<br>
+└── scripts/<br>
+      </div>
+    </div>
+    <div class="pane after">
+      <div class="pane-label">新 AFTER (最小拆法)</div>
+      <div class="tree">
+.<br>
+├── index.html  <span class="com">(~250 lines, 只有 markup)</span><br>
+├── <span class="add">styles.css   (~3,250 lines)</span><br>
+├── <span class="add">app.js       (entry, ~200 lines)</span><br>
+├── <span class="add">js/</span><br>
+│   ├── <span class="add">api.js          // fetch + AbortController</span><br>
+│   ├── <span class="add">state.js        // PREFS + localStorage</span><br>
+│   ├── <span class="add">views/</span><br>
+│   │   ├── <span class="add">scan.js     // 個股查詢</span><br>
+│   │   ├── <span class="add">etf.js      // ETF 研究</span><br>
+│   │   ├── <span class="add">chart.js    // K 線 (含 DPR)</span><br>
+│   │   └── <span class="add">status.js   // 管理狀態</span><br>
+│   └── <span class="add">tools/          // ETF 12 個工具各一檔</span><br>
+├── data/<br>
+└── scripts/<br>
+      </div>
+      <p class="pane-note">▲ 不需要 webpack / vite，用 ES modules：<code>&lt;script type="module" src="./app.js"&gt;</code></p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== C19 =================== -->
+<section class="section" id="c19">
+  <div class="section-head">
+    <span class="section-num">C19</span>
+    <h2 class="section-title">沒有 lint / format / pre-commit</h2>
+    <span class="tag struct">結構</span>
+  </div>
+  <p class="section-desc">
+    目前 GitHub Actions 只跑資料抓取。加一個 <code>prettier --check</code> 對未來自己 / AI 接手程式一致性幫助大。
+  </p>
+  <div class="codecmp">
+    <pre class="before"><br>.github/workflows/
+└── refresh-market-data.yml
+   <span class="com"># 只跑資料更新</span></pre>
+    <pre class="after"><br>.github/workflows/
+├── refresh-market-data.yml
+└── <span class="add">lint.yml  # 每次 PR/push 跑</span>
+   <span class="add">- run: npx prettier --check "**/*.{html,css,js,json,md}"</span>
+
+package.json (新增)
+<span class="add">{
+  "scripts": {
+    "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
+    "lint":   "prettier --check  \"**/*.{html,css,js,json,md}\""
+  },
+  "devDependencies": { "prettier": "^3.2.0" }
+}</span>
+
+.prettierrc
+<span class="add">{ "printWidth": 110, "singleQuote": true, "semi": true }</span></pre>
+  </div>
+</section>
+
+<!-- =================== C20 =================== -->
+<section class="section" id="c20">
+  <div class="section-head">
+    <span class="section-num">C20</span>
+    <h2 class="section-title">innerHTML 大量使用 — 維持紀律的提醒</h2>
+    <span class="tag struct">結構</span>
+  </div>
+  <p class="section-desc">
+    全檔 ~30 處 <code>.innerHTML =</code>，目前都有經過 <code>html()</code> escape，OK。但有兩條後端內容直接寫進 DOM 的路徑要記得保持 server 端清過（index.html:4288, 4297）。
+  </p>
+  <div class="checklist">
+    <ul>
+      <li>✅ <code>html()</code> 已正確 escape <code>&amp;&lt;&gt;"'</code></li>
+      <li>✅ 所有使用者輸入（搜尋字串 / 股號）都經過 <code>html()</code></li>
+      <li>⚠️ <code>data.text_message</code> 直接寫進 DOM（line 4297）— 信任後端</li>
+      <li>⚠️ LINE bubble HTML 直接 render（line 4288）— 信任後端</li>
+      <li>📝 未來若 LINE bot 開放群組成員投稿內容，這兩條路徑必須改用 textContent 或先 sanitize</li>
+      <li>📝 拆檔後（C18）建議在 <code>js/dom.js</code> 提供統一的 <code>safeHTML()</code> wrapper</li>
+    </ul>
+  </div>
+</section>
+
+<div class="footer">
+  <p>C01–C20 全部 20 項。優先級建議：先做 <b>C01 / C02 / C04</b>（一行 CSS / 一個 filter 就修好的 bug），再做 <b>C05 / C10</b>（深色模式破版），其餘照影響面排程。</p>
+  <p style="margin-top:6px">產出時間：2026-05-14 ・ 對應 review 訊息：「整理 index.html 7368 行單檔的 20 項改善」</p>
+</div>
+
+</div><!-- container -->
+
+</body>
+</html>
