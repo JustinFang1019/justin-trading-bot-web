@@ -153,6 +153,7 @@ function applyTheme(theme = currentTheme) {
     const hint = currentTheme === "dark" ? "點一下切回淺色" : "適合收盤後長時間看 ETF 與小卡";
     btn.innerHTML = `<strong>夜</strong><strong>${label}</strong><span>${hint}</span>`;
   }
+  if (typeof selected !== "undefined" && selected && typeof drawChart === "function") drawChart();
 }
 
 applyTheme(currentTheme);
@@ -1000,9 +1001,16 @@ function goTopicHome() {
 }
 
 function updateBackButton() {
+  const btn = $("backButton");
+  const controls = btn.parentElement;
   const etfNested = Boolean(document.querySelector("#activeEtfView.active") && activeEtfLevel !== "ranking");
-  $("backButton").textContent = "上一層";
-  $("backButton").disabled = !etfNested && commandHistory.length <= 1 && !isScanEducationChildPage();
+  const canGoBack = etfNested || commandHistory.length > 1 || isScanEducationChildPage();
+  btn.textContent = "上一層";
+  btn.disabled = !canGoBack;
+  btn.hidden = !canGoBack;
+  if (controls) {
+    controls.style.gridTemplateColumns = canGoBack ? "minmax(0, 1fr) auto auto" : "minmax(0, 1fr) auto";
+  }
 }
 
 function queueLookup() {
@@ -1074,14 +1082,43 @@ function renderDetail() {
   drawChart();
 }
 
+function chartColors() {
+  const css = getComputedStyle(document.documentElement);
+  const v = (name, fallback) => (css.getPropertyValue(name).trim() || fallback);
+  return {
+    bg:        v("--surface",     "#ffffff"),
+    grid:      v("--line",        "#e5e7eb"),
+    muted:     v("--muted",       "#667085"),
+    blue:      v("--blue",        "#1d4ed8"),
+    purple:    v("--purple",      "#6d28d9"),
+    red:       v("--red",         "#b42318"),
+    redSoft:   v("--red-soft",    "#fee2e2"),
+    green:     v("--green",       "#047857"),
+    greenSoft: v("--green-soft",  "#dcfce7"),
+  };
+}
+
 function drawChart() {
   const canvas = $("chart");
   if (!canvas || !selected) return;
   const ctx = canvas.getContext("2d");
-  const w = canvas.width;
-  const h = canvas.height;
+  // DPR-aware buffer sizing
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || 720;
+  const cssH = canvas.clientHeight || 360;
+  const targetW = Math.round(cssW * dpr);
+  const targetH = Math.round(cssH * dpr);
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    canvas.width = targetW;
+    canvas.height = targetH;
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const w = cssW;
+  const h = cssH;
+
+  const c = chartColors();
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = c.bg;
   ctx.fillRect(0, 0, w, h);
 
   const rows = (kbarById.get(selected.id) || []).slice(-80).map(r => ({
@@ -1089,8 +1126,8 @@ function drawChart() {
   })).filter(r => r.high && r.low);
 
   if (!rows.length) {
-    ctx.fillStyle = "#667085";
-    ctx.font = "18px Microsoft JhengHei, Arial";
+    ctx.fillStyle = c.muted;
+    ctx.font = "16px Microsoft JhengHei, Arial";
     ctx.fillText("尚未取得 K 線快取", 32, 52);
     return;
   }
@@ -1101,7 +1138,7 @@ function drawChart() {
   const step = (w - 60) / rows.length;
   const bodyW = Math.max(3, Math.min(8, step * .48));
 
-  ctx.strokeStyle = "#e5e7eb";
+  ctx.strokeStyle = c.grid;
   for (let i = 0; i < 5; i++) {
     const y = 28 + i * ((h - 60) / 4);
     ctx.beginPath();
@@ -1110,7 +1147,7 @@ function drawChart() {
     ctx.stroke();
   }
 
-  [[selected.stop, "#b42318"], [selected.p1, "#1d4ed8"], [selected.p2, "#6d28d9"]].forEach(([value, color]) => {
+  [[selected.stop, c.red], [selected.p1, c.blue], [selected.p2, c.purple]].forEach(([value, color]) => {
     if (!value) return;
     const y = yOf(value);
     ctx.setLineDash([6, 5]);
@@ -1125,8 +1162,8 @@ function drawChart() {
   rows.forEach((r, i) => {
     const x = 32 + i * step;
     const up = r.close >= r.open;
-    ctx.strokeStyle = up ? "#b42318" : "#047857";
-    ctx.fillStyle = up ? "#fee2e2" : "#dcfce7";
+    ctx.strokeStyle = up ? c.red : c.green;
+    ctx.fillStyle = up ? c.redSoft : c.greenSoft;
     ctx.beginPath();
     ctx.moveTo(x, yOf(r.high));
     ctx.lineTo(x, yOf(r.low));
@@ -1137,10 +1174,12 @@ function drawChart() {
     ctx.strokeRect(x - bodyW / 2, top, bodyW, Math.max(3, bottom - top));
   });
 
-  ctx.fillStyle = "#475467";
-  ctx.font = "14px Microsoft JhengHei, Arial";
+  ctx.fillStyle = c.muted;
+  ctx.font = "13px Microsoft JhengHei, Arial";
   ctx.fillText(`${selected.id} ${selected.name} / bot Kbar cache`, 30, 20);
 }
+
+window.addEventListener("resize", () => { if (selected) drawChart(); });
 
 function renderWarrants() {
   if (!selected) return;
@@ -3461,19 +3500,50 @@ $("authButton").addEventListener("click", async () => {
 });
 $("backButton").addEventListener("click", goBack);
 $("homeButton").addEventListener("click", goTopicHome);
-$("menuButton").addEventListener("click", () => {
+function focusableInDrawer() {
+  return $("drawerOverlay").querySelectorAll(
+    'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+}
+function drawerKeydown(event) {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeDrawer();
+    return;
+  }
+  if (event.key === "Tab") {
+    const items = focusableInDrawer();
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+}
+function openDrawer() {
   $("drawerOverlay").classList.add("open");
   $("drawerOverlay").setAttribute("aria-hidden", "false");
-});
-$("drawerClose").addEventListener("click", () => {
-  $("drawerOverlay").classList.remove("open");
-  $("drawerOverlay").setAttribute("aria-hidden", "true");
-});
+  document.addEventListener("keydown", drawerKeydown);
+  const first = focusableInDrawer()[0];
+  if (first) first.focus();
+}
+function closeDrawer() {
+  const overlay = $("drawerOverlay");
+  if (!overlay.classList.contains("open")) return;
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+  document.removeEventListener("keydown", drawerKeydown);
+  $("menuButton").focus();
+}
+$("menuButton").addEventListener("click", openDrawer);
+$("drawerClose").addEventListener("click", closeDrawer);
 $("drawerOverlay").addEventListener("click", event => {
-  if (event.target === $("drawerOverlay")) {
-    $("drawerOverlay").classList.remove("open");
-    $("drawerOverlay").setAttribute("aria-hidden", "true");
-  }
+  if (event.target === $("drawerOverlay")) closeDrawer();
 });
 $("themeToggle")?.addEventListener("click", () => {
   applyTheme(currentTheme === "dark" ? "" : "dark");
@@ -3482,8 +3552,7 @@ $("themeToggle")?.addEventListener("click", () => {
 document.addEventListener("click", async event => {
   const menuView = event.target.closest("[data-menu-view]");
   if (menuView) {
-    $("drawerOverlay").classList.remove("open");
-    $("drawerOverlay").setAttribute("aria-hidden", "true");
+    closeDrawer();
     activate(menuView.dataset.menuView);
     if (menuView.dataset.menuView === "scanView") {
       $("searchInput").value = "";
@@ -3495,8 +3564,7 @@ document.addEventListener("click", async event => {
 
   const menuCommand = event.target.closest("[data-menu-command]");
   if (menuCommand) {
-    $("drawerOverlay").classList.remove("open");
-    $("drawerOverlay").setAttribute("aria-hidden", "true");
+    closeDrawer();
     $("searchInput").value = menuCommand.dataset.menuCommand;
     activate("scanView");
     await loadCommand(menuCommand.dataset.menuCommand);
