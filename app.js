@@ -1017,6 +1017,7 @@ function queueLookup() {
 }
 
 function activate(viewId, options = {}) {
+  document.body.dataset.view = viewId;
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === viewId));
   document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.view === viewId));
   document.querySelectorAll("[data-menu-view]").forEach(b => b.classList.toggle("active", b.dataset.menuView === viewId));
@@ -1321,16 +1322,28 @@ function upcomingSortKey(etf = {}) {
   return date;
 }
 
+function isUpcomingEtfStillUpcoming(etf) {
+  const today = new Date().toISOString().slice(0, 10);
+  const listing = String(etf?.listingDate || "");
+  // 只有當 listingDate 是完整 ISO 日期且 < 今日才算過期；
+  // 「待公告」/「2026-06 上旬」這類非完整日期一律保留。
+  return !/^\d{4}-\d{2}-\d{2}$/.test(listing) || listing >= today;
+}
+
+function activeUpcomingEtfs() {
+  return upcomingEtfs.filter(isUpcomingEtfStillUpcoming);
+}
+
 function visibleUpcomingEtfs() {
   const q = activeEtfSearch.trim().toLowerCase();
-  return [...upcomingEtfs]
+  return activeUpcomingEtfs()
     .filter(etf => !q || [etf.code, etf.name, etf.issuer, etf.market, etf.theme].some(value => String(value || "").toLowerCase().includes(q)))
     .sort((a, b) => upcomingSortKey(a).localeCompare(upcomingSortKey(b)));
 }
 
 function findUpcomingEtf(query) {
   const q = String(query || "").trim().toUpperCase();
-  return upcomingEtfs.find(etf => String(etf.code).toUpperCase() === q || String(etf.name || "").includes(query));
+  return activeUpcomingEtfs().find(etf => String(etf.code).toUpperCase() === q || String(etf.name || "").includes(query));
 }
 
 function daysUntilText(dateText) {
@@ -1354,11 +1367,12 @@ function humanDate(dateText) {
 
 function setUpcomingEntryVisible(visible) {
   const section = $("upcomingEtfSection");
-  if (section) section.style.display = visible ? "" : "none";
+  const upcoming = activeUpcomingEtfs();
+  if (section) section.style.display = visible && upcoming.length ? "" : "none";
   const badge = $("upcomingEtfBadge");
-  if (badge) badge.textContent = `${upcomingEtfs.length} 檔`;
+  if (badge) badge.textContent = `${upcoming.length} 檔`;
   const lead = $("upcomingEtfLead");
-  const next = [...upcomingEtfs].sort((a, b) => upcomingSortKey(a).localeCompare(upcomingSortKey(b)))[0];
+  const next = [...upcoming].sort((a, b) => upcomingSortKey(a).localeCompare(upcomingSortKey(b)))[0];
   if (lead && next) lead.textContent = `最近 ${next.code} ${daysUntilText(upcomingSortKey(next))}`;
 }
 
@@ -1423,7 +1437,7 @@ function renderUpcomingEtfListPage() {
   setPageHeader("ETF 研究", "即將上市 ETF");
   $("activeEtfTitle").textContent = "即將上市 ETF";
   $("activeEtfSub").textContent = "預購是先登記，募集是正式申購期間。點 ETF 可看完整資料。";
-  $("activeEtfBadge").textContent = `${rows.length}/${upcomingEtfs.length} 檔`;
+  $("activeEtfBadge").textContent = `${rows.length}/${activeUpcomingEtfs().length} 檔`;
   $("activeEtfList").innerHTML = `
     <div class="upcoming-note">這裡只列未上市或即將掛牌 ETF；已上市 ETF 排名請回上一層。</div>
     <div class="upcoming-etf-list">${rows.length ? upcomingRowsHtml(rows) : `<div class="message">目前沒有符合搜尋的即將上市 ETF。</div>`}</div>

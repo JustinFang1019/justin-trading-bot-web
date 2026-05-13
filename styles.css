@@ -65,10 +65,23 @@ body {
 [data-theme="dark"] .source-card,
 [data-theme="dark"] .etf-feature-card,
 [data-theme="dark"] .upcoming-entry,
+[data-theme="dark"] .upcoming-detail-card,
 [data-theme="dark"] .bottom-nav,
 [data-theme="dark"] .drawer,
 [data-theme="dark"] .menu-btn,
-[data-theme="dark"] .status-pill {
+[data-theme="dark"] .home-btn,
+[data-theme="dark"] .status-pill,
+[data-theme="dark"] .etf-sort-row button,
+[data-theme="dark"] .rotation-card,
+[data-theme="dark"] .calendar-nav button,
+[data-theme="dark"] .calendar-event,
+[data-theme="dark"] .calendar-upcoming,
+[data-theme="dark"] .tool-controls,
+[data-theme="dark"] .filter-chip,
+[data-theme="dark"] .period-chips button,
+[data-theme="dark"] .source-actions button,
+[data-theme="dark"] .loading-actions button,
+[data-theme="dark"] .copy-command {
   background: var(--surface);
   border-color: var(--line);
   color: var(--ink);
@@ -294,13 +307,18 @@ h1 {
 }
 
 .filters {
-  display: none;
+  display: flex;
   gap: 8px;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 2px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+}
+
+/* 篩選 chip 只在「個股查詢」顯示，其它 view 隱藏 */
+body:not([data-view="scanView"]) .toolbar > .filters {
+  display: none;
 }
 
 .filters::-webkit-scrollbar {
