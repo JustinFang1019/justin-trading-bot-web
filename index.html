@@ -1363,6 +1363,74 @@
     .tone-amber { background: var(--amber-soft); color: var(--amber); }
     .tone-purple { background: var(--purple-soft); color: var(--purple); }
 
+    .rotation-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+      padding: 11px;
+    }
+
+    .rotation-head {
+      align-items: flex-start;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .rotation-head h3 {
+      font-size: 16px;
+      line-height: 1.25;
+      margin: 0;
+    }
+
+    .rotation-phase {
+      border-radius: 999px;
+      flex: 0 0 auto;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 5px 9px;
+      white-space: nowrap;
+    }
+
+    .rotation-evidence {
+      color: var(--muted);
+      display: grid;
+      font-size: 12px;
+      gap: 4px;
+      line-height: 1.45;
+    }
+
+    .rotation-metrics {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .rotation-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .rotation-chip {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 5px 8px;
+      white-space: nowrap;
+    }
+
+    .rotation-chip.stock {
+      background: #fff;
+      color: var(--muted);
+    }
+
     .etf-spark {
       align-items: flex-end;
       display: flex;
@@ -6002,13 +6070,63 @@
           const data = payload.data || {};
           const rows = data.rows || [];
           $("activeEtfBadge").textContent = `${rows.length} 題材`;
+          const usefulRows = rows.filter(row => !/分散|其他/.test(String(row.theme || "")));
+          const noiseRows = rows.filter(row => /分散|其他/.test(String(row.theme || "")));
+          const orderedRows = [...usefulRows, ...noiseRows].slice(0, 12);
+          const classifyTheme = row => {
+            const avg = num(row.avg_change);
+            const flow = num(row.flow_billion);
+            const asset = num(row.asset_delta_billion);
+            const score = num(row.score);
+            const noisy = /分散|其他/.test(String(row.theme || ""));
+            if (noisy) return { label: "雜訊", tone: "amber", why: "分類太分散，先做背景參考" };
+            if (avg > 0 && (flow > 0 || asset > 0 || score >= 9)) return { label: "領先", tone: "green", why: "漲幅與資金/規模同向" };
+            if (avg > 0 || score >= 8) return { label: "轉強", tone: "blue", why: "價格或分數先轉強，等待資金確認" };
+            if (avg < 0 && (flow < 0 || asset < 0 || score < 3)) return { label: "退潮", tone: "red", why: "漲幅與資金/規模偏弱" };
+            return { label: "觀察", tone: "purple", why: "方向尚未一致" };
+          };
+          const phaseCounts = orderedRows.reduce((acc, row) => {
+            const phase = classifyTheme(row).label;
+            acc[phase] = (acc[phase] || 0) + 1;
+            return acc;
+          }, {});
+          const topTheme = orderedRows.find(row => classifyTheme(row).label !== "雜訊") || orderedRows[0] || {};
+          const renderRotationChip = (item, type) => {
+            const code = String(item.code || item.stock_id || "").trim();
+            const name = item.name || item.stock_name || "";
+            const attr = type === "etf" ? "data-etf-code" : "data-etf-stock";
+            return `<span class="rotation-chip ${type === "stock" ? "stock" : ""}" ${code ? `${attr}="${html(code)}"` : ""}>${html(`${code} ${name}`.trim())}</span>`;
+          };
           $("activeEtfList").innerHTML = `
             ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
-            <div class="mini-pills"><div class="mini-pill tone-blue"><small>主題池</small><strong>${html((data.themes || []).slice(0, 3).join(" / "))}</strong></div><div class="mini-pill tone-green"><small>資料來源</small><strong>ETF 持股 + 排名</strong></div></div>
-            ${rows.map((row, index) => {
-              const etfs = (row.representative_etfs || []).map(item => item.code).filter(Boolean).slice(0, 5).join(" / ");
-              const holdings = (row.representative_holdings || []).map(item => `${item.stock_id || ""} ${item.stock_name || ""}`.trim()).filter(Boolean).slice(0, 4).join("、");
-              return `<div class="status-row"><strong><span class="rank">#${index + 1}</span> ${html(row.theme)} <span class="${num(row.score) >= 0 ? "up" : "dn"}">${html(row.signal || "")}</span></strong><div class="meta"><span>分數 ${html(row.score ?? "-")}</span><span>平均 ${fmtSignedPct(row.avg_change)}</span><span>資金 ${fmtBillionSigned(row.flow_billion)}</span><span>規模 ${fmtBillionSigned(row.asset_delta_billion)}</span><span>${html(row.etf_count)} 檔 ETF</span></div><div class="meta"><span>ETF：${html(etfs || "待資料")}</span><span>成分：${html(holdings || "待資料")}</span></div></div>`;
+            <div class="mini-pills">
+              <div class="mini-pill tone-blue"><small>目前主線</small><strong>${html(topTheme.theme || "待資料")}</strong></div>
+              <div class="mini-pill tone-green"><small>領先 / 轉強</small><strong>${(phaseCounts["領先"] || 0) + (phaseCounts["轉強"] || 0)} 組</strong></div>
+              <div class="mini-pill tone-amber"><small>讀法</small><strong>價格 + 資金 + 代表股</strong></div>
+            </div>
+            <div class="message">輪動雷達改用「領先、轉強、退潮、觀察」判讀；第一版依 ETF 持股、ETF 漲跌與資金/規模快照估算，資金欄位為 0 時代表來源尚未補齊或當期無明顯變化。</div>
+            ${orderedRows.map((row, index) => {
+              const phase = classifyTheme(row);
+              const etfs = (row.representative_etfs || []).filter(item => item.code).slice(0, 4);
+              const holdings = (row.representative_holdings || []).filter(item => item.stock_id || item.stock_name).slice(0, 5);
+              return `<div class="rotation-card">
+                <div class="rotation-head">
+                  <h3><span class="rank">#${index + 1}</span> ${html(row.theme)}</h3>
+                  <span class="rotation-phase tone-${phase.tone}">${html(phase.label)}</span>
+                </div>
+                <div class="rotation-metrics">
+                  <div class="mini-pill tone-purple"><small>相對分數</small><strong>${html(row.score ?? "-")}</strong></div>
+                  <div class="mini-pill tone-blue"><small>平均漲跌</small><strong>${fmtSignedPct(row.avg_change)}</strong></div>
+                  <div class="mini-pill tone-green"><small>ETF 數</small><strong>${html(row.etf_count || 0)} 檔</strong></div>
+                </div>
+                <div class="rotation-evidence">
+                  <span>${html(phase.why)}；資金 ${fmtBillionSigned(row.flow_billion)}，規模 ${fmtBillionSigned(row.asset_delta_billion)}。</span>
+                  <span>代表 ETF</span>
+                </div>
+                <div class="rotation-chip-row">${etfs.map(item => renderRotationChip(item, "etf")).join("") || `<span class="rotation-chip">待資料</span>`}</div>
+                <div class="rotation-evidence"><span>代表成分股</span></div>
+                <div class="rotation-chip-row">${holdings.map(item => renderRotationChip(item, "stock")).join("") || `<span class="rotation-chip stock">待資料</span>`}</div>
+              </div>`;
             }).join("") || `<div class="message">目前沒有足夠資料建立主題。</div>`}
           `;
         } catch (error) {
