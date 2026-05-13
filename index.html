@@ -4783,6 +4783,14 @@
       return `${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 億`;
     }
 
+    function fmtMoneyFlow(value, fallback = "金額待資料") {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return fallback;
+      const sign = n > 0 ? "+" : "";
+      if (Math.abs(n) >= 0.1) return `${sign}${n.toLocaleString("zh-TW", { maximumFractionDigits: 1 })} 億`;
+      return `${sign}${(n * 10000).toLocaleString("zh-TW", { maximumFractionDigits: 0 })} 萬`;
+    }
+
     function etfDecisionMetrics(etf = {}) {
       return {
         flow5d: firstValue(etf.net_purchase_5d_text, etf.net_purchase_5d_billion != null ? fmtBillionSigned(etf.net_purchase_5d_billion) : "", etf.net_purchase_today_text, etf.net_flow_5d_text, etf.net_flow_5d, etf.net_flow_5d_billion != null ? fmtBillionSigned(etf.net_flow_5d_billion) : "", "未取得"),
@@ -5730,8 +5738,8 @@
             <div class="section-title">三大法人逐日 <span>TWSE T86 官方日報</span></div>
             ${instRows.map(row => `<div class="status-row"><strong>${html(row.data_date)} ${html(row.stock_id)} ${html(row.stock_name || "")}</strong><div class="meta"><span>外資 ${(row.foreign_net / 1000).toLocaleString("zh-TW")} 張</span><span>投信 ${(row.investment_trust_net / 1000).toLocaleString("zh-TW")} 張</span><span>自營 ${(row.dealer_net / 1000).toLocaleString("zh-TW")} 張</span><span>合計 ${(row.total_net / 1000).toLocaleString("zh-TW")} 張</span></div></div>`).join("") || `<div class="message">TWSE T86 暫時沒有 ${html(institutionalStockId)} 的逐日資料。</div>`}
             <div class="section-title">ETF 佐證 <span>來自持股快照與前次比較</span></div>
-            ${rows.map(row => `<div class="status-row"><strong>${html(row.code)} ${html(row.name || "")}</strong><div class="meta"><span>${row.is_new ? "新進" : row.is_removed ? "移除" : "變動"}</span><span>權重 ${fmtSignedPct(row.weight_delta)}</span><span>${row.share_delta ? `${Number(row.share_delta).toLocaleString("zh-TW")} 股` : "股數待資料"}</span><span>${row.share_delta_billion == null ? "金額待資料" : fmtBillionSigned(row.share_delta_billion)}</span></div></div>`).join("") || `<div class="message">目前 ETF 快照沒有 ${html(institutionalStockId)} 的加減碼資料。</div>`}
-            <div class="suggestions"><button data-etf-tool="stockFlow" type="button">看完整 ETF 加減碼</button></div>
+            ${rows.map(row => `<div class="status-row"><strong>${html(row.code)} ${html(row.name || "")}</strong><div class="meta"><span>${row.is_new ? "新進" : row.is_removed ? "移除" : "變動"}</span><span>權重 ${fmtSignedPct(row.weight_delta)}</span><span>${row.share_delta ? fmtShareUnit(row.share_delta, row, true) : "張數待資料"}</span><span>${fmtMoneyFlow(row.share_delta_billion)}</span></div></div>`).join("") || `<div class="message">目前 ETF 快照沒有 ${html(institutionalStockId)} 的加減碼資料。</div>`}
+            <div class="suggestions"><button data-etf-tool="stockFlow" data-stock-flow-id="${html(institutionalStockId)}" type="button">看完整 ETF 加減碼</button></div>
           `;
         } catch (error) {
           if (requestSeq !== etfToolRequestSeq) return;
@@ -5747,7 +5755,7 @@
         <div class="mini-pills"><div class="mini-pill tone-blue"><small>技術分數</small><strong>${stock ? `${html(stock.score)} 分` : "待查"}</strong></div><div class="mini-pill tone-green"><small>ETF 持有</small><strong>可點下方查詢</strong></div><div class="mini-pill tone-amber"><small>法人 API</small><strong>待接入</strong></div></div>
         <div class="section-title">下一步資料源 <span>三大法人佐證欄位</span></div>
         <div class="status-row"><strong>外資 / 投信 / 自營商</strong><div class="meta"><span>買賣超張數</span><span>連買連賣天數</span><span>與 ETF 加減碼同向確認</span></div></div>
-        <div class="suggestions"><button data-etf-tool="stockFlow" type="button">看 ETF 誰加碼 ${html(institutionalStockId)}</button></div>
+        <div class="suggestions"><button data-etf-tool="stockFlow" data-stock-flow-id="${html(institutionalStockId)}" type="button">看 ETF 誰加碼 ${html(institutionalStockId)}</button></div>
       `;
     }
 
@@ -6092,9 +6100,10 @@
           const isInc = shareDelta > 0 || isNew;
           const deltaMain = Number.isFinite(shareDelta) ? fmtShareUnit(shareDelta, row, true) : "張數待資料";
           const deltaSub = `權重 ${fmtSignedPct(row.weight_delta)}`;
+          const moneyText = fmtMoneyFlow(row.share_delta_billion);
           return `<div class="stock-flow-row ${isInc ? "inc" : "dec"}" data-etf-code="${html(row.code)}">
             <div class="info"><strong>${html(row.code)} ${html(row.name || "")}</strong><small>${html(row.category || "")}・${html(row.issuer || "")}${isNew ? `・<span class="new-tag">新進</span>` : ""}</small></div>
-            <div class="delta ${isInc ? "pos" : "neg"}">${html(deltaMain)}<small>${html(deltaSub)}</small></div>
+            <div class="delta ${isInc ? "pos" : "neg"}">${html(deltaMain)}<small>${html(deltaSub)}</small><small>${html(moneyText)}</small></div>
           </div>`;
         };
         $("activeEtfBadge").textContent = data.stock_id || stockId;
@@ -6534,6 +6543,9 @@
 
       const etfTool = event.target.closest("[data-etf-tool]");
       if (etfTool) {
+        if (etfTool.dataset.etfTool === "stockFlow" && etfTool.dataset.stockFlowId) {
+          etfStockFlowId = normalizeStockFlowId(etfTool.dataset.stockFlowId) || etfStockFlowId;
+        }
         await renderEtfToolPage(etfTool.dataset.etfTool);
         return;
       }
