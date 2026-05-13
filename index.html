@@ -4726,6 +4726,37 @@
       return String(value || fallback);
     }
 
+    function formatDividendFrequency(value, fallback = "—") {
+      const raw = String(value || "").trim();
+      if (!raw) return fallback;
+      const key = raw.toLowerCase().replace(/[_\s]+/g, "-");
+      const map = {
+        monthly: "月配",
+        month: "月配",
+        "每月": "月配",
+        quarterly: "季配",
+        quarter: "季配",
+        "semi-annual": "半年配",
+        semiannual: "半年配",
+        "semi-annually": "半年配",
+        "half-yearly": "半年配",
+        annual: "年配",
+        annually: "年配",
+        yearly: "年配",
+        none: "不配息",
+        no: "不配息",
+        "no-dividend": "不配息",
+        irregular: "不定期",
+      };
+      if (map[key]) return map[key];
+      if (/月/.test(raw)) return "月配";
+      if (/季/.test(raw)) return "季配";
+      if (/半|半年|semi/i.test(raw)) return "半年配";
+      if (/年/.test(raw)) return "年配";
+      if (/不|無|none|no/i.test(raw)) return "不配息";
+      return raw;
+    }
+
     function fmtBillionSigned(value, fallback = "待資料") {
       const n = Number(value);
       if (!Number.isFinite(n)) return String(value || fallback);
@@ -5403,7 +5434,7 @@
             const type = dividendCategoryClass(item);
             return `<div class="cal-list-item" data-etf-code="${html(item.code)}">
               <div class="date">${html(String(item.ex_date || "").slice(5) || "-")}</div>
-              <div><strong><i class="cal-dot ${type}"></i>${html(item.code || "")} ${html(item.name || "")}</strong><small>發放 ${html(item.payment_date || "-")}・${html(item.dividend_frequency || "配息")}</small></div>
+              <div><strong><i class="cal-dot ${type}"></i>${html(item.code || "")} ${html(item.name || "")}</strong><small>發放 ${html(item.payment_date || "-")}・${html(formatDividendFrequency(item.dividend_frequency, "配息"))}</small></div>
               <div class="amount">${html(item.amount_text || "-")}</div>
             </div>`;
           }).join("") || `<div class="message">目前沒有未來配息事件。</div>`}
@@ -5478,7 +5509,7 @@
         if (row.yield_12m == null && Number(s.minYield || 0) > 0) return false;
         if (row.expense_ratio != null && Number(row.expense_ratio) > Number(s.maxExpense || 99)) return false;
         if (row.expense_ratio == null && s.completeOnly) return false;
-        if (s.freq?.length && row.dividend_frequency && !s.freq.includes(row.dividend_frequency)) return false;
+        if (s.freq?.length && row.dividend_frequency && !s.freq.includes(formatDividendFrequency(row.dividend_frequency))) return false;
         if (s.freq?.length && !row.dividend_frequency && s.completeOnly) return false;
         return true;
       }).slice(0, 40);
@@ -5926,7 +5957,7 @@
             <div class="label">規模</div>${rows.map(row => `<div class="${winClass(winners, "asset_size_billion", row.asset_size_billion)}">${fmtBillion(row.asset_size_billion)}</div>`).join("")}
             <div class="label">費率</div>${rows.map(row => `<div class="${winClass(winners, "expense_ratio", row.expense_ratio)}">${html(metric(row).expense)}</div>`).join("")}
             <div class="label">近12月殖利率</div>${rows.map(row => `<div class="${winClass(winners, "yield_12m", row.yield_12m)}">${html(metric(row).yield12m)}</div>`).join("")}
-            <div class="label">配息頻率</div>${rows.map(row => `<div>${html(row.dividend_frequency || "—")}</div>`).join("")}
+            <div class="label">配息頻率</div>${rows.map(row => `<div>${html(formatDividendFrequency(row.dividend_frequency))}</div>`).join("")}
             <div class="label">折溢價</div>${rows.map(row => `<div class="${winClass(winners, "nav_premium", row.nav_premium)}">${html(metric(row).premium)}</div>`).join("")}
             <div class="label">近5日淨流入</div>${rows.map(row => `<div class="${winClass(winners, "net_purchase_5d_billion", row.net_purchase_5d_billion)}">${html(metric(row).flow5d)}</div>`).join("")}
             <div class="label">受益人</div>${rows.map(row => `<div class="${winClass(winners, "holders", row.holders)}">${fmtHolders(row.holders)}</div>`).join("")}
