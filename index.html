@@ -6,7 +6,7 @@
   <title>Justin Trading Bot Web</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-view="scanView">
   <main class="app">
     <header class="topbar">
       <button class="menu-btn" id="menuButton" type="button" aria-label="功能選單">≡</button>
@@ -35,14 +35,14 @@
         <button class="back-btn" id="backButton" type="button" disabled>上一層</button>
       </div>
       <label class="search" id="topSearchWrap" aria-label="搜尋股票">
-        <input id="searchInput" placeholder="輸入說明小卡指令，例如 2330 / 即時 2330">
+        <input id="searchInput" placeholder="輸入代號或指令，例：2330">
       </label>
       <div class="filters">
-        <button class="active" data-filter="all">全部</button>
-        <button data-filter="START">START</button>
-        <button data-filter="CONT">CONT</button>
-        <button data-filter="rs90">RS 90+</button>
-        <button data-filter="repeat">連續</button>
+        <button class="active" data-filter="all" title="所有掃描結果">全部</button>
+        <button data-filter="START" title="首次出現的策略訊號">首次</button>
+        <button data-filter="CONT" title="連續中的策略訊號">進行中</button>
+        <button data-filter="rs90" title="相對強弱 RS 排名 90 以上">RS 90+</button>
+        <button data-filter="repeat" title="連續多日發出訊號">連續</button>
       </div>
     </div>
 
@@ -187,14 +187,14 @@
                   <span>中文轉篩選</span>
                 </button>
               </div>
-              <div class="etf-reserved-grid" aria-label="保留功能">
+              <div class="etf-reserved-grid" aria-label="即將推出">
                 <button class="etf-feature-card reserved" type="button" disabled>
                   <strong>自選 + 推播</strong>
-                  <span>B01 保留</span>
+                  <span>即將推出</span>
                 </button>
                 <button class="etf-feature-card reserved" type="button" disabled>
                   <strong>自選分組</strong>
-                  <span>B09 保留</span>
+                  <span>即將推出</span>
                 </button>
                 <button class="etf-feature-card" id="sourceAdminTool" data-etf-tool="sourceAdmin" type="button" hidden>
                   <strong>來源狀態</strong>
