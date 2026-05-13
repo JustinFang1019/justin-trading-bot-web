@@ -2581,6 +2581,15 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .etf-feature-groups,
+      .etf-decision-grid,
+      .etf-monitor-grid,
+      .etf-reserved-grid {
+        max-width: 100%;
+        min-width: 0;
+        width: 100%;
+      }
+
       .etf-reserved-grid {
         display: grid;
       }
@@ -2716,7 +2725,7 @@
       .etf-monitor-grid,
       .etf-reserved-grid {
         gap: 8px;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, calc((100% - 8px) / 2)));
       }
 
       .etf-feature-card {
