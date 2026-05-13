@@ -2835,6 +2835,68 @@
       text-align: center;
     }
 
+    .loading-panel {
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      padding: 18px 12px;
+      text-align: center;
+    }
+
+    .loading-spinner {
+      animation: spin .9s linear infinite;
+      border: 3px solid #dbe7f6;
+      border-top-color: var(--blue);
+      border-radius: 999px;
+      height: 28px;
+      width: 28px;
+    }
+
+    .loading-panel strong {
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .loading-panel p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .loading-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .loading-actions button {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--blue);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 7px 10px;
+    }
+
+    .loading-actions button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .suggestions {
       display: flex;
       flex-wrap: wrap;
@@ -3306,6 +3368,8 @@
     let naturalQueryText = "找殖利率大於5%、費率低於0.8%、折溢價小於1%的 ETF";
     let institutionalStockId = "2330";
     let etfToolRequestSeq = 0;
+    let activeEtfRequestSeq = 0;
+    let etfLoadingTimer = null;
     let etfFilterSettings = {
       preset: "highDividend",
       query: "",
@@ -4918,6 +4982,9 @@
     }
 
     function renderActiveEtfRanking() {
+      activeEtfRequestSeq += 1;
+      etfToolRequestSeq += 1;
+      stopEtfLoading();
       activeEtfLevel = "ranking";
       selectedEtf = null;
       selectedUpcomingEtfCode = "";
@@ -4985,6 +5052,7 @@
     }
 
     function renderActiveEtfDetail() {
+      stopEtfLoading();
       if (!selectedEtf) {
         renderActiveEtfRanking();
         return;
@@ -5071,6 +5139,7 @@
     }
 
     function renderEtfOverlap(data = {}) {
+      stopEtfLoading();
       activeEtfLevel = "overlap";
       setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
@@ -5104,7 +5173,42 @@
     }
 
     function etfToolError(error) {
+      stopEtfLoading();
       return `<div class="message">API 讀取失敗：${html(error.message || error)}</div>`;
+    }
+
+    function stopEtfLoading() {
+      if (etfLoadingTimer) clearInterval(etfLoadingTimer);
+      etfLoadingTimer = null;
+    }
+
+    function setEtfLoading(text, detail = "正在連線到資料來源，完成後會自動更新畫面。") {
+      stopEtfLoading();
+      const startedAt = Date.now();
+      $("activeEtfList").innerHTML = `
+        <div class="loading-panel">
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <strong>${html(text)}</strong>
+          <p id="etfLoadingDetail">${html(detail)}</p>
+          <p id="etfLoadingElapsed">已等待 0 秒</p>
+          <div class="loading-actions">
+            <button class="primary" data-retry-active-etf type="button">重新整理</button>
+            <button data-etf-home type="button">回 ETF 首頁</button>
+          </div>
+        </div>
+      `;
+      etfLoadingTimer = setInterval(() => {
+        const elapsed = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+        const elapsedEl = $("etfLoadingElapsed");
+        const detailEl = $("etfLoadingDetail");
+        if (!elapsedEl || !detailEl) {
+          stopEtfLoading();
+          return;
+        }
+        elapsedEl.textContent = `已等待 ${elapsed} 秒`;
+        if (elapsed >= 12) detailEl.textContent = "資料來源回應較慢，可以先按重新整理，或回 ETF 首頁再進來。";
+        else if (elapsed >= 6) detailEl.textContent = "還在等待 API 回應，通常是官網/盤中報價來源比較慢。";
+      }, 1000);
     }
 
     function setEtfToolShell(title, sub, badge, loadingText = "正在讀取 ETF API...") {
@@ -5112,7 +5216,24 @@
       $("activeEtfTitle").textContent = title;
       $("activeEtfSub").textContent = sub;
       $("activeEtfBadge").textContent = badge;
-      $("activeEtfList").innerHTML = `<div class="message">${html(loadingText)}</div>`;
+      setEtfLoading(loadingText);
+    }
+
+    async function retryActiveEtfView() {
+      const level = String(activeEtfLevel || "");
+      if (level.startsWith("tool:")) {
+        await renderEtfToolPage(level.replace(/^tool:/, ""), { skipRouteSave: true });
+        return;
+      }
+      if (level === "detail" && selectedEtf?.code) {
+        await loadActiveEtfDetail(selectedEtf.code, { skipRouteSave: true });
+        return;
+      }
+      if (level === "overlap" && activeEtfOverlapParentCode) {
+        await loadEtfOverlap(activeEtfOverlapParentCode);
+        return;
+      }
+      await loadActiveEtfs({ skipRouteSave: true });
     }
 
     function etfRowHtml(row = {}, rightText = "") {
@@ -5584,6 +5705,7 @@
     }
 
     async function renderEtfToolPage(tool, options = {}) {
+      activeEtfRequestSeq += 1;
       activeEtfLevel = `tool:${tool}`;
       selectedEtf = null;
       selectedUpcomingEtfCode = "";
@@ -6260,10 +6382,12 @@
     }
 
     async function loadActiveEtfs(options = {}) {
+      const requestSeq = ++activeEtfRequestSeq;
       setUpcomingEntryVisible(true);
-      $("activeEtfList").innerHTML = `<div class="message">正在讀取 ETF 快照...</div>`;
+      setEtfLoading("正在讀取 ETF 快照...", "正在取得 ETF 清單、排序與指標快取。");
       try {
         const payload = await getJson(`${API_BASE}/etfs`);
+        if (requestSeq !== activeEtfRequestSeq) return;
         activeEtfPayload = payload.data || {};
         activeEtfs = activeEtfPayload.etfs || [];
         setCompareCodes(activeEtfPayload.default_compare_codes || etfCompareCodes);
@@ -6274,6 +6398,7 @@
         if (!options.skipRouteSave) saveAppRoute({ view: "activeEtfView", level: "ranking" });
         updateBackButton();
       } catch (error) {
+        if (requestSeq !== activeEtfRequestSeq) return;
         $("activeEtfBadge").textContent = "失敗";
         $("activeEtfList").innerHTML = `<div class="message">無法讀取 ETF：${html(error.message)}</div>`;
         setUpcomingEntryVisible(true);
@@ -6281,13 +6406,15 @@
     }
 
     async function loadActiveEtfDetail(code, options = {}) {
+      const requestSeq = ++activeEtfRequestSeq;
       const etf = activeEtfs.find(item => item.code === code);
       setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
-      $("activeEtfList").innerHTML = `<div class="message">正在讀取 ${html(code)} 持股變化...</div>`;
+      setEtfLoading(`正在讀取 ${code} 持股變化...`, "正在取得 ETF 持股、官網資料與前次快照。");
       try {
         const payload = await getJson(`${API_BASE}/etfs/${encodeURIComponent(code)}`);
+        if (requestSeq !== activeEtfRequestSeq) return;
         selectedEtf = { ...(payload.data || {}), ranking: payload.data?.ranking || etf };
         selectedUpcomingEtfCode = "";
         const rank = selectedEtf.ranking || {};
@@ -6297,22 +6424,26 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
         updateBackButton();
       } catch (error) {
+        if (requestSeq !== activeEtfRequestSeq) return;
         $("activeEtfList").innerHTML = `<div class="message">無法讀取 ${html(code)}：${html(error.message)}</div>`;
       }
     }
 
     async function loadEtfOverlap(stockId, stockName = "") {
+      const requestSeq = ++activeEtfRequestSeq;
       activeEtfOverlapParent = activeEtfLevel;
       activeEtfOverlapParentCode = activeEtfLevel === "upcoming" ? selectedUpcomingEtfCode : (selectedEtf?.code || "");
       setActiveEtfNestedChrome(true);
       setUpcomingEntryVisible(false);
       setEtfTypeTabsVisible(false);
-      $("activeEtfList").innerHTML = `<div class="message">正在查詢 ${html(stockId)} 被哪些 ETF 持有...</div>`;
+      setEtfLoading(`正在查詢 ${stockId} 被哪些 ETF 持有...`, "正在掃描已快取 ETF 持股資料。");
       try {
         const payload = await getJson(`${API_BASE}/etfs/stock/${encodeURIComponent(stockId)}`);
+        if (requestSeq !== activeEtfRequestSeq) return;
         renderEtfOverlap({ ...(payload.data || {}), stock_name: payload.data?.stock_name || stockName });
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
+        if (requestSeq !== activeEtfRequestSeq) return;
         $("activeEtfList").innerHTML = `<div class="message">無法查詢共同持有 ETF：${html(error.message)}</div>`;
       }
     }
@@ -6562,6 +6693,18 @@
         $("searchInput").value = menuCommand.dataset.menuCommand;
         activate("scanView");
         await loadCommand(menuCommand.dataset.menuCommand);
+        return;
+      }
+
+      if (event.target.closest("[data-retry-active-etf]")) {
+        await retryActiveEtfView();
+        return;
+      }
+
+      if (event.target.closest("[data-etf-home]")) {
+        activeEtfLevel = "ranking";
+        selectedEtf = null;
+        renderActiveEtfRanking();
         return;
       }
 
