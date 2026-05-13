@@ -132,15 +132,11 @@
                   <span>張數與最大風險</span>
                 </button>
               </div>
-              <div class="etf-tool-section-label">查詢與監控</div>
+              <div class="etf-tool-section-label">市場 ・ 籌碼</div>
               <div class="etf-monitor-grid">
                 <button class="etf-feature-card" data-etf-tool="marketDashboard" type="button">
                   <strong><span class="etf-tool-emoji">🌡️</span>大盤儀表板</strong>
                   <span>情緒與 Top 5</span>
-                </button>
-                <button class="etf-feature-card" data-etf-tool="hitRate" type="button" hidden>
-                  <strong><span class="etf-tool-emoji">🎯</span>策略勝率</strong>
-                  <span>30 日觀察</span>
                 </button>
                 <button class="etf-feature-card" data-etf-tool="flow" type="button">
                   <strong><span class="etf-tool-emoji">💰</span>資金流</strong>
@@ -154,6 +150,13 @@
                   <strong><span class="etf-tool-emoji">🧬</span>持股重疊</strong>
                   <span>熱力圖</span>
                 </button>
+                <button class="etf-feature-card" data-etf-tool="hitRate" type="button" hidden>
+                  <strong><span class="etf-tool-emoji">🎯</span>策略勝率</strong>
+                  <span>30 日觀察</span>
+                </button>
+              </div>
+              <div class="etf-tool-section-label">配息 ・ 趨勢</div>
+              <div class="etf-monitor-grid">
                 <button class="etf-feature-card" data-etf-tool="calendar" type="button">
                   <strong><span class="etf-tool-emoji">🗓️</span>配息日曆</strong>
                   <span>30 天除息</span>
@@ -170,23 +173,28 @@
                   <strong><span class="etf-tool-emoji">📊</span>14 日趨勢</strong>
                   <span>權重變化</span>
                 </button>
-                <button class="etf-feature-card" data-etf-tool="rebalanceRadar" type="button">
-                  <strong><span class="etf-tool-emoji">📡</span>季調雷達</strong>
-                  <span>預測納入/剔除</span>
-                </button>
-                <button class="etf-feature-card" data-etf-tool="themeRadar" type="button">
-                  <strong><span class="etf-tool-emoji">🧭</span>主題輪動</strong>
-                  <span>資金與題材</span>
-                </button>
-                <button class="etf-feature-card" data-etf-tool="shareCard" type="button" hidden>
-                  <strong><span class="etf-tool-emoji">🖼️</span>卡片分享</strong>
-                  <span>預覽與 LINE 分享</span>
-                </button>
-                <button class="etf-feature-card" data-etf-tool="naturalQuery" type="button">
-                  <strong><span class="etf-tool-emoji">💬</span>自然語言</strong>
-                  <span>中文轉篩選</span>
-                </button>
               </div>
+              <details class="etf-tool-more">
+                <summary>進階工具</summary>
+                <div class="etf-monitor-grid">
+                  <button class="etf-feature-card" data-etf-tool="rebalanceRadar" type="button">
+                    <strong><span class="etf-tool-emoji">📡</span>季調雷達</strong>
+                    <span>預測納入/剔除</span>
+                  </button>
+                  <button class="etf-feature-card" data-etf-tool="themeRadar" type="button">
+                    <strong><span class="etf-tool-emoji">🧭</span>主題輪動</strong>
+                    <span>資金與題材</span>
+                  </button>
+                  <button class="etf-feature-card" data-etf-tool="naturalQuery" type="button">
+                    <strong><span class="etf-tool-emoji">💬</span>自然語言</strong>
+                    <span>中文轉篩選</span>
+                  </button>
+                  <button class="etf-feature-card" data-etf-tool="shareCard" type="button" hidden>
+                    <strong><span class="etf-tool-emoji">🖼️</span>卡片分享</strong>
+                    <span>預覽與 LINE 分享</span>
+                  </button>
+                </div>
+              </details>
               <div class="etf-reserved-grid" aria-label="即將推出">
                 <button class="etf-feature-card reserved" type="button" disabled>
                   <strong>自選 + 推播</strong>
