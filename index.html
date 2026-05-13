@@ -2466,15 +2466,25 @@
 
       .filters,
       .etf-sort-row {
-        flex-wrap: wrap;
-        overflow-x: visible;
+        flex-wrap: nowrap;
+        margin-left: -1px;
+        margin-right: -1px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .filters::-webkit-scrollbar,
+      .etf-sort-row::-webkit-scrollbar {
+        display: none;
       }
 
       .etf-type-tabs button,
       .etf-detail-tabs button,
       .etf-sort-row button {
-        flex: 1 1 calc(50% - 6px);
-        min-width: 0;
+        flex: 0 0 auto;
+        min-width: 112px;
       }
 
       .etf-decision-grid,
