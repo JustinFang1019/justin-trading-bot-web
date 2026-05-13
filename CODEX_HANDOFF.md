@@ -2,6 +2,22 @@
 
 Last updated: 2026-05-12 Asia/Taipei
 
+## 2026-05-14 ETF Mobile UI Guardrail
+
+- User confirmed the ETF homepage mobile clipping issue is finally fixed. The stable fix is in `index.html` and must be preserved when adding/removing ETF feature cards.
+- Root cause: `.etf-tools` is a CSS grid, and its grid children default to `min-width: auto`. Wide horizontal tab/sort content made `.etf-feature-groups`, `#etfTypeTabs`, and `#etfSortRow` expand beyond the phone viewport, so the right side looked cut off.
+- Required CSS invariants:
+  - `.etf-tools { min-width: 0; max-width: 100%; }`
+  - `.etf-tools > * { min-width: 0; max-width: 100%; }`
+  - `.etf-feature-groups`, `.etf-rank-controls`, `.etf-type-tabs`, `.etf-detail-tabs`, and `.etf-sort-row` must keep `min-width: 0`.
+  - ETF category tabs and sort buttons must remain horizontal scrollers: parent has `overflow-x: auto`; buttons use `flex: 0 0 auto`, not `flex: 1 0 auto`.
+- Do not redesign the ETF homepage mobile layout when adding features. Keep the established two-column tool-card grid, horizontal category row, horizontal sort row, and three metric pills per ETF ranking card.
+- Verification before any future push that touches `index.html` ETF UI:
+  - `node scripts/check-inline-scripts.mjs`
+  - `node scripts/check-mobile-overflow.mjs`
+  - Confirm the static guard still includes `etf tool grid children can shrink` and `etf tool grid items constrained`.
+- Additional reference written in `docs/mobile-verification.md` under `ETF 首頁手機版 UI 防呆守則`.
+
 ## Current User Intent
 
 The user wants to continue this project across computers. GitHub should carry both code and concise Codex handoff notes.

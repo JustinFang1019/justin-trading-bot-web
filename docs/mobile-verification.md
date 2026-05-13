@@ -31,3 +31,24 @@ node scripts/check-mobile-overflow.mjs
 3. 回報時明確寫出「local browser 被環境擋住」或「已完成 public page visual check」。
 
 等 Browser Use / app 設定允許 local URL 後，仍要補做 390px、430px、768px 三個寬度的實機或自動截圖檢查。
+
+## ETF 首頁手機版 UI 防呆守則
+
+2026-05-14 的 ETF 首頁破版原因已確認：不是功能卡片本身，而是 `.etf-tools` 是 grid，子元素預設 `min-width: auto`，加上分類列與排序列內部按鈕有固定最小寬度，最後把 grid item 撐到超過手機寬度。修正後的穩定規則如下，之後新增或刪除 ETF 功能入口時必須保留。
+
+- `.etf-tools` 必須保留 `min-width: 0` 與 `max-width: 100%`。
+- `.etf-tools > *` 必須保留 `min-width: 0` 與 `max-width: 100%`，避免 grid item 被內容撐寬。
+- `.etf-feature-groups`、`.etf-rank-controls`、`.etf-type-tabs`、`.etf-detail-tabs`、`.etf-sort-row` 必須保留 `min-width: 0`。
+- ETF 分類列與排序列是「橫向滑動列」，不是自動換行區塊。不要改成滿版 grid，也不要讓每顆按鈕 `flex: 1 0 auto`。
+- `.etf-type-tabs button`、`.etf-detail-tabs button`、`.etf-sort-row button` 應維持 `flex: 0 0 auto`，讓按鈕保持自然寬度，超出的部分交給父層橫滑。
+- `.etf-type-tabs`、`.etf-detail-tabs`、`.etf-sort-row` 應保留 `overflow-x: auto`、`overflow-y: hidden`、`-webkit-overflow-scrolling: touch`。
+- ETF 工具卡片新增或移除時，只改資料/按鈕清單與既有 grid 內容；不要重寫 `.etf-tools`、`.etf-feature-groups`、分類列、排序列的 layout。
+- 手機版以 375px 寬度為最低驗收基準。改完至少要跑 `node scripts/check-mobile-overflow.mjs`，確認包含 `etf tool grid children can shrink` 與 `etf tool grid items constrained`。
+
+實務檢查重點：
+
+1. 手機 ETF 首頁的「決策工具 / 查詢與監控」卡片應完整在畫面內，不能右側被切。
+2. 「全部 / 主動 / 股票 / 高股息 / 債券」分類列可以左右滑動。
+3. 「規模金額 / 近12月殖利率 / 費率 / 折溢價」排序列可以左右滑動。
+4. ETF 排名卡片的三個指標 pill 在手機版應維持一列三格，不要被改成單欄。
+5. 新增功能入口時，如果手機右側被切，優先檢查 grid/flex item 的 `min-width: auto`，不要先回滾功能或重做 UI。
