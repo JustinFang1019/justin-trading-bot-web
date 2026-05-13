@@ -5150,6 +5150,7 @@
       $("activeEtfBadge").textContent = `${(data.etfs || []).length} 檔`;
       const warning = data.complete === false ? `<div class="message">${html(data.warning || "共同持有清單目前來自已快取 ETF，尚非完整全市場。")}</div>` : "";
       const top = (data.etfs || [])[0] || {};
+      const stockId = normalizeStockFlowId(data.stock_id || "");
       $("activeEtfList").innerHTML = `
         <div class="etf-hero">
           <h2>${html(data.stock_id || "")} ${html(data.stock_name || "")}</h2>
@@ -5160,6 +5161,10 @@
           <div class="mini-pill tone-purple"><small>共同 ETF</small><strong>${(data.etfs || []).length} 檔</strong></div>
           <div class="mini-pill tone-amber"><small>最高權重</small><strong>${top.weight ?? "-"}%</strong></div>
           <div class="mini-pill tone-green"><small>已掃資料</small><strong>${data.scanned_cached_etf_count || 0}/${data.ranking_count || 0}</strong></div>
+        </div>
+        <div class="suggestions">
+          <button data-etf-tool="stockFlow" data-stock-flow-id="${html(stockId)}" type="button">個股加減碼</button>
+          <button data-etf-tool="institutional" data-institutional-stock-id="${html(stockId)}" type="button">法人籌碼</button>
         </div>
         ${warning}
         ${(data.etfs || []).map(row => `
@@ -6719,6 +6724,9 @@
       if (etfTool) {
         if (etfTool.dataset.etfTool === "stockFlow" && etfTool.dataset.stockFlowId) {
           etfStockFlowId = normalizeStockFlowId(etfTool.dataset.stockFlowId) || etfStockFlowId;
+        }
+        if (etfTool.dataset.etfTool === "institutional" && etfTool.dataset.institutionalStockId) {
+          institutionalStockId = normalizeStockFlowId(etfTool.dataset.institutionalStockId) || institutionalStockId;
         }
         await renderEtfToolPage(etfTool.dataset.etfTool);
         return;
