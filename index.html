@@ -72,10 +72,23 @@
     [data-theme="dark"] .source-card,
     [data-theme="dark"] .etf-feature-card,
     [data-theme="dark"] .upcoming-entry,
+    [data-theme="dark"] .upcoming-detail-card,
     [data-theme="dark"] .bottom-nav,
     [data-theme="dark"] .drawer,
     [data-theme="dark"] .menu-btn,
-    [data-theme="dark"] .status-pill {
+    [data-theme="dark"] .home-btn,
+    [data-theme="dark"] .status-pill,
+    [data-theme="dark"] .etf-sort-row button,
+    [data-theme="dark"] .rotation-card,
+    [data-theme="dark"] .calendar-nav button,
+    [data-theme="dark"] .calendar-event,
+    [data-theme="dark"] .calendar-upcoming,
+    [data-theme="dark"] .tool-controls,
+    [data-theme="dark"] .filter-chip,
+    [data-theme="dark"] .period-chips button,
+    [data-theme="dark"] .source-actions button,
+    [data-theme="dark"] .loading-actions button,
+    [data-theme="dark"] .copy-command {
       background: var(--surface);
       border-color: var(--line);
       color: var(--ink);
@@ -301,13 +314,18 @@
     }
 
     .filters {
-      display: none;
+      display: flex;
       gap: 8px;
       overflow-x: auto;
       overflow-y: hidden;
       padding-bottom: 2px;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
+    }
+
+    /* 篩選 chip 只在「個股查詢」顯示，其它 view 隱藏 */
+    body:not([data-view="scanView"]) .toolbar > .filters {
+      display: none;
     }
 
     .filters::-webkit-scrollbar {
@@ -3254,7 +3272,7 @@
     }
   </style>
 </head>
-<body>
+<body data-view="scanView">
   <main class="app">
     <header class="topbar">
       <button class="menu-btn" id="menuButton" type="button" aria-label="功能選單">≡</button>
@@ -3283,14 +3301,14 @@
         <button class="back-btn" id="backButton" type="button" disabled>上一層</button>
       </div>
       <label class="search" id="topSearchWrap" aria-label="搜尋股票">
-        <input id="searchInput" placeholder="輸入說明小卡指令，例如 2330 / 即時 2330">
+        <input id="searchInput" placeholder="輸入代號或指令，例：2330">
       </label>
       <div class="filters">
-        <button class="active" data-filter="all">全部</button>
-        <button data-filter="START">START</button>
-        <button data-filter="CONT">CONT</button>
-        <button data-filter="rs90">RS 90+</button>
-        <button data-filter="repeat">連續</button>
+        <button class="active" data-filter="all" title="所有掃描結果">全部</button>
+        <button data-filter="START" title="首次出現的策略訊號">首次</button>
+        <button data-filter="CONT" title="連續中的策略訊號">進行中</button>
+        <button data-filter="rs90" title="相對強弱 RS 排名 90 以上">RS 90+</button>
+        <button data-filter="repeat" title="連續多日發出訊號">連續</button>
       </div>
     </div>
 
@@ -3435,14 +3453,14 @@
                   <span>中文轉篩選</span>
                 </button>
               </div>
-              <div class="etf-reserved-grid" aria-label="保留功能">
+              <div class="etf-reserved-grid" aria-label="即將推出">
                 <button class="etf-feature-card reserved" type="button" disabled>
                   <strong>自選 + 推播</strong>
-                  <span>B01 保留</span>
+                  <span>即將推出</span>
                 </button>
                 <button class="etf-feature-card reserved" type="button" disabled>
                   <strong>自選分組</strong>
-                  <span>B09 保留</span>
+                  <span>即將推出</span>
                 </button>
                 <button class="etf-feature-card" id="sourceAdminTool" data-etf-tool="sourceAdmin" type="button" hidden>
                   <strong>來源狀態</strong>
@@ -4520,6 +4538,7 @@
     }
 
     function activate(viewId, options = {}) {
+      document.body.dataset.view = viewId;
       document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === viewId));
       document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.view === viewId));
       document.querySelectorAll("[data-menu-view]").forEach(b => b.classList.toggle("active", b.dataset.menuView === viewId));
@@ -4824,16 +4843,28 @@
       return date;
     }
 
+    function isUpcomingEtfStillUpcoming(etf) {
+      const today = new Date().toISOString().slice(0, 10);
+      const listing = String(etf?.listingDate || "");
+      // 只有當 listingDate 是完整 ISO 日期且 < 今日才算過期；
+      // 「待公告」/「2026-06 上旬」這類非完整日期一律保留。
+      return !/^\d{4}-\d{2}-\d{2}$/.test(listing) || listing >= today;
+    }
+
+    function activeUpcomingEtfs() {
+      return upcomingEtfs.filter(isUpcomingEtfStillUpcoming);
+    }
+
     function visibleUpcomingEtfs() {
       const q = activeEtfSearch.trim().toLowerCase();
-      return [...upcomingEtfs]
+      return activeUpcomingEtfs()
         .filter(etf => !q || [etf.code, etf.name, etf.issuer, etf.market, etf.theme].some(value => String(value || "").toLowerCase().includes(q)))
         .sort((a, b) => upcomingSortKey(a).localeCompare(upcomingSortKey(b)));
     }
 
     function findUpcomingEtf(query) {
       const q = String(query || "").trim().toUpperCase();
-      return upcomingEtfs.find(etf => String(etf.code).toUpperCase() === q || String(etf.name || "").includes(query));
+      return activeUpcomingEtfs().find(etf => String(etf.code).toUpperCase() === q || String(etf.name || "").includes(query));
     }
 
     function daysUntilText(dateText) {
@@ -4857,11 +4888,12 @@
 
     function setUpcomingEntryVisible(visible) {
       const section = $("upcomingEtfSection");
-      if (section) section.style.display = visible ? "" : "none";
+      const upcoming = activeUpcomingEtfs();
+      if (section) section.style.display = visible && upcoming.length ? "" : "none";
       const badge = $("upcomingEtfBadge");
-      if (badge) badge.textContent = `${upcomingEtfs.length} 檔`;
+      if (badge) badge.textContent = `${upcoming.length} 檔`;
       const lead = $("upcomingEtfLead");
-      const next = [...upcomingEtfs].sort((a, b) => upcomingSortKey(a).localeCompare(upcomingSortKey(b)))[0];
+      const next = [...upcoming].sort((a, b) => upcomingSortKey(a).localeCompare(upcomingSortKey(b)))[0];
       if (lead && next) lead.textContent = `最近 ${next.code} ${daysUntilText(upcomingSortKey(next))}`;
     }
 
@@ -4926,7 +4958,7 @@
       setPageHeader("ETF 研究", "即將上市 ETF");
       $("activeEtfTitle").textContent = "即將上市 ETF";
       $("activeEtfSub").textContent = "預購是先登記，募集是正式申購期間。點 ETF 可看完整資料。";
-      $("activeEtfBadge").textContent = `${rows.length}/${upcomingEtfs.length} 檔`;
+      $("activeEtfBadge").textContent = `${rows.length}/${activeUpcomingEtfs().length} 檔`;
       $("activeEtfList").innerHTML = `
         <div class="upcoming-note">這裡只列未上市或即將掛牌 ETF；已上市 ETF 排名請回上一層。</div>
         <div class="upcoming-etf-list">${rows.length ? upcomingRowsHtml(rows) : `<div class="message">目前沒有符合搜尋的即將上市 ETF。</div>`}</div>
