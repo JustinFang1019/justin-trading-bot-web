@@ -28,24 +28,44 @@ let activeEtfSortDir = "desc";
 let activeEtfLevel = "ranking";
 let activeEtfOverlapParent = "ranking";
 let activeEtfOverlapParentCode = "";
-let etfCompareCodes = ["00878", "00919", "00929", "00940"];
-let etfHeatmapCodes = ["00981A", "00982A", "00878", "00919", "00929", "00940"];
-let etfStockFlowId = "2330";
-let stockFlowPeriod = "7d";
-let etfHoldingTrendCode = "00981A";
-let etfFlowPeriod = "1m";
+const PREFS_KEY = "webPrefs";
+function loadPrefs() {
+  try { return JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); }
+  catch { return {}; }
+}
+function savePrefs() {
+  try {
+    const snapshot = {
+      etfCompareCodes, etfHeatmapCodes, etfStockFlowId, stockFlowPeriod,
+      etfHoldingTrendCode, etfFlowPeriod, holdingTrendSort, etfPortfolioText,
+      dividendCalcCode, dividendCalcLots,
+      positionCalcCode, positionBudget, positionRiskPct, positionAtrK,
+      naturalQueryText, institutionalStockId, themeRadarDays,
+    };
+    localStorage.setItem(PREFS_KEY, JSON.stringify(snapshot));
+  } catch {}
+}
+const _p = loadPrefs();
+let etfCompareCodes = _p.etfCompareCodes ?? ["00878", "00919", "00929", "00940"];
+let etfHeatmapCodes = _p.etfHeatmapCodes ?? ["00981A", "00982A", "00878", "00919", "00929", "00940"];
+let etfStockFlowId = _p.etfStockFlowId ?? "2330";
+let stockFlowPeriod = _p.stockFlowPeriod ?? "7d";
+let etfHoldingTrendCode = _p.etfHoldingTrendCode ?? "00981A";
+let etfFlowPeriod = _p.etfFlowPeriod ?? "1m";
 let calendarMonth = null;
-let holdingTrendSort = "weight";
-let etfPortfolioText = "0050 40\n00878 30\n00919 30";
-let dividendCalcCode = "00878";
-let dividendCalcLots = 10;
-let positionCalcCode = "2330";
-let positionBudget = 300000;
-let positionRiskPct = 2;
-let positionAtrK = 2;
-let naturalQueryText = "找殖利率大於5%、費率低於0.8%、折溢價小於1%的 ETF";
-let institutionalStockId = "2330";
-let themeRadarDays = 5;
+let holdingTrendSort = _p.holdingTrendSort ?? "weight";
+let etfPortfolioText = _p.etfPortfolioText ?? "0050 40\n00878 30\n00919 30";
+let dividendCalcCode = _p.dividendCalcCode ?? "00878";
+let dividendCalcLots = _p.dividendCalcLots ?? 10;
+let positionCalcCode = _p.positionCalcCode ?? "2330";
+let positionBudget = _p.positionBudget ?? 300000;
+let positionRiskPct = _p.positionRiskPct ?? 2;
+let positionAtrK = _p.positionAtrK ?? 2;
+let naturalQueryText = _p.naturalQueryText ?? "找殖利率大於5%、費率低於0.8%、折溢價小於1%的 ETF";
+let institutionalStockId = _p.institutionalStockId ?? "2330";
+let themeRadarDays = _p.themeRadarDays ?? 5;
+window.setInterval(savePrefs, 5000);
+window.addEventListener("beforeunload", savePrefs);
 let etfToolRequestSeq = 0;
 let activeEtfRequestSeq = 0;
 let etfLoadingTimer = null;
@@ -721,8 +741,11 @@ function renderWebEducation() {
   updateBackButton();
 }
 
+let lookupCtrl = null;
 function renderOriginalFeed() {
   $("actionNotice").innerHTML = "";
+  if (lookupCtrl) lookupCtrl.abort();
+  lookupCtrl = null;
   const q = $("searchInput").value.trim();
   if (!q || ["說明", "help", "HELP"].includes(q)) {
     setPageForCommand("");
@@ -738,7 +761,8 @@ function renderOriginalFeed() {
     return;
   }
   $("cardFeed").innerHTML = `<div class="message">正在讀取 ${html(q)} 的 LINE 小卡...</div>`;
-  loadCommand(q);
+  lookupCtrl = new AbortController();
+  loadCommand(q, { signal: lookupCtrl.signal });
 }
 
 async function runHelpCommand(command) {
@@ -811,13 +835,15 @@ async function loadCommand(command, options = {}) {
     return;
   }
   try {
-    const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`, commandFetchOptions());
+    const fetchOpts = { ...commandFetchOptions(), ...(options.signal ? { signal: options.signal } : {}) };
+    const payload = await getJson(`${API_BASE}/command?text=${encodeURIComponent(text)}`, fetchOpts);
     if (trackHistory) rememberCommand(text);
     renderCommandPayload(text, payload.data || {});
     updateBackButton();
     $("syncTitle").textContent = "已連線";
     $("syncMeta").textContent = `更新 ${friendlyTime(payload.generated_at)}`;
   } catch (error) {
+    if (error.name === "AbortError") return;
     if (error.message.startsWith("401") && LIFF_ID) {
       clearSession();
       try {
@@ -3345,6 +3371,14 @@ async function selectStock(id, nextView = null) {
 }
 
 async function loadApp() {
+  const coldStartHint = window.setTimeout(() => {
+    const cell = $("cardFeed");
+    if (cell && cell.querySelector(".message")) {
+      cell.innerHTML = `<div class="message">⏳ 伺服器喚醒中 ・ 後端是 Render 免費實例，閒置後第一次請求約需 30–60 秒。</div>`;
+    }
+    $("syncTitle").textContent = "喚醒中";
+    $("syncMeta").textContent = "Render 免費實例冷啟動";
+  }, 5000);
   try {
     const [health, scans, cards, usage] = await Promise.allSettled([
       getJson(`${API_BASE}/health`),
@@ -3380,6 +3414,8 @@ async function loadApp() {
     $("syncMeta").textContent = error.message;
     $("cardFeed").innerHTML = `<div class="message">無法讀取原 bot API：${html(error.message)}。不顯示假資料，避免與 LINE 結果混淆。</div>`;
     renderStatus(error);
+  } finally {
+    window.clearTimeout(coldStartHint);
   }
 }
 
