@@ -1,21 +1,11 @@
 # New Feature Implementation Plan
 
-Last updated: 2026-05-13 Asia/Taipei
+Last updated: 2026-05-12 Asia/Taipei
 
 This plan turns the current preview features into concrete implementation work. The guiding rule is:
 
 - `justin-trading-bot-web`: UI, LIFF session, view routing, local interactions, read API rendering.
 - `justin-trading-bot`: API, Google Sheets writes, LINE push, data cache jobs, external tokens, admin operations.
-
-## 2026-05-13 Build Checkpoint
-
-- Rollback tags were created before the opening-release work:
-  - web: `checkpoint/pre-opening-2026-05-13-web`
-  - api: `checkpoint/pre-opening-2026-05-13-api`
-- ETF official-source backend has started with EzMoney support for `00403A` and `00981A`.
-- The ETF page now treats issuer official data as the visible first source when the API marks a row as official-first.
-- Feature `10 Dark mode` has started in the web UI with drawer toggle and local persistence.
-- Feature `01 Watchlist + push` and `09 Watchlist groups` remain intentionally reserved in the ETF feature grid. The UI space is kept, but writes/pushes wait for authenticated backend endpoints.
 
 ## Current Foundation
 
