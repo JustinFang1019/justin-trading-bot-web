@@ -5663,23 +5663,46 @@
     }
 
     async function renderMarketDashboardPage() {
-      ++etfToolRequestSeq;
+      const requestSeq = ++etfToolRequestSeq;
       setEtfToolShell("大盤儀表板", "ETF 盤勢情緒、上漲下跌家數與 Top 5。", "市場", "正在整理市場快照...");
-      const rows = activeEtfs.filter(row => Number.isFinite(Number(row.change_rate)));
-      const up = rows.filter(row => Number(row.change_rate) > 0).length;
-      const down = rows.filter(row => Number(row.change_rate) < 0).length;
-      const avg = rows.length ? rows.reduce((sum, row) => sum + Number(row.change_rate || 0), 0) / rows.length : NaN;
-      const mood = avg >= 0.8 ? "偏多" : avg <= -0.8 ? "偏空" : up >= down ? "中性偏多" : "中性偏空";
-      const gainers = [...rows].sort((a, b) => num(b.change_rate) - num(a.change_rate)).slice(0, 5);
-      const movers = [...activeEtfs].sort((a, b) => Math.abs(num(b.asset_delta_billion)) - Math.abs(num(a.asset_delta_billion))).slice(0, 5);
-      $("activeEtfBadge").textContent = mood;
-      $("activeEtfList").innerHTML = `
-        <div class="mini-pills"><div class="mini-pill tone-blue"><small>盤勢情緒</small><strong>${html(mood)}</strong></div><div class="mini-pill tone-green"><small>上漲</small><strong>${up} 檔</strong></div><div class="mini-pill tone-red"><small>下跌</small><strong>${down} 檔</strong></div><div class="mini-pill tone-purple"><small>平均漲跌</small><strong>${Number.isFinite(avg) ? fmtSignedPct(avg) : "-%"}</strong></div></div>
-        <div class="section-title">漲幅 Top 5 <span>依收盤漲跌幅</span></div>
-        ${renderToolRows(gainers, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有漲跌資料。</div>`}
-        <div class="section-title">規模/資金變化 Top 5 <span>依可用快照推估</span></div>
-        ${renderToolRows(movers, row => row.asset_delta_available ? fmtBillionSigned(row.asset_delta_billion) : etfAssetTrendText(row)) || `<div class="message">目前沒有規模變化快照。</div>`}
-      `;
+      try {
+        const payload = await getJson(`${API_BASE}/etfs/market-dashboard`);
+        if (requestSeq !== etfToolRequestSeq) return;
+        const data = payload.data || {};
+        const summary = data.summary || {};
+        const mood = summary.mood || "待資料";
+        const up = Number(summary.up || 0);
+        const down = Number(summary.down || 0);
+        const avg = Number(summary.avg_change_rate);
+        const gainers = data.gainers || [];
+        const decliners = data.decliners || [];
+        const movers = data.movers || [];
+        const modeLabel = data.data_label || (data.data_mode === "intraday" ? "盤中快照" : "收盤快照");
+        const modeNote = data.data_mode === "intraday"
+          ? `TWSE MIS 盤中 ${Number(data.realtime_count || 0)} 檔，約 30 秒快取`
+          : "目前未取得盤中報價，先顯示收盤快照";
+        $("activeEtfBadge").textContent = mood;
+        $("activeEtfList").innerHTML = `
+          <div class="message">${html(modeLabel)}｜${html(modeNote)}｜更新 ${html(friendlyTime(data.updated_at) || "-")}</div>
+          <div class="mini-pills"><div class="mini-pill tone-blue"><small>盤勢情緒</small><strong>${html(mood)}</strong></div><div class="mini-pill tone-green"><small>上漲</small><strong>${up} 檔</strong></div><div class="mini-pill tone-red"><small>下跌</small><strong>${down} 檔</strong></div><div class="mini-pill tone-purple"><small>平均漲跌</small><strong>${Number.isFinite(avg) ? fmtSignedPct(avg) : "-%"}</strong></div></div>
+          <div class="section-title">漲幅 Top 5 <span>依${html(modeLabel)}漲跌幅</span></div>
+          ${renderToolRows(gainers, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有漲跌資料。</div>`}
+          <div class="section-title">跌幅 Top 5 <span>依${html(modeLabel)}漲跌幅</span></div>
+          ${renderToolRows(decliners, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有跌幅資料。</div>`}
+          <div class="section-title">規模/資金變化 Top 5 <span>非盤中，依可用快照推估</span></div>
+          ${renderToolRows(movers, row => row.asset_delta_available ? fmtBillionSigned(row.asset_delta_billion) : etfAssetTrendText(row)) || `<div class="message">目前沒有規模變化快照。</div>`}
+        `;
+      } catch (error) {
+        if (requestSeq !== etfToolRequestSeq) return;
+        const rows = activeEtfs.filter(row => Number.isFinite(Number(row.change_rate)));
+        const up = rows.filter(row => Number(row.change_rate) > 0).length;
+        const down = rows.filter(row => Number(row.change_rate) < 0).length;
+        const avg = rows.length ? rows.reduce((sum, row) => sum + Number(row.change_rate || 0), 0) / rows.length : NaN;
+        const mood = avg >= 0.8 ? "偏多" : avg <= -0.8 ? "偏空" : up >= down ? "中性偏多" : "中性偏空";
+        const gainers = [...rows].sort((a, b) => num(b.change_rate) - num(a.change_rate)).slice(0, 5);
+        $("activeEtfBadge").textContent = mood;
+        $("activeEtfList").innerHTML = `<div class="message">盤中快照 API 暫時無法讀取，先顯示收盤快照：${html(error.message)}</div>${renderToolRows(gainers, row => fmtSignedPct(row.change_rate))}`;
+      }
     }
 
     async function renderHitRatePage() {
