@@ -161,6 +161,19 @@ function html(value) {
   }[ch]));
 }
 
+// Tagged template literal that escapes interpolated values by default.
+// Usage: `el.innerHTML = safeHTML\`<div>${userInput}</div>\`;`
+// Pass `raw(...)` to opt out of escaping for a single value (already-trusted HTML).
+function safeHTML(strings, ...values) {
+  return strings.reduce((acc, str, i) => {
+    if (i >= values.length) return acc + str;
+    const v = values[i];
+    const piece = (v && typeof v === "object" && v.__rawSafeHTML) ? v.value : html(v);
+    return acc + str + piece;
+  }, "");
+}
+safeHTML.raw = value => ({ __rawSafeHTML: true, value: String(value ?? "") });
+
 function applyTheme(theme = currentTheme) {
   currentTheme = theme === "dark" ? "dark" : "";
   document.documentElement.dataset.theme = currentTheme;
