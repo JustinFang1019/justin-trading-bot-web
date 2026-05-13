@@ -17,6 +17,7 @@ const checks = [
   ["tool controls max width", /\.tool-controls[\s\S]*?max-width:\s*100%/],
   ["mobile tool input single column", /@media\s*\(max-width:\s*720px\)[\s\S]*?\.tool-input-row\s*{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/],
   ["mobile range line single column", /@media\s*\(max-width:\s*720px\)[\s\S]*?\.range-line\s*{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/],
+  ["mobile feature cards two columns constrained", /@media\s*\(max-width:\s*720px\)[\s\S]*?\.etf-decision-grid,[\s\S]*?\.etf-monitor-grid,[\s\S]*?\.etf-reserved-grid\s*{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*calc\(\(100vw - 50px\) \/ 2\)\)\)[\s\S]*?max-width:\s*calc\(100vw - 42px\)/],
   ["mobile metric pills guarded", /\.mobile-overflow-guard\s+\.metric-pills/],
   ["mobile decision metrics guarded", /\.mobile-overflow-guard\s+\.decision-metrics/],
   ["mobile rotation metrics guarded", /\.mobile-overflow-guard\s+\.rotation-metrics/],

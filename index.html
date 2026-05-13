@@ -2597,20 +2597,18 @@
       }
 
       .etf-decision-grid,
-      .etf-reserved-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
+      .etf-monitor-grid,
       .etf-reserved-grid {
         display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, calc((100vw - 50px) / 2)));
+        max-width: calc(100vw - 42px);
+        min-width: 0;
+        width: 100%;
       }
 
       .etf-reserved-grid .etf-feature-card {
         flex: none;
-      }
-
-      .etf-monitor-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .etf-feature-card {
@@ -2749,7 +2747,9 @@
       .etf-monitor-grid,
       .etf-reserved-grid {
         gap: 8px;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, calc((100vw - 50px) / 2)));
+        max-width: calc(100vw - 42px);
+        width: 100%;
       }
 
       .etf-feature-card {
@@ -2796,7 +2796,7 @@
       }
     }
 
-    @media (max-width: 380px) {
+    @media (max-width: 360px) {
       .etf-decision-grid,
       .etf-monitor-grid,
       .etf-reserved-grid {
