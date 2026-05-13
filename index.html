@@ -304,21 +304,40 @@
       display: none;
       gap: 8px;
       overflow-x: auto;
+      overflow-y: hidden;
       padding-bottom: 2px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filters::-webkit-scrollbar {
+      display: none;
     }
 
     .etf-type-tabs,
     .etf-detail-tabs {
       display: flex;
+      gap: 7px;
       margin-top: 8px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .etf-type-tabs::-webkit-scrollbar,
+    .etf-detail-tabs::-webkit-scrollbar {
+      display: none;
     }
 
     .etf-type-tabs button,
     .etf-detail-tabs button {
-      flex: 1 0 auto;
+      flex: 0 0 auto;
       font-weight: 900;
       min-width: 74px;
       text-align: center;
+      white-space: nowrap;
     }
 
     .etf-sort-row {
@@ -326,7 +345,14 @@
       gap: 7px;
       margin-top: 8px;
       overflow-x: auto;
+      overflow-y: hidden;
       padding-bottom: 2px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .etf-sort-row::-webkit-scrollbar {
+      display: none;
     }
 
     .etf-sort-row button {
@@ -337,7 +363,7 @@
       color: #475467;
       cursor: pointer;
       display: inline-flex;
-      flex: 1 0 auto;
+      flex: 0 0 auto;
       font-size: 12px;
       font-weight: 900;
       gap: 4px;
@@ -764,6 +790,8 @@
       display: grid;
       gap: 8px;
       margin: 0 0 10px;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .etf-feature-groups {
@@ -978,6 +1006,11 @@
     .etf-feature-card.reserved .etf-feature-chip {
       background: var(--amber-soft);
       color: var(--amber);
+    }
+
+    #activeEtfView .panel-body {
+      min-width: 0;
+      overflow-x: clip;
     }
 
     .etf-feature-card strong {
