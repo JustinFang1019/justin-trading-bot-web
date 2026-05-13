@@ -1,0 +1,13 @@
+{
+  "name": "justin-trading-bot-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Web prototype for the Justin trading bot — vanilla HTML/CSS/JS, no build pipeline.",
+  "scripts": {
+    "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{html,css,js,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}
