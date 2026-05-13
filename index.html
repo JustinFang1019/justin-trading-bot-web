@@ -1456,26 +1456,6 @@
       max-width: 100%;
     }
 
-    .mobile-overflow-guard .app,
-    .mobile-overflow-guard .panel,
-    .mobile-overflow-guard .line-card,
-    .mobile-overflow-guard .tool-controls,
-    .mobile-overflow-guard .status-grid,
-    .mobile-overflow-guard #activeEtfList {
-      max-width: 100vw !important;
-      min-width: 0 !important;
-      overflow-x: hidden !important;
-    }
-
-    .mobile-overflow-guard .tool-input-row,
-    .mobile-overflow-guard .range-line,
-    .mobile-overflow-guard .mini-pills,
-    .mobile-overflow-guard .metric-pills,
-    .mobile-overflow-guard .decision-metrics,
-    .mobile-overflow-guard .rotation-metrics {
-      grid-template-columns: minmax(0, 1fr) !important;
-    }
-
     .etf-spark {
       align-items: flex-end;
       display: flex;
@@ -2639,19 +2619,6 @@
         max-width: 100%;
       }
 
-      .panel,
-      .line-card,
-      .tool-controls,
-      .status-grid,
-      .detail-grid,
-      .etf-tools,
-      .etf-feature-groups,
-      #activeEtfList {
-        max-width: 100%;
-        min-width: 0;
-        overflow-x: hidden;
-      }
-
       .tool-input-row {
         grid-template-columns: minmax(0, 1fr);
       }
@@ -2772,8 +2739,6 @@
       .pills,
       .card-actions,
       .mini-pills,
-      .metric-pills,
-      .decision-metrics,
       .etf-flow-grid,
       .etf-feature-grid {
         grid-template-columns: 1fr;
@@ -3675,19 +3640,6 @@
       $("pageSub").textContent = sub;
     }
 
-    function checkMobileOverflow(label = "render") {
-      if (window.innerWidth > 720) {
-        document.body.classList.remove("mobile-overflow-guard");
-        return;
-      }
-      requestAnimationFrame(() => {
-        const root = document.documentElement;
-        const overflow = Math.max(0, root.scrollWidth - root.clientWidth);
-        document.body.classList.toggle("mobile-overflow-guard", overflow > 2);
-        if (overflow > 2) console.warn(`[mobile-overflow] ${label}: +${overflow}px`);
-      });
-    }
-
     function friendlyError(error, fallback = "暫時無法完成，請稍後再試。") {
       const message = String(error?.message || error || "");
       if (/idtoken expired|expired/i.test(message)) {
@@ -4112,7 +4064,6 @@
       $("cardFeed").innerHTML = rows.length
         ? rows.map(scanCard).join("")
         : `<div class="message">沒有符合條件的小卡。若這裡是空的，請看狀態頁的 API 錯誤。</div>`;
-      checkMobileOverflow("scan-feed");
     }
 
     function usageText() {
@@ -4546,7 +4497,6 @@
       if (viewId === "chartView") drawChart();
       if (viewId === "statusView") loadStatus();
       updateBackButton();
-      checkMobileOverflow(`activate:${viewId}`);
     }
 
     async function loadExtras(stock) {
@@ -5212,7 +5162,6 @@
           </div>
         `;
       }).join("") : `<div class="message">${activeEtfs.length ? "沒有符合搜尋或分類的 ETF。" : "目前沒有 ETF 快照。Render 部署後會在第一次讀取時建立快取。"}</div>`;
-      checkMobileOverflow("etf-ranking");
     }
 
     function changeRows(rows = [], emptyText = "目前沒有異動資料", kind = "added") {
@@ -5940,7 +5889,6 @@
       await (renderers[tool] || renderEtfComparePage)();
       window.scrollTo({ top: 0, behavior: "smooth" });
       updateBackButton();
-      checkMobileOverflow(`tool:${tool}`);
     }
 
     async function renderEtfFlowPage() {
