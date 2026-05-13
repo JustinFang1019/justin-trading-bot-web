@@ -2125,7 +2125,7 @@
       border-radius: 6px;
       display: grid;
       gap: 10px;
-      grid-template-columns: minmax(0, 1fr) 100px 90px;
+      grid-template-columns: minmax(0, 1fr) 148px;
       margin-top: 6px;
       padding: 9px 12px;
     }
@@ -2136,14 +2136,10 @@
     .stock-flow-row .info strong { display: block; font-size: 12.5px; font-weight: 900; overflow-wrap: anywhere; }
     .stock-flow-row .info small { color: var(--muted); display: block; font-size: 10.5px; margin-top: 2px; }
     .stock-flow-row .info .new-tag { color: var(--green); font-weight: 900; }
-    .stock-flow-row .bar { background: #f0f3f7; border-radius: 999px; height: 8px; overflow: hidden; }
-    .stock-flow-row .bar i { border-radius: 999px; display: block; height: 100%; }
-    .stock-flow-row.inc .bar i { background: var(--green); }
-    .stock-flow-row.dec .bar i { background: var(--red); margin-left: auto; }
-    .stock-flow-row .delta { font-size: 13px; font-weight: 900; text-align: right; }
+    .stock-flow-row .delta { align-items: flex-end; display: flex; flex-direction: column; gap: 3px; font-size: 13px; font-weight: 900; text-align: right; }
     .stock-flow-row .delta.pos { color: var(--green); }
     .stock-flow-row .delta.neg { color: var(--red); }
-    .stock-flow-row .delta small { color: var(--muted); display: block; font-size: 10px; font-weight: 600; }
+    .stock-flow-row .delta small { color: var(--muted); display: block; font-size: 10px; font-weight: 700; }
 
     .stock-flow-search .tool-input-row {
       margin-bottom: 8px;
@@ -2531,11 +2527,8 @@
       }
 
       .stock-flow-row {
-        grid-template-columns: minmax(0, 1fr) 86px;
-      }
-
-      .stock-flow-row .bar {
-        grid-column: 1 / -1;
+        gap: 8px;
+        grid-template-columns: minmax(0, 1fr) 92px;
       }
 
       .holding-trend-row {
@@ -6093,18 +6086,14 @@
         const periodLabel = { "7d": "近 7 個交易日", "14d": "近 14 個交易日", "30d": "近 30 個交易日" }[stockFlowPeriod] || "近 7 個交易日";
         const currentOnly = rows.filter(row => row.public_current_only).length;
         const weightOnlyCount = Number(data.weight_only_count || 0);
-        const allFlowRows = [...incRows, ...decRows];
-        const maxAbsShare = Math.max(...allFlowRows.map(row => Math.abs(Number(row.share_delta) || 0)), 1);
         const renderRow = row => {
           const isNew = rowIsNew(row);
           const shareDelta = Number(row.share_delta);
           const isInc = shareDelta > 0 || isNew;
-          const widthPct = Math.max(8, Math.min(100, Math.abs(shareDelta || 0) / maxAbsShare * 100));
-          const deltaMain = isNew ? `+${fmtPctValue(row.weight).replace(/^\+/, "")}` : fmtShareUnit(row.share_delta, row, true);
-          const deltaSub = isNew ? "新進權重" : `權重 ${fmtSignedPct(row.weight_delta)}`;
+          const deltaMain = Number.isFinite(shareDelta) ? fmtShareUnit(shareDelta, row, true) : "張數待資料";
+          const deltaSub = `權重 ${fmtSignedPct(row.weight_delta)}`;
           return `<div class="stock-flow-row ${isInc ? "inc" : "dec"}" data-etf-code="${html(row.code)}">
             <div class="info"><strong>${html(row.code)} ${html(row.name || "")}</strong><small>${html(row.category || "")}・${html(row.issuer || "")}${isNew ? `・<span class="new-tag">新進</span>` : ""}</small></div>
-            <div class="bar"><i style="width:${widthPct}%"></i></div>
             <div class="delta ${isInc ? "pos" : "neg"}">${html(deltaMain)}<small>${html(deltaSub)}</small></div>
           </div>`;
         };
