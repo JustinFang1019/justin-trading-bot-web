@@ -17,3 +17,9 @@ docs/feature-previews/*.html
 # 主檔目前 7300+ 行單檔，等 C18 拆檔後再進 lint scope
 # 若想在當前狀態 lint，請暫時移除這行
 index.html
+
+# C18 split 出來的 app.js / styles.css 是從原 index.html 內聯內容
+# byte-for-byte 搬出 (只 dedent 4 空白)，尚未過 prettier。等 contributor
+# 在 local 跑一次 `npm run format` 並 commit 後再從 ignore 移除。
+app.js
+styles.css
