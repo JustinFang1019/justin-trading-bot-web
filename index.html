@@ -2048,7 +2048,7 @@
     .tool-input-row {
       display: grid;
       gap: 8px;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     }
 
     .tool-input-row input {
@@ -3430,11 +3430,13 @@
     let etfPortfolioText = "0050 40\n00878 30\n00919 30";
     let dividendCalcCode = "00878";
     let dividendCalcLots = 10;
-    let positionCalcCode = "0050";
+    let positionCalcCode = "2330";
     let positionBudget = 300000;
     let positionRiskPct = 2;
+    let positionAtrK = 2;
     let naturalQueryText = "找殖利率大於5%、費率低於0.8%、折溢價小於1%的 ETF";
     let institutionalStockId = "2330";
+    let themeRadarDays = 5;
     let etfToolRequestSeq = 0;
     let activeEtfRequestSeq = 0;
     let etfLoadingTimer = null;
@@ -3602,6 +3604,15 @@
       const payload = await res.json().catch(() => null);
       if (!res.ok) throw new Error(payload?.error || `${res.status} ${res.statusText}`);
       return payload;
+    }
+
+    async function postJson(url, body = {}, options = {}) {
+      return getJson(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        body: JSON.stringify(body),
+        ...options
+      });
     }
 
     function commandFetchOptions() {
@@ -3834,6 +3845,8 @@
           <button class="card-button primary" data-action="financial" data-id="${stock.id}">財報</button>
           <button class="card-button" data-action="realtime" data-id="${stock.id}">即時</button>
           <button class="card-button" data-action="backtest" data-id="${stock.id}">回測</button>
+          <button class="card-button" data-action="institutional" data-id="${stock.id}">法人</button>
+          <button class="card-button" data-action="position" data-id="${stock.id}">部位</button>
           <button class="card-button" data-action="watch" data-id="${stock.id}">+自選</button>
         </div>
       `;
@@ -5869,11 +5882,16 @@
       const requestSeq = ++etfToolRequestSeq;
       setEtfToolShell("大盤儀表板", "ETF 盤勢情緒、上漲下跌家數與 Top 5。", "市場", "正在整理市場快照...");
       try {
-        const payload = await getJson(`${API_BASE}/etfs/market-dashboard`);
+        const [payload, dividendPayload] = await Promise.all([
+          getJson(`${API_BASE}/etfs/market-dashboard`),
+          getJson(`${API_BASE}/etfs/dividends/calendar?days=7`).catch(() => ({ data: { events: [] } }))
+        ]);
         if (requestSeq !== etfToolRequestSeq) return;
         const data = payload.data || {};
+        const dividendEvents = (dividendPayload.data?.events || []).filter(item => Number(item.days_from_today) >= 0 && Number(item.days_from_today) <= 7).slice(0, 5);
         const summary = data.summary || {};
         const mood = summary.mood || "待資料";
+        const sentimentScore = Number(summary.sentiment_score);
         const up = Number(summary.up || 0);
         const down = Number(summary.down || 0);
         const avg = Number(summary.avg_change_rate);
@@ -5887,9 +5905,11 @@
         $("activeEtfBadge").textContent = mood;
         $("activeEtfList").innerHTML = `
           <div class="message">${html(modeLabel)}｜${html(modeNote)}｜更新 ${html(friendlyTime(data.updated_at) || "-")}</div>
-          <div class="mini-pills"><div class="mini-pill tone-blue"><small>盤勢情緒</small><strong>${html(mood)}</strong></div><div class="mini-pill tone-green"><small>上漲</small><strong>${up} 檔</strong></div><div class="mini-pill tone-red"><small>下跌</small><strong>${down} 檔</strong></div><div class="mini-pill tone-purple"><small>平均漲跌</small><strong>${Number.isFinite(avg) ? fmtSignedPct(avg) : "-%"}</strong></div></div>
+          <div class="mini-pills"><div class="mini-pill tone-blue"><small>情緒分數</small><strong>${Number.isFinite(sentimentScore) ? `${sentimentScore}/100` : html(mood)}</strong></div><div class="mini-pill tone-green"><small>RS90 / START</small><strong>${html(summary.rs90_count || 0)} / ${html(summary.start_count || 0)}</strong></div><div class="mini-pill tone-green"><small>上漲</small><strong>${up} 檔</strong></div><div class="mini-pill tone-red"><small>下跌</small><strong>${down} 檔</strong></div><div class="mini-pill tone-purple"><small>平均漲跌</small><strong>${Number.isFinite(avg) ? fmtSignedPct(avg) : "-%"}</strong></div></div>
           <div class="section-title">漲幅 Top 5 <span>依${html(modeLabel)}漲跌幅</span></div>
           ${renderMarketRows(gainers, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有盤中漲幅資料。</div>`}
+          <div class="section-title">配息倒數 ETF <span>D-7 內除息</span></div>
+          ${dividendEvents.map(item => `<div class="status-row" data-etf-code="${html(item.code)}"><strong>${html(item.code)} ${html(item.name || "")}</strong><div class="meta"><span>D-${html(item.days_from_today)}</span><span>除息 ${html(item.ex_date || "-")}</span><span>發放 ${html(item.payment_date || "-")}</span><span>${html(item.amount_text || "金額待公布")}</span></div></div>`).join("") || `<div class="message">未來 7 天目前沒有配息倒數資料。</div>`}
           <div class="section-title">跌幅 Top 5 <span>依${html(modeLabel)}漲跌幅</span></div>
           ${renderMarketRows(decliners, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有盤中跌幅資料。</div>`}
           <div class="section-title">規模/資金變化 Top 5 <span>非盤中，依可用快照推估</span></div>
@@ -5986,43 +6006,59 @@
     }
 
     async function renderPortfolioSimulatorPage() {
-      ++etfToolRequestSeq;
+      const requestSeq = ++etfToolRequestSeq;
       setEtfToolShell("投組模擬器", "輸入 ETF 與比例，估算殖利率、費率、折溢價與主題曝險。", "試算", "正在計算投組...");
       const rows = parsePortfolioRows();
-      const known = rows.filter(row => row.etf);
       const totalWeight = rows.reduce((sum, row) => sum + row.weight, 0) || 1;
-      const yield12m = weightedAverage(known, "yield_12m");
-      const expense = weightedAverage(known, "expense_ratio");
-      const premium = weightedAverage(known, "nav_premium");
-      const themes = known.reduce((acc, row) => {
-        const key = simpleThemeOf(row.etf);
-        acc[key] = (acc[key] || 0) + row.weight / totalWeight * 100;
-        return acc;
-      }, {});
-      $("activeEtfBadge").textContent = `${rows.length} 檔`;
-      $("activeEtfList").innerHTML = `
-        <div class="tool-controls"><div class="tool-input-row"><textarea id="etfPortfolioInput" rows="5" style="width:100%;resize:vertical" placeholder="每行：ETF代號 比例">${html(etfPortfolioText)}</textarea></div><div class="suggestions"><button data-portfolio-run type="button">重新試算</button></div><div class="message">格式例：0050 40、00878 30、00919 30。第一版以 ETF 指標加權，持股重疊先用主題曝險近似。</div></div>
-        <div class="mini-pills"><div class="mini-pill tone-purple"><small>加權殖利率</small><strong>${Number.isFinite(yield12m) ? fmtPctValue(yield12m) : "待資料"}</strong></div><div class="mini-pill tone-blue"><small>加權費率</small><strong>${Number.isFinite(expense) ? fmtPctValue(expense) : "待資料"}</strong></div><div class="mini-pill tone-red"><small>加權折溢價</small><strong>${Number.isFinite(premium) ? fmtPctValue(premium) : "待資料"}</strong></div></div>
-        <div class="section-title">配置明細 <span>未知代號會標示待資料</span></div>
-        ${rows.map(row => `<div class="status-row"><strong>${html(row.code)} ${html(row.etf?.name || "待資料")}</strong><div class="meta"><span>比例 ${(row.weight / totalWeight * 100).toFixed(1)}%</span><span>殖利率 ${html(row.etf ? etfDecisionMetrics(row.etf).yield12m : "待資料")}</span><span>費率 ${html(row.etf ? etfDecisionMetrics(row.etf).expense : "待資料")}</span></div></div>`).join("") || `<div class="message">請輸入 ETF 與比例。</div>`}
-        <div class="section-title">主題曝險 <span>用來近似重疊風險</span></div>
-        ${Object.entries(themes).map(([name, pct]) => `<div class="status-row"><strong>${html(name)}</strong><div class="meta"><span>${pct.toFixed(1)}%</span></div></div>`).join("") || `<div class="message">目前沒有可計算的主題曝險。</div>`}
-      `;
+      try {
+        const payload = await postJson(`${API_BASE}/portfolio/simulate`, { etfs: rows.map(row => ({ code: row.code, weight: row.weight })) });
+        if (requestSeq !== etfToolRequestSeq) return;
+        const data = payload.data || {};
+        const resultRows = data.etfs || [];
+        $("activeEtfBadge").textContent = `${resultRows.length} 檔`;
+        $("activeEtfList").innerHTML = `
+          <div class="tool-controls">
+            <div class="tool-input-row"><textarea id="etfPortfolioInput" rows="4" style="width:100%;resize:vertical" placeholder="每行：ETF代號 比例">${html(etfPortfolioText)}</textarea></div>
+            ${rows.map(row => `<div class="range-line"><span>${html(row.code)}</span><input data-portfolio-weight="${html(row.code)}" type="range" min="0" max="100" step="5" value="${html(Math.round(row.weight / totalWeight * 100))}"><strong>${(row.weight / totalWeight * 100).toFixed(0)}%</strong></div>`).join("")}
+            <div class="suggestions"><button data-portfolio-run type="button">重新試算</button></div>
+            <div class="message">後端會把配比正規化為 100%；支援 2–10 檔，重疊率用持股快取計算。</div>
+          </div>
+          <div class="mini-pills"><div class="mini-pill tone-purple"><small>加權殖利率</small><strong>${data.weighted_yield == null ? "待資料" : fmtPctValue(data.weighted_yield)}</strong></div><div class="mini-pill tone-blue"><small>加權費率</small><strong>${data.weighted_expense == null ? "待資料" : fmtPctValue(data.weighted_expense)}</strong></div><div class="mini-pill tone-red"><small>持股重疊</small><strong>${data.overlap_pct == null ? "待資料" : fmtPctValue(data.overlap_pct)}</strong></div></div>
+          ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
+          <div class="section-title">配置明細 <span>總和強制 100%</span></div>
+          ${resultRows.map(row => `<div class="status-row"><strong>${html(row.code)} ${html(row.name || "待資料")}</strong><div class="meta"><span>比例 ${html(row.weight)}%</span><span>殖利率 ${row.yield_12m == null ? "待資料" : fmtPctValue(row.yield_12m)}</span><span>費率 ${row.expense_ratio == null ? "待資料" : fmtPctValue(row.expense_ratio)}</span><span>持股 ${html(row.holding_count || 0)} 檔</span></div></div>`).join("") || `<div class="message">請輸入 ETF 與比例。</div>`}
+          <div class="section-title">重疊警告 <span>共同持有成分股</span></div>
+          ${(data.overlap_top || []).map(row => `<div class="status-row" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}"><strong>${html(row.stock_id)} ${html(row.stock_name || "")}</strong><div class="meta"><span>重疊 ${fmtPctValue(row.overlap_pct)}</span><span>曝險 ${fmtPctValue(row.exposure_pct)}</span><span>${html((row.etfs || []).join(" / "))}</span></div></div>`).join("") || `<div class="message">目前沒有明顯持股重疊，或持股快取尚未建立。</div>`}
+        `;
+      } catch (error) {
+        if (requestSeq !== etfToolRequestSeq) return;
+        $("activeEtfList").innerHTML = etfToolError(error);
+      }
     }
 
     async function renderDividendCalculatorPage() {
-      ++etfToolRequestSeq;
+      const requestSeq = ++etfToolRequestSeq;
       const etf = etfByCode(dividendCalcCode);
       const lots = Math.max(0, num(dividendCalcLots, 0));
       const shares = lots * 1000;
-      const dps = etf ? estimatedDividendPerShare(etf) : NaN;
-      const income = Number.isFinite(dps) ? dps * shares : NaN;
       setEtfToolShell("配息試算", "輸入 ETF 與張數，估算近 12 月年化入帳。", "試算", "正在試算配息...");
-      $("activeEtfList").innerHTML = `
-        <div class="tool-controls"><div class="tool-input-row"><input id="dividendCalcCode" value="${html(dividendCalcCode)}" inputmode="latin" placeholder="ETF 代號"><input id="dividendCalcLots" value="${html(lots)}" inputmode="numeric" placeholder="張數"><button data-dividend-calc-run type="button">試算</button></div><div class="message">第一版用近12月殖利率反推年化配息，不代表未來實際配息。</div></div>
-        <div class="mini-pills"><div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${etf ? html(etfDecisionMetrics(etf).yield12m) : "待資料"}</strong></div><div class="mini-pill tone-blue"><small>估每股年配</small><strong>${Number.isFinite(dps) ? dps.toFixed(2) : "待資料"}</strong></div><div class="mini-pill tone-green"><small>年化入帳</small><strong>${Number.isFinite(income) ? Math.round(income).toLocaleString("zh-TW") : "待資料"}</strong></div></div>
-        ${etf ? etfRowHtml(etf, fmtBillion(etf.asset_size_billion)) : `<div class="message">找不到 ${html(dividendCalcCode)}，請先確認 ETF 清單已載入。</div>`}
-      `;
+      try {
+        const payload = await getJson(`${API_BASE}/etf/${encodeURIComponent(dividendCalcCode)}/dividend-history`);
+        if (requestSeq !== etfToolRequestSeq) return;
+        const data = payload.data || {};
+        const dps = num(data.estimated_amount, etf ? estimatedDividendPerShare(etf) : NaN);
+        const income = Number.isFinite(dps) ? dps * shares : NaN;
+        $("activeEtfBadge").textContent = data.code || dividendCalcCode;
+        $("activeEtfList").innerHTML = `
+          <div class="tool-controls"><div class="tool-input-row"><input id="dividendCalcCode" value="${html(dividendCalcCode)}" inputmode="latin" placeholder="ETF 代號"><input id="dividendCalcLots" value="${html(lots)}" inputmode="numeric" placeholder="張數"><button data-dividend-calc-run type="button">試算</button></div>${data.warning ? `<div class="message">${html(data.warning)}</div>` : `<div class="message">入帳用最近一次配息金額估算；實際仍以公告為準。</div>`}</div>
+          <div class="mini-pills"><div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${data.yield_12m == null ? etf ? html(etfDecisionMetrics(etf).yield12m) : "待資料" : fmtPctValue(data.yield_12m)}</strong></div><div class="mini-pill tone-blue"><small>估每股配息</small><strong>${Number.isFinite(dps) ? dps.toFixed(2) : "待資料"}</strong></div><div class="mini-pill tone-green"><small>估入帳金額</small><strong>${Number.isFinite(income) ? Math.round(income).toLocaleString("zh-TW") : "待資料"}</strong></div><div class="mini-pill tone-amber"><small>填息中位數</small><strong>${data.median_fill_days == null ? "待資料" : `${data.median_fill_days} 天`}</strong></div></div>
+          <div class="section-title">5 年填息歷史 <span>未填息標紅</span></div>
+          ${(data.events || []).slice(0, 12).map(row => `<div class="status-row"><strong>${html(row.ex_date || "-")} 除息 ${html(row.amount_text || "")}</strong><div class="meta"><span>發放 ${html(row.payment_date || "-")}</span><span class="${row.filled ? "up" : "dn"}">${row.filled ? `填息 ${html(row.fill_days)} 天` : "尚無填息日"}</span></div></div>`).join("") || `<div class="message">目前沒有配息歷史。</div>`}
+        `;
+      } catch (error) {
+        if (requestSeq !== etfToolRequestSeq) return;
+        $("activeEtfList").innerHTML = etfToolError(error);
+      }
     }
 
     async function renderRebalanceRadarPage() {
@@ -6065,7 +6101,7 @@
         const requestSeq = ++etfToolRequestSeq;
         setEtfToolShell("主題輪動雷達", "依 ETF 持股與名稱 mapping 出明確題材，觀察資金、漲跌與代表成分股。", "主題", "正在讀取主題雷達 API...");
         try {
-          const payload = await getJson(`${API_BASE}/etfs/theme-radar`);
+          const payload = await getJson(`${API_BASE}/themes/rotation?days=${encodeURIComponent(themeRadarDays)}`);
           if (requestSeq !== etfToolRequestSeq) return;
           const data = payload.data || {};
           const rows = data.rows || [];
@@ -6099,6 +6135,7 @@
           };
           $("activeEtfList").innerHTML = `
             ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
+            <div class="etf-period-tabs"><button class="${themeRadarDays === 5 ? "active" : ""}" data-theme-days="5" type="button">5 日</button><button class="${themeRadarDays === 20 ? "active" : ""}" data-theme-days="20" type="button">20 日</button><button class="${themeRadarDays === 60 ? "active" : ""}" data-theme-days="60" type="button">60 日</button></div>
             <div class="mini-pills">
               <div class="mini-pill tone-blue"><small>目前主線</small><strong>${html(topTheme.theme || "待資料")}</strong></div>
               <div class="mini-pill tone-green"><small>領先 / 轉強</small><strong>${(phaseCounts["領先"] || 0) + (phaseCounts["轉強"] || 0)} 組</strong></div>
@@ -6190,23 +6227,35 @@
     }
 
     async function renderPositionCalculatorPage() {
-      ++etfToolRequestSeq;
-      const etf = etfByCode(positionCalcCode);
-      const price = num(etf?.close_price, 0);
+      const requestSeq = ++etfToolRequestSeq;
+      const stock = stockById(positionCalcCode);
+      const fallbackPrice = num(stock?.close, 0);
       const budget = Math.max(0, num(positionBudget, 0));
       const risk = Math.max(0, num(positionRiskPct, 0));
-      const lotCost = price * 1000;
-      const lotsByBudget = lotCost ? Math.floor(budget / lotCost) : 0;
-      const maxLoss = budget * risk / 100;
-      const stopPct = Math.max(3, Math.abs(num(etf?.nav_premium, 0)) + 5);
-      const lotsByRisk = price ? Math.floor(maxLoss / (price * 1000 * stopPct / 100)) : 0;
-      const lots = Math.max(0, Math.min(lotsByBudget, lotsByRisk || lotsByBudget));
-      setEtfToolShell("部位試算", "輸入預算與最大風險，估算建議張數。", "張數", "正在試算部位...");
-      $("activeEtfList").innerHTML = `
-        <div class="tool-controls"><div class="tool-input-row"><input id="positionCodeInput" value="${html(positionCalcCode)}" inputmode="latin" placeholder="ETF 代號"><input id="positionBudgetInput" value="${html(positionBudget)}" inputmode="numeric" placeholder="預算"><input id="positionRiskInput" value="${html(positionRiskPct)}" inputmode="decimal" placeholder="風險%"><button data-position-run type="button">試算</button></div><div class="message">停損距離先用 max(3%, 折溢價絕對值+5%) 粗估，之後可接 ATR。</div></div>
-        <div class="mini-pills"><div class="mini-pill tone-blue"><small>建議張數</small><strong>${lots} 張</strong></div><div class="mini-pill tone-red"><small>最大風險</small><strong>${Math.round(maxLoss).toLocaleString("zh-TW")}</strong></div><div class="mini-pill tone-amber"><small>估停損距離</small><strong>${stopPct.toFixed(1)}%</strong></div></div>
-        ${etf ? etfRowHtml(etf, `每張約 ${Math.round(lotCost).toLocaleString("zh-TW")}`) : `<div class="message">找不到 ${html(positionCalcCode)}。</div>`}
-      `;
+      setEtfToolShell("部位試算", "依資金、風險％與 ATR 停損，估算可買張數。", "張數", "正在讀取 ATR...");
+      try {
+        const payload = await getJson(`${API_BASE}/stock/${encodeURIComponent(positionCalcCode)}/atr?days=20`);
+        if (requestSeq !== etfToolRequestSeq) return;
+        const data = payload.data || {};
+        const price = num(data.entry_price, num(data.last_close, fallbackPrice));
+        const atr = num(data.atr, NaN);
+        const stopDistance = Number.isFinite(atr) ? atr * Math.max(0.5, num(positionAtrK, 2)) : price * 0.05;
+        const stopPrice = price ? Math.max(0, price - stopDistance) : 0;
+        const maxLoss = budget * risk / 100;
+        const shares = stopDistance ? Math.floor(maxLoss / stopDistance) : 0;
+        const lotsByRisk = Math.floor(shares / 1000);
+        const lotsByBudget = price ? Math.floor(budget / (price * 1000)) : 0;
+        const lots = Math.max(0, Math.min(lotsByRisk, lotsByBudget));
+        $("activeEtfBadge").textContent = `${lots} 張`;
+        $("activeEtfList").innerHTML = `
+          <div class="tool-controls"><div class="tool-input-row"><input id="positionCodeInput" value="${html(positionCalcCode)}" inputmode="latin" placeholder="個股代號"><input id="positionBudgetInput" value="${html(positionBudget)}" inputmode="numeric" placeholder="資金"><input id="positionRiskInput" value="${html(positionRiskPct)}" inputmode="decimal" placeholder="風險%"><input id="positionAtrInput" value="${html(positionAtrK)}" inputmode="decimal" placeholder="ATR倍數"><button data-position-run type="button">試算</button></div>${data.warning ? `<div class="message">${html(data.warning)}</div>` : `<div class="message">已帶入 START/收盤價與 20 日 ATR；停損價 = 進場價 - ATR × k。</div>`}</div>
+          <div class="mini-pills"><div class="mini-pill tone-blue"><small>建議張數</small><strong>${lots} 張</strong></div><div class="mini-pill tone-red"><small>最大風險</small><strong>${Math.round(maxLoss).toLocaleString("zh-TW")}</strong></div><div class="mini-pill tone-amber"><small>停損價</small><strong>${stopPrice ? stopPrice.toFixed(2) : "待資料"}</strong></div><div class="mini-pill tone-purple"><small>R 倍數</small><strong>1R = ${Number.isFinite(stopDistance) ? stopDistance.toFixed(2) : "待資料"}</strong></div></div>
+          <div class="status-row" data-id="${html(positionCalcCode)}"><strong>${html(positionCalcCode)} ${html(stock?.name || data.stock_name || "")}</strong><div class="meta"><span>進場 ${price ? price.toFixed(2) : "待資料"}</span><span>ATR ${Number.isFinite(atr) ? atr.toFixed(2) : "待資料"}</span><span>資金上限 ${lotsByBudget} 張</span><span>風險上限 ${lotsByRisk} 張</span></div></div>
+        `;
+      } catch (error) {
+        if (requestSeq !== etfToolRequestSeq) return;
+        $("activeEtfList").innerHTML = etfToolError(error);
+      }
     }
 
     function parseNaturalQuery(text = "") {
@@ -6223,20 +6272,23 @@
     }
 
     async function renderNaturalQueryPage() {
-      ++etfToolRequestSeq;
-      const parsed = parseNaturalQuery(naturalQueryText);
-      const rows = activeEtfs.filter(row => {
-        if (parsed.query && !`${row.name || ""} ${row.category || ""} ${row.manager_type || ""}`.includes(parsed.query)) return false;
-        if (num(row.yield_12m, -1) < num(parsed.minYield, 0)) return false;
-        if (Number.isFinite(Number(row.expense_ratio)) && Number(row.expense_ratio) > num(parsed.maxExpense, 99)) return false;
-        if (parsed._maxPremium != null && Math.abs(num(row.nav_premium, 999)) > parsed._maxPremium) return false;
-        return true;
-      }).slice(0, 12);
-      setEtfToolShell("自然語言查詢", "用中文描述條件，轉成 ETF 篩選結果。", `${rows.length} 檔`, "正在解析中文條件...");
-      $("activeEtfList").innerHTML = `
-        <div class="tool-controls"><div class="tool-input-row"><input id="naturalQueryInput" value="${html(naturalQueryText)}" placeholder="例如：找殖利率大於5%、費率低於0.8%的 ETF"><button data-natural-query-run type="button">查詢</button></div><div class="message">解析結果：殖利率 ≥ ${parsed.minYield}%、費率 ≤ ${parsed.maxExpense}%${parsed._maxPremium != null ? `、折溢價 ≤ ${parsed._maxPremium}%` : ""}${parsed.query ? `、關鍵字 ${html(parsed.query)}` : ""}</div></div>
-        ${renderToolRows(rows, row => etfDecisionMetrics(row).yield12m) || `<div class="message">目前沒有符合條件的 ETF。</div>`}
-      `;
+      const requestSeq = ++etfToolRequestSeq;
+      setEtfToolShell("自然語言查詢", "用中文描述條件，轉成 ETF 篩選結果。", "AI", "正在解析中文條件...");
+      try {
+        const payload = await postJson(`${API_BASE}/nlq/etf`, { query: naturalQueryText });
+        if (requestSeq !== etfToolRequestSeq) return;
+        const data = payload.data || {};
+        const rows = data.rows || [];
+        $("activeEtfBadge").textContent = `${rows.length} 檔`;
+        $("activeEtfList").innerHTML = `
+          <div class="tool-controls"><div class="tool-input-row"><input id="naturalQueryInput" value="${html(naturalQueryText)}" placeholder="例如：找殖利率大於5%、費率低於0.8%的 ETF"><button data-natural-query-run type="button">查詢</button></div><div class="message">解析條件：${html(data.sql_explain || "待解析")}</div>${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}</div>
+          ${(Object.entries(data.filters || {}).filter(([, value]) => value != null && value !== "" && !(Array.isArray(value) && !value.length)).map(([key, value]) => `<span class="tool-chip active">${html(key)} ${html(Array.isArray(value) ? value.join("/") : value)}</span>`).join(""))}
+          ${renderToolRows(rows, row => etfDecisionMetrics(row).yield12m) || `<div class="message">目前沒有符合條件的 ETF。</div>`}
+        `;
+      } catch (error) {
+        if (requestSeq !== etfToolRequestSeq) return;
+        $("activeEtfList").innerHTML = etfToolError(error);
+      }
     }
 
     async function renderEtfComparePage() {
@@ -6731,6 +6783,15 @@
       if (complete) {
         etfFilterSettings.completeOnly = complete.checked;
         await renderEtfFilterPage();
+        return;
+      }
+      const portfolioWeightInput = event.target.closest("[data-portfolio-weight]");
+      if (portfolioWeightInput) {
+        const code = portfolioWeightInput.dataset.portfolioWeight;
+        const rows = parsePortfolioRows();
+        const nextRows = rows.map(row => row.code === code ? { ...row, weight: num(portfolioWeightInput.value, row.weight) } : row);
+        etfPortfolioText = nextRows.map(row => `${row.code} ${row.weight}`).join("\n");
+        await renderPortfolioSimulatorPage();
       }
     });
     document.addEventListener("keydown", async event => {
@@ -7012,9 +7073,10 @@
       }
 
       if (event.target.closest("[data-position-run]")) {
-        positionCalcCode = normalizeEtfCode($("positionCodeInput")?.value || positionCalcCode) || positionCalcCode;
+        positionCalcCode = normalizeStockFlowId($("positionCodeInput")?.value || positionCalcCode) || positionCalcCode;
         positionBudget = num($("positionBudgetInput")?.value, positionBudget);
         positionRiskPct = num($("positionRiskInput")?.value, positionRiskPct);
+        positionAtrK = num($("positionAtrInput")?.value, positionAtrK);
         await renderPositionCalculatorPage();
         return;
       }
@@ -7022,6 +7084,13 @@
       if (event.target.closest("[data-natural-query-run]")) {
         naturalQueryText = $("naturalQueryInput")?.value || naturalQueryText;
         await renderNaturalQueryPage();
+        return;
+      }
+
+      const themeDays = event.target.closest("[data-theme-days]");
+      if (themeDays) {
+        themeRadarDays = Number(themeDays.dataset.themeDays || 5);
+        await renderThemeRadarPage();
         return;
       }
 
@@ -7159,6 +7228,18 @@
           return;
         }
         if (type === "chart" && id) { await selectStock(id, "chartView"); return; }
+        if (type === "institutional" && id) {
+          institutionalStockId = normalizeStockFlowId(id) || institutionalStockId;
+          activate("activeEtfView", { skipLoad: true });
+          await renderEtfToolPage("institutional");
+          return;
+        }
+        if (type === "position" && id) {
+          positionCalcCode = normalizeStockFlowId(id) || positionCalcCode;
+          activate("activeEtfView", { skipLoad: true });
+          await renderEtfToolPage("position");
+          return;
+        }
         if (type === "financial") { window.open(`https://statementdog.com/analysis/${id}`, "_blank", "noopener"); return; }
       }
 
