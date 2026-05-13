@@ -5401,6 +5401,14 @@
       return rows.map((row, index) => `<div class="etf-row" data-etf-code="${html(row.code)}"><div class="etf-line"><strong><span class="rank">#${index + 1}</span> ${html(row.code)} ${html(row.name || "")}</strong><span>${html(rightFn(row))}</span></div><div class="meta"><span>${html(simpleThemeOf(row))}</span><span>規模 ${fmtBillion(row.asset_size_billion)}</span><span>費率 ${html(etfDecisionMetrics(row).expense)}</span></div>${metricPillsHtml(row)}</div>`).join("");
     }
 
+    function renderMarketRows(rows, rightFn) {
+      return rows.map((row, index) => {
+        const sourceLabel = row.intraday ? "盤中" : "收盤";
+        const sourceColor = row.intraday ? "var(--green)" : "var(--muted)";
+        return `<div class="etf-row" data-etf-code="${html(row.code)}"><div class="etf-line"><strong><span class="rank">#${index + 1}</span> ${html(row.code)} ${html(row.name || "")}</strong><span>${html(rightFn(row))}</span></div><div class="meta"><span style="color:${sourceColor};font-weight:900">${html(sourceLabel)}</span><span>${html(row.quote_time || row.quote_source || "")}</span><span>${html(simpleThemeOf(row))}</span><span>規模 ${fmtBillion(row.asset_size_billion)}</span></div>${metricPillsHtml(row)}</div>`;
+      }).join("");
+    }
+
     function etfFlowUnavailableHtml(data = {}) {
       const watchRows = activeEtfs
         .filter(row => Number.isFinite(Number(row.asset_size_billion)))
@@ -5679,18 +5687,18 @@
         const movers = data.movers || [];
         const modeLabel = data.data_label || (data.data_mode === "intraday" ? "盤中快照" : "收盤快照");
         const modeNote = data.data_mode === "intraday"
-          ? `TWSE MIS 盤中 ${Number(data.realtime_count || 0)} 檔，約 30 秒快取`
+          ? `排行只採盤中 ${Number(data.realtime_count || 0)} 檔；${Number(data.close_fallback_count || 0)} 檔未納入盤中排行`
           : "目前未取得盤中報價，先顯示收盤快照";
         $("activeEtfBadge").textContent = mood;
         $("activeEtfList").innerHTML = `
           <div class="message">${html(modeLabel)}｜${html(modeNote)}｜更新 ${html(friendlyTime(data.updated_at) || "-")}</div>
           <div class="mini-pills"><div class="mini-pill tone-blue"><small>盤勢情緒</small><strong>${html(mood)}</strong></div><div class="mini-pill tone-green"><small>上漲</small><strong>${up} 檔</strong></div><div class="mini-pill tone-red"><small>下跌</small><strong>${down} 檔</strong></div><div class="mini-pill tone-purple"><small>平均漲跌</small><strong>${Number.isFinite(avg) ? fmtSignedPct(avg) : "-%"}</strong></div></div>
           <div class="section-title">漲幅 Top 5 <span>依${html(modeLabel)}漲跌幅</span></div>
-          ${renderToolRows(gainers, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有漲跌資料。</div>`}
+          ${renderMarketRows(gainers, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有盤中漲幅資料。</div>`}
           <div class="section-title">跌幅 Top 5 <span>依${html(modeLabel)}漲跌幅</span></div>
-          ${renderToolRows(decliners, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有跌幅資料。</div>`}
+          ${renderMarketRows(decliners, row => fmtSignedPct(row.change_rate)) || `<div class="message">目前沒有盤中跌幅資料。</div>`}
           <div class="section-title">規模/資金變化 Top 5 <span>非盤中，依可用快照推估</span></div>
-          ${renderToolRows(movers, row => row.asset_delta_available ? fmtBillionSigned(row.asset_delta_billion) : etfAssetTrendText(row)) || `<div class="message">目前沒有規模變化快照。</div>`}
+          ${renderMarketRows(movers, row => row.asset_delta_available ? fmtBillionSigned(row.asset_delta_billion) : etfAssetTrendText(row)) || `<div class="message">目前沒有規模變化快照。</div>`}
         `;
       } catch (error) {
         if (requestSeq !== etfToolRequestSeq) return;
