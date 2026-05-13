@@ -12,6 +12,8 @@ const checks = [
   ["mobile tool input single column", /@media\s*\(max-width:\s*720px\)[\s\S]*?\.tool-input-row\s*{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/],
   ["mobile range line single column", /@media\s*\(max-width:\s*720px\)[\s\S]*?\.range-line\s*{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/],
   ["type tabs horizontal scroll", /\.etf-type-tabs,[\s\S]*?\.etf-detail-tabs\s*{[\s\S]*?overflow-x:\s*auto[\s\S]*?\.etf-type-tabs button,[\s\S]*?\.etf-detail-tabs button\s*{[\s\S]*?flex:\s*0\s+0\s+auto/],
+  ["etf tool grid children can shrink", /\.etf-tools\s*{[\s\S]*?min-width:\s*0[\s\S]*?\.etf-tools\s*>\s*\*\s*{[\s\S]*?max-width:\s*100%[\s\S]*?min-width:\s*0/],
+  ["etf tool grid items constrained", /\.etf-feature-groups\s*{[\s\S]*?min-width:\s*0[\s\S]*?\.etf-rank-controls\s*{[\s\S]*?min-width:\s*0[\s\S]*?\.etf-type-tabs,[\s\S]*?\.etf-detail-tabs,[\s\S]*?\.etf-sort-row\s*{[\s\S]*?min-width:\s*0/],
   ["mobile metric pills stay grid", /\.metric-pills\s*{[\s\S]*?grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/],
   ["category controls scroll", /\.filters\s*{[\s\S]*?overflow-x:\s*auto/],
   ["sort controls scroll", /\.etf-sort-row\s*{[\s\S]*?overflow-x:\s*auto/],
