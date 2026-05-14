@@ -1309,7 +1309,7 @@ function actionDeltaText(row = {}, kind = "added") {
   if (kind === "holdings") return `${row.weight ?? "-"}%`;
   const shares = Number(row.share_delta);
   if (Number.isFinite(shares) && shares !== 0) return fmtShareUnit(shares, row, true);
-  if (Number.isFinite(shares) && shares === 0) return "股數未變";
+  if (Number.isFinite(shares) && shares === 0) return "持股未動，僅權重變";
   const weightDelta = Number(row.weight_delta);
   if (Number.isFinite(weightDelta)) return fmtSignedPct(weightDelta);
   return "-";
@@ -2630,6 +2630,12 @@ async function renderMarketDashboardPage() {
 }
 
 async function renderHitRatePage() {
+  // 策略勝率還在內部驗證階段，未對外開放。非管理員身分一律導回 ETF 首頁。
+  if (!isWebAdmin()) {
+    activeEtfLevel = "ranking";
+    renderActiveEtfRanking();
+    return;
+  }
   {
     const requestSeq = ++etfToolRequestSeq;
     setEtfToolShell("策略 hit-rate", "用後端追蹤表整理 30 日勝率、最大漲幅與後續表現。", "30 日", "正在讀取策略表現 API...");
@@ -3144,7 +3150,7 @@ async function renderStockEtfFlowPage() {
             <h2>${html(data.stock_id || stockId)} ${html(data.stock_name || "")}</h2>
             <p>${html(data.data_date || "")}・${periodLabel} ETF 持股變動統計</p>
           </div>
-          <div class="stock-flow-counter"><strong>${rows.length} 檔</strong><small>其中 ${currentOnly} 檔目前仍持有</small></div>
+          <div class="stock-flow-counter"><strong>${rows.length} 檔</strong>${currentOnly ? `<small>其中 ${currentOnly} 檔本期新進</small>` : ""}</div>
         </div>
         <div class="period-chips">
           <button class="${stockFlowPeriod === "7d" ? "on" : ""}" data-stock-flow-period="7d" type="button">近 7 日</button>
@@ -3157,7 +3163,7 @@ async function renderStockEtfFlowPage() {
         <div class="sfs dec"><small>減碼 ETF</small><strong>${decreased} 檔</strong></div>
         <div class="sfs net ${netClass}"><small>淨買超金額</small><strong>${html(netText)}</strong></div>
       </div>
-      ${data.warning ? `<div class="message">${html(data.warning)}${weightOnlyCount ? ` 已排除 ${weightOnlyCount} 筆只有權重變動、股數未變的資料。` : ""}</div>` : ""}
+      ${data.warning ? `<div class="message">${html(data.warning)}${weightOnlyCount ? ` 已排除 ${weightOnlyCount} 筆「ETF 沒實際買賣、只是其它持股漲跌讓這檔比重變動」的資料。` : ""}</div>` : ""}
       <div class="page-hint">來源：已快取 ETF 持股 + 前次快照（未快取者不納入）</div>
       ${incRows.length ? `<div class="section-title">加碼 Top ${Math.min(incRows.length, 5)} <span style="color:var(--green)">合計 ${incRows.slice(0, 5).reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0).toFixed(1)} 億</span></div>${incRows.slice(0, 5).map(renderRow).join("")}` : ""}
       ${decRows.length ? `<div class="section-title">減碼 Top ${Math.min(decRows.length, 3)} <span style="color:var(--red)">合計 ${decRows.slice(0, 3).reduce((sum, row) => sum + (Number(row.share_delta_billion) || 0), 0).toFixed(1)} 億</span></div>${decRows.slice(0, 3).map(renderRow).join("")}` : ""}
@@ -3196,7 +3202,7 @@ async function renderHoldingTrendPage() {
         const deltaValue = Number.isFinite(delta) ? delta : 0;
         const deltaClass = !Number.isFinite(delta) || Math.abs(deltaValue) < 0.005 ? "flat" : deltaValue > 0 ? "up" : "dn";
         const barPct = Math.min(50, Math.abs(deltaValue) / maxAbsDelta * 50);
-        const deltaText = Number.isFinite(delta) ? `${deltaValue > 0 ? "+" : ""}${deltaValue.toLocaleString("zh-TW", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ppt` : "—";
+        const deltaText = Number.isFinite(delta) ? `${deltaValue > 0 ? "+" : ""}${deltaValue.toLocaleString("zh-TW", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 百分點` : "—";
         return `<div class="holding-trend-row" data-etf-stock="${html(row.stock_id)}" data-etf-stock-name="${html(row.stock_name || "")}">
           <div class="ht-code">${html(row.stock_id)}</div>
           <div class="ht-name"><strong>${html(row.stock_name || "")}</strong>${st ? `<div class="ht-tags"><span class="ht-tag ${st.tone}">${st.label}</span></div>` : ""}</div>
