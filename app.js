@@ -2251,14 +2251,16 @@ function etfFlowSourceLabel(source) {
   return labels[source] || source || "資料來源";
 }
 
-function etfFlowBarsHtml(row = {}) {
+function etfFlowBarsHtml(row = {}, scaleMax = 0) {
   if (!String(row.source_field || "").startsWith("ifa_net_subscription_")) return "";
   const sub = Number(row.subscription_billion);
   const red = Number(row.redemption_billion);
   if (!Number.isFinite(sub) && !Number.isFinite(red)) return "";
-  const max = Math.max(0.01, sub || 0, red || 0);
-  const subWidth = Math.max(4, Math.round((Math.max(0, sub || 0) / max) * 100));
-  const redWidth = Math.max(4, Math.round((Math.max(0, red || 0) / max) * 100));
+  // 用全頁共用的 scaleMax 把長條 normalize，這樣大流入跟小流入視覺上才會
+  // 拉開差距。沒帶 scale 就 fall back 回自身最大值（向後相容）。
+  const max = scaleMax > 0 ? scaleMax : Math.max(0.01, Math.abs(sub) || 0, Math.abs(red) || 0);
+  const subWidth = Math.max(2, Math.round((Math.max(0, sub || 0) / max) * 100));
+  const redWidth = Math.max(2, Math.round((Math.max(0, red || 0) / max) * 100));
   return `<div class="flow-bars"><div class="flow-bar in"><b>申</b><span><i style="width:${subWidth}%"></i></span><em>${fmtBillion(sub)}</em></div><div class="flow-bar out"><b>贖</b><span><i style="width:${redWidth}%"></i></span><em>${fmtBillion(red)}</em></div></div>`;
 }
 
@@ -2536,6 +2538,14 @@ async function renderEtfFlowPage() {
     const outflows = data.outflows || [];
     const hasFlowData = inflows.length || outflows.length;
     $("activeEtfBadge").textContent = hasFlowData ? (data.data_date || "資料") : "等待快取";
+    // 全頁 (inflows + outflows) 共用一個 bar normalization max，讓「大金額」和
+    // 「小金額」視覺長度真的拉開。沒有此值的話，每列各自 normalize 後所有
+    // 「申」都會長得一樣滿格。
+    const flowScaleMax = [...inflows, ...outflows].reduce((m, row) => {
+      const sub = Math.abs(Number(row.subscription_billion) || 0);
+      const red = Math.abs(Number(row.redemption_billion) || 0);
+      return Math.max(m, sub, red);
+    }, 0.01);
     const flowRow = (row, index, tone) => {
       const isIfa = String(row.source_field || "").startsWith("ifa_net_subscription_");
       const tags = [
@@ -2550,7 +2560,7 @@ async function renderEtfFlowPage() {
           <div class="change-main">
             <div class="change-title"><div class="code">${index + 1}</div><div class="name">${html(row.code)} ${html(row.name || "")}</div></div>
             <div class="change-tags">${tags.map(tag => `<span>${html(tag)}</span>`).join("")}</div>
-            ${etfFlowBarsHtml(row)}
+            ${etfFlowBarsHtml(row, flowScaleMax)}
           </div>
           <div class="delta ${tone === "red" ? "tone-red" : "tone-green"}">${html(row.flow_text || fmtBillionSigned(row.flow_billion))}<small>${tone === "red" ? "流出" : "流入"}</small></div>
         </div>
@@ -2758,7 +2768,7 @@ async function renderDividendCalculatorPage() {
     $("activeEtfBadge").textContent = data.code || dividendCalcCode;
     $("activeEtfList").innerHTML = `
       <div class="tool-controls"><div class="tool-input-row"><input id="dividendCalcCode" value="${html(dividendCalcCode)}" inputmode="latin" placeholder="ETF 代號"><input id="dividendCalcLots" value="${html(lots)}" inputmode="numeric" placeholder="張數"><button data-dividend-calc-run type="button">試算</button></div>${data.warning ? `<div class="message">${html(data.warning)}</div>` : `<div class="message">入帳用最近一次配息金額估算；實際仍以公告為準。</div>`}</div>
-      <div class="mini-pills"><div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${data.yield_12m == null ? etf ? html(etfDecisionMetrics(etf).yield12m) : "待資料" : fmtPctValue(data.yield_12m)}</strong></div><div class="mini-pill tone-blue"><small>估每股配息</small><strong>${Number.isFinite(dps) ? dps.toFixed(2) : "待資料"}</strong></div><div class="mini-pill tone-green"><small>估入帳金額</small><strong>${Number.isFinite(income) ? Math.round(income).toLocaleString("zh-TW") : "待資料"}</strong></div><div class="mini-pill tone-amber"><small>填息中位數</small><strong>${data.median_fill_days == null ? "待資料" : `${data.median_fill_days} 天`}</strong></div></div>
+      <div class="mini-pills"><div class="mini-pill tone-purple"><small>近12月殖利率</small><strong>${data.yield_12m == null ? etf ? html(etfDecisionMetrics(etf).yield12m) : "待資料" : fmtPctValue(data.yield_12m)}</strong></div><div class="mini-pill tone-blue"><small>估每股配息</small><strong>${Number.isFinite(dps) ? dps.toFixed(2) : "待資料"}</strong></div><div class="mini-pill tone-green"><small>估入帳金額 (年)</small><strong>${Number.isFinite(income) ? Math.round(income).toLocaleString("zh-TW") : "待資料"}</strong></div><div class="mini-pill tone-amber"><small>填息中位數</small><strong>${data.median_fill_days == null ? "待資料" : `${data.median_fill_days} 天`}</strong></div></div>
       <div class="section-title">5 年填息歷史 <span>未填息標紅</span></div>
       ${(data.events || []).slice(0, 12).map(row => `<div class="status-row"><strong>${html(row.ex_date || "-")} 除息 ${html(row.amount_text || "")}</strong><div class="meta"><span>發放 ${html(row.payment_date || "-")}</span><span class="${row.filled ? "up" : "dn"}">${row.filled ? `填息 ${html(row.fill_days)} 天` : "尚無填息日"}</span></div></div>`).join("") || `<div class="message">目前沒有配息歷史。</div>`}
     `;
