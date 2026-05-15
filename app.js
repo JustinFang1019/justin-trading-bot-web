@@ -1864,7 +1864,15 @@ function renderActiveEtfDetail() {
   const detailCode = selectedEtf.code || rank.code || "";
   // 新增 + 加碼 合併成一個 tab，靠每列 _flow 標註區分
   const addedRows = (changes.added || []).map(r => ({ ...r, _flow: "added" }));
-  const increasedRows = (changes.increased || []).map(r => ({ ...r, _flow: "increased" }));
+  // 「加碼」只留股數真的增加的；share_delta === 0（股數沒動、只是被其它
+  // 持股推升權重）不算加碼，跟「減碼/出清」的過濾邏輯一致，避免再出現
+  // 台積電那種「張數待資料」的列。
+  const increasedRows = (changes.increased || [])
+    .filter(r => {
+      const sd = Number(r.share_delta);
+      return Number.isFinite(sd) && sd > 0;
+    })
+    .map(r => ({ ...r, _flow: "increased" }));
   // 減碼/出清 只列「張數真的有變」的；純權重變動（share_delta === 0）不列入
   const decreasedRows = (changes.decreased || []).filter(r => {
     const sd = Number(r.share_delta);
@@ -1909,7 +1917,10 @@ function renderActiveEtfDetail() {
       ${officialStamp ? `・更新 ${html(officialStamp)}` : ""}
     </div>
   ` : "";
-  const officialSourceButton = official.source_url ? `<button data-action="external" data-url="${html(official.source_url)}">官網</button>` : "";
+  // 用真正的 <a target=_blank>，不要 button+JS window.open——後者在手機
+  // 會被 popup blocker 擋掉（使用者回報點不動）。
+  const extLink = (url, label) => `<a class="ext-link" href="${html(url)}" target="_blank" rel="noopener">${html(label)}</a>`;
+  const officialSourceButton = official.source_url ? extLink(official.source_url, "官網") : "";
   $("activeEtfList").innerHTML = `
     <div class="etf-hero etf-detail-hero">
       <div class="etf-detail-head">
@@ -1937,9 +1948,9 @@ function renderActiveEtfDetail() {
     <div class="meta"><span>${html(rank.issuer || "")}</span><span>${html(rank.manager_type || "")}</span><span>${html(rank.category || "")}</span><span>${html(rank.index_name || "")}</span></div>
     <div class="suggestions">
       ${officialSourceButton}
-      <button data-action="external" data-url="${html(rank.twse_url || `https://misapi.twse.com.tw/stock/fibest.jsp?stock=${encodeURIComponent(detailCode)}`)}">TWSE</button>
-      <button data-action="external" data-url="${html(rank.moneydj_url || `https://www.moneydj.com/ETF/X/Basic/Basic0004.xdjhtm?etfid=${encodeURIComponent(detailCode)}.TW`)}">MoneyDJ</button>
-      <button data-action="external" data-url="${html(rank.etfinfo_url || `https://www.etfinfo.tw/etf/${encodeURIComponent(detailCode)}`)}">ETFInfo</button>
+      ${extLink(rank.twse_url || `https://mis.twse.com.tw/stock/fibest.jsp?stock=${encodeURIComponent(detailCode)}.tw`, "TWSE")}
+      ${extLink(rank.moneydj_url || `https://www.moneydj.com/ETF/X/Basic/Basic0004.xdjhtm?etfid=${encodeURIComponent(detailCode)}.TW`, "MoneyDJ")}
+      ${extLink(rank.etfinfo_url || `https://www.etfinfo.tw/etf/${encodeURIComponent(detailCode)}`, "ETFInfo")}
     </div>
     ${officialNotice}
     ${unavailable}
