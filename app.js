@@ -38,7 +38,7 @@ function savePrefs() {
     const snapshot = {
       etfCompareCodes, etfHeatmapCodes, etfStockFlowId, stockFlowPeriod,
       etfHoldingTrendCode, etfFlowPeriod, holdingTrendSort, etfPortfolioText,
-      dividendCalcCode, dividendCalcLots,
+      dividendCalcCode, dividendCalcLots, monthlyDivTarget,
       positionCalcCode, positionBudget, positionRiskPct, positionAtrK,
       naturalQueryText, institutionalStockId, themeRadarDays,
     };
@@ -57,6 +57,7 @@ let holdingTrendSort = _p.holdingTrendSort ?? "weight";
 let etfPortfolioText = _p.etfPortfolioText ?? "0050 40\n00878 30\n00919 30";
 let dividendCalcCode = _p.dividendCalcCode ?? "00878";
 let dividendCalcLots = _p.dividendCalcLots ?? 10;
+let monthlyDivTarget = _p.monthlyDivTarget ?? 5000;
 let positionCalcCode = _p.positionCalcCode ?? "2330";
 let positionBudget = _p.positionBudget ?? 300000;
 let positionRiskPct = _p.positionRiskPct ?? 2;
@@ -2508,6 +2509,7 @@ async function renderEtfToolPage(tool, options = {}) {
     institutional: renderInstitutionalPage,
     portfolio: renderPortfolioSimulatorPage,
     dividendCalc: renderDividendCalculatorPage,
+    monthlyDividendPlan: renderMonthlyDividendPlanPage,
     rebalanceRadar: renderRebalanceRadarPage,
     shareCard: renderShareCardPage,
     position: renderPositionCalculatorPage,
@@ -3084,6 +3086,69 @@ async function renderEtfHeatmapPage() {
       </div></div>
       <div class="upcoming-note">重疊度用 holdings weight intersection：sum(min(a.weight, b.weight))。</div>
       <div class="hm-legend"><span>低 &lt;25%</span><div class="hm-scale"><i class="ovl-1"></i><i class="ovl-2"></i><i class="ovl-3"></i><i class="ovl-4"></i><i class="ovl-5"></i></div><span>高 ≥60%</span></div>
+    `;
+  } catch (error) {
+    if (requestSeq !== etfToolRequestSeq) return;
+    $("activeEtfList").innerHTML = etfToolError(error);
+  }
+}
+
+function monthsCoverageText(months) {
+  const set = new Set(months || []);
+  const all = [];
+  for (let m = 1; m <= 12; m++) all.push(set.has(m) ? `${m}` : "·");
+  return all.join(" ");
+}
+
+async function renderMonthlyDividendPlanPage() {
+  const requestSeq = ++etfToolRequestSeq;
+  const target = Math.max(0, num(monthlyDivTarget, 5000));
+  setEtfToolShell("月月配試算", "輸入想每月領的股息，推薦要買哪幾檔、各幾張。", "試算", "正在用官方配息資料試算...");
+  try {
+    const payload = await getJson(`${API_BASE}/etfs/monthly-dividend-plan?target=${encodeURIComponent(target)}`);
+    if (requestSeq !== etfToolRequestSeq) return;
+    const data = payload.data || {};
+    const single = data.single_monthly || [];
+    const rotation = data.rotation || [];
+    $("activeEtfBadge").textContent = `月領 ${target.toLocaleString("zh-TW")}`;
+
+    const fundCard = (f, tone) => `
+      <div class="status-row">
+        <strong>${html(f.code)} ${html(f.name || "")} ｜ 買 ${html(f.suggest_lots)} 張</strong>
+        <div class="meta">
+          <span>每張年配息 ${Math.round(f.annual_per_lot).toLocaleString("zh-TW")}</span>
+          <span>殖利率 ${f.yield_pct == null ? "—" : f.yield_pct + "%"}</span>
+          <span>每張成本 ${f.cost_per_lot == null ? "—" : Math.round(f.cost_per_lot).toLocaleString("zh-TW")}</span>
+          <span class="${tone}">估月領 ${Math.round(f.est_monthly_income).toLocaleString("zh-TW")}</span>
+          <span>配息月 ${monthsCoverageText(f.payout_months)}</span>
+        </div>
+      </div>`;
+
+    $("activeEtfList").innerHTML = `
+      <div class="tool-controls">
+        <div class="tool-input-row">
+          <input id="monthlyDivTarget" value="${html(target)}" inputmode="numeric" placeholder="想每月領多少元">
+          <button data-monthly-div-run type="button">試算</button>
+        </div>
+        <div class="message">${html(data.note || "")}</div>
+        ${data.warning ? `<div class="message">${html(data.warning)}</div>` : ""}
+      </div>
+
+      <div class="section-title">方案 A ｜ 單一月配 ETF <span>挑一檔配息月份最完整、殖利率最高</span></div>
+      ${single.length ? single.map(f => fundCard(f, "up")).join("") : `<div class="message">目前沒有配息月數 ≥ 10 的月配 ETF 資料。</div>`}
+
+      <div class="section-title">方案 B ｜ 季配輪動組合 <span>幾檔錯開除息月，湊成月月有息</span></div>
+      ${rotation.length ? `
+        <div class="mini-pills">
+          <div class="mini-pill tone-green"><small>組合估月領</small><strong>${Math.round(data.rotation_total_monthly || 0).toLocaleString("zh-TW")}</strong></div>
+          <div class="mini-pill tone-blue"><small>組合總成本</small><strong>${Math.round(data.rotation_total_cost || 0).toLocaleString("zh-TW")}</strong></div>
+          <div class="mini-pill tone-purple"><small>覆蓋月份</small><strong>${(data.rotation_months_covered || []).length}/12</strong></div>
+        </div>
+        ${rotation.map(f => fundCard(f, "up")).join("")}
+        <div class="upcoming-note">覆蓋月份：${monthsCoverageText(data.rotation_months_covered)}（數字=有配息的月、·=該月沒息）</div>
+      ` : `<div class="message">目前沒有足夠的季配 ETF 可組成輪動組合。</div>`}
+
+      <div class="upcoming-note">資料來源：${html(data.source || "TWSE")}。金額為近 12 月實配推估，未來不保證相同。</div>
     `;
   } catch (error) {
     if (requestSeq !== etfToolRequestSeq) return;
@@ -3825,6 +3890,12 @@ document.addEventListener("click", async event => {
     dividendCalcCode = normalizeEtfCode($("dividendCalcCode")?.value || dividendCalcCode) || dividendCalcCode;
     dividendCalcLots = num($("dividendCalcLots")?.value, dividendCalcLots);
     await renderDividendCalculatorPage();
+    return;
+  }
+
+  if (event.target.closest("[data-monthly-div-run]")) {
+    monthlyDivTarget = Math.max(0, num($("monthlyDivTarget")?.value, monthlyDivTarget));
+    await renderMonthlyDividendPlanPage();
     return;
   }
 
