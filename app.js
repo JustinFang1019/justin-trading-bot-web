@@ -3078,7 +3078,7 @@ async function renderEtfHeatmapPage() {
     $("activeEtfList").innerHTML = `
       ${etfHeatmapControlsHtml()}
       ${data.warning && data.complete === false ? `<div class="message">${html(data.warning)}</div>` : ""}
-      <div class="heatmap-wrap"><div class="heatmap-grid">
+      <div class="heatmap-wrap"><div class="heatmap-grid" style="grid-template-columns: 96px repeat(${Math.max(1, codes.length)}, 58px); min-width: ${96 + Math.max(1, codes.length) * 58}px;">
         <div class="axis"></div>${codes.map(code => `<div class="axis">${html(code)}</div>`).join("")}
         ${(data.matrix || []).map(row => `<div class="axis">${html(row.code)}</div>${(row.values || []).map(item => `<div class="${item.code === row.code ? "self" : cellClass(item.overlap_pct)}">${item.overlap_pct == null ? "—" : `${item.overlap_pct}%`}</div>`).join("")}`).join("")}
       </div></div>
