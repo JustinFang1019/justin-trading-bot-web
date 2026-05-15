@@ -1895,7 +1895,14 @@ function renderActiveEtfDetail() {
     holdings: { title: "完整持股", rows: selectedEtf.holdings || [], empty: "目前沒有持股明細。", kind: "holdings" }
   };
   const groups = isActiveManagedEtf(rank) ? allGroups : { holdings: allGroups.holdings };
-  if (!groups[activeEtfTab]) activeEtfTab = Object.keys(groups)[0] || "holdings";
+  // fresh entry (activeEtfTab === "__auto__") 或拿到不存在的 tab → 自動挑
+  // 第一個「有列資料」的群組；全空才退回第一個群組。頁內點 tab 設成明確
+  // key（即使該 tab 空）時，這裡不會把使用者搶走。
+  if (activeEtfTab === "__auto__" || !groups[activeEtfTab]) {
+    activeEtfTab = Object.keys(groups).find(k => (groups[k].rows || []).length > 0)
+      || Object.keys(groups)[0]
+      || "holdings";
+  }
   const current = groups[activeEtfTab] || groups.added;
   const heroName = selectedEtf.name || rank.name || "";
   const heroSub = [rank.issuer, rank.manager_type, rank.category, rank.index_name].filter(Boolean).join("・");
@@ -3391,7 +3398,7 @@ async function loadActiveEtfs(options = {}) {
     setCompareCodes(activeEtfPayload.default_compare_codes || etfCompareCodes);
     setHeatmapCodes(activeEtfPayload.default_heatmap_codes || etfHeatmapCodes);
     etfHoldingTrendCode = normalizeEtfCode((activeEtfPayload.default_holding_trend_codes || [])[0]) || etfHoldingTrendCode;
-    activeEtfTab = "added";
+    activeEtfTab = "__auto__";
     renderActiveEtfRanking();
     if (!options.skipRouteSave) saveAppRoute({ view: "activeEtfView", level: "ranking" });
     updateBackButton();
@@ -3416,7 +3423,10 @@ async function loadActiveEtfDetail(code, options = {}) {
     selectedEtf = { ...(payload.data || {}), ranking: payload.data?.ranking || etf };
     selectedUpcomingEtfCode = "";
     const rank = selectedEtf.ranking || {};
-    activeEtfTab = isActiveManagedEtf(rank) ? (activeEtfTab === "ranking" ? "added" : activeEtfTab) : "holdings";
+    // 每次「點進」ETF 詳細頁都重設成自動：renderActiveEtfDetail 會挑
+    // 第一個「有資料」的 tab 停靠（加碼有料就停加碼，否則減碼，否則完整持股）。
+    // 使用者在頁內點 tab 才會設成明確值、不會被搶回去。
+    activeEtfTab = isActiveManagedEtf(rank) ? "__auto__" : "holdings";
     renderActiveEtfDetail();
     if (!options.skipRouteSave) saveAppRoute({ view: "activeEtfView", level: "detail", code: selectedEtf.code || code });
     window.scrollTo({ top: 0, behavior: "smooth" });
