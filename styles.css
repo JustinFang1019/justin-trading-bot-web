@@ -422,7 +422,8 @@ body:not([data-view="scanView"]) .toolbar > .filters {
   color: var(--blue);
 }
 
-.etf-detail-tabs button.increased {
+.etf-detail-tabs button.increased,
+.etf-detail-tabs button.addinc {
   background: var(--green-soft);
   border-color: #bbf7d0;
   color: var(--green);
@@ -446,7 +447,8 @@ body:not([data-view="scanView"]) .toolbar > .filters {
   color: #fff;
 }
 
-.etf-detail-tabs button.increased.active {
+.etf-detail-tabs button.increased.active,
+.etf-detail-tabs button.addinc.active {
   background: var(--green);
   border-color: var(--green);
   color: #fff;

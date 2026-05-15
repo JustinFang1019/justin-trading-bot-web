@@ -1307,19 +1307,26 @@ function fmtCloseChange(row = {}) {
 }
 
 function actionDeltaText(row = {}, kind = "added") {
+  // 完整持股 tab：顯示權重（這是唯一保留權重的地方）
   if (kind === "holdings") return `${row.weight ?? "-"}%`;
+  // 新增/加碼 + 減碼/出清：主數字一律是「張數變化」
   const shares = Number(row.share_delta);
   if (Number.isFinite(shares) && shares !== 0) return fmtShareUnit(shares, row, true);
-  if (Number.isFinite(shares) && shares === 0) return "持股未動，僅權重變";
-  const weightDelta = Number(row.weight_delta);
-  if (Number.isFinite(weightDelta)) return fmtSignedPct(weightDelta);
-  return "-";
+  // 新增（首次出現、無前一筆股數）→ 用目前持股當「+X張」
+  const cur = Number(row.shares ?? row.current_shares);
+  if ((row._flow === "added" || row.is_new) && Number.isFinite(cur) && cur > 0) {
+    return fmtShareUnit(cur, row, true);
+  }
+  return "張數待資料";
 }
 
 function actionDeltaSub(row = {}, kind = "added") {
+  // 完整持股：小字寫「權重」（配合主數字的 X%）
   if (kind === "holdings") return "權重";
-  const weightDelta = Number(row.weight_delta ?? row.weight);
-  return Number.isFinite(weightDelta) ? `權重 ${fmtSignedPct(weightDelta)}` : "股數變化";
+  // 其它 tab：小字寫「±金額」，不再出現權重
+  const billion = Number(row.share_delta_billion ?? row.amount_delta_billion);
+  if (Number.isFinite(billion) && billion !== 0) return fmtMoneyFlow(billion, "");
+  return "";
 }
 
 function stockMarketLabel(row = {}) {
@@ -1330,10 +1337,14 @@ function stockMarketLabel(row = {}) {
 }
 
 function changeNote(row = {}, kind = "added") {
+  // 合併後的「新增/加碼」tab：用每列自己的來源標註區分
+  if (kind === "addinc") {
+    return (row._flow === "added" || row.is_new) ? "新增持股" : "加碼持股";
+  }
   const map = {
     added: "新增持股",
     increased: "加碼持股",
-    decreased: "減碼持股",
+    decreased: (row.is_removed || Number(row.shares ?? row.current_shares) === 0) ? "出清持股" : "減碼持股",
     holdings: `持有 ${fmtShareUnit(row.shares, row)}`
   };
   return map[kind] || "持股";
@@ -1800,7 +1811,7 @@ function renderActiveEtfRanking() {
 }
 
 function changeRows(rows = [], emptyText = "目前沒有異動資料", kind = "added") {
-  const toneMap = { added: "tone-blue", increased: "tone-green", decreased: "tone-red", holdings: "tone-purple" };
+  const toneMap = { added: "tone-blue", increased: "tone-green", addinc: "tone-green", decreased: "tone-red", holdings: "tone-purple" };
   return rows.length ? rows.map(row => {
     const width = Math.max(8, Math.min(100, Math.abs(row.weight || row.weight_delta || 1) * 10));
     const marketLabel = stockMarketLabel(row);
@@ -1850,10 +1861,29 @@ function renderActiveEtfDetail() {
   $("activeEtfBadge").textContent = selectedEtf.ranking?.asset_size_billion ? fmtBillion(selectedEtf.ranking.asset_size_billion) : `${(selectedEtf.holdings || []).length} 檔`;
   const changes = selectedEtf.changes || {};
   const rank = selectedEtf.ranking || {};
+  const detailCode = selectedEtf.code || rank.code || "";
+  // 新增 + 加碼 合併成一個 tab，靠每列 _flow 標註區分
+  const addedRows = (changes.added || []).map(r => ({ ...r, _flow: "added" }));
+  const increasedRows = (changes.increased || []).map(r => ({ ...r, _flow: "increased" }));
+  // 減碼/出清 只列「張數真的有變」的；純權重變動（share_delta === 0）不列入
+  const decreasedRows = (changes.decreased || []).filter(r => {
+    const sd = Number(r.share_delta);
+    return !Number.isFinite(sd) || sd !== 0;
+  });
+  const removedRows = (changes.removed || []).map(r => ({ ...r, is_removed: true }));
   const allGroups = {
-    added: { title: "今日新增", rows: changes.added || [], empty: "今日沒有新增持股。", kind: "added" },
-    increased: { title: "今日加碼", rows: changes.increased || [], empty: "今日沒有加碼資料。", kind: "increased" },
-    decreased: { title: "今日減碼 / 出清", rows: [...(changes.decreased || []), ...(changes.removed || [])], empty: "今日沒有減碼或出清資料。", kind: "decreased" },
+    addinc: {
+      title: "新增/加碼",
+      rows: [...addedRows, ...increasedRows],
+      empty: "今日沒有新增或加碼。",
+      kind: "addinc",
+    },
+    decreased: {
+      title: "減碼/出清",
+      rows: [...decreasedRows, ...removedRows],
+      empty: "今日沒有減碼或出清（純權重變動不列入）。",
+      kind: "decreased",
+    },
     holdings: { title: "完整持股", rows: selectedEtf.holdings || [], empty: "目前沒有持股明細。", kind: "holdings" }
   };
   const groups = isActiveManagedEtf(rank) ? allGroups : { holdings: allGroups.holdings };
@@ -1907,9 +1937,9 @@ function renderActiveEtfDetail() {
     <div class="meta"><span>${html(rank.issuer || "")}</span><span>${html(rank.manager_type || "")}</span><span>${html(rank.category || "")}</span><span>${html(rank.index_name || "")}</span></div>
     <div class="suggestions">
       ${officialSourceButton}
-      ${rank.twse_url ? `<button data-action="external" data-url="${html(rank.twse_url)}">TWSE</button>` : ""}
-      ${rank.moneydj_url ? `<button data-action="external" data-url="${html(rank.moneydj_url)}">MoneyDJ</button>` : ""}
-      ${rank.etfinfo_url ? `<button data-action="external" data-url="${html(rank.etfinfo_url)}">ETFInfo</button>` : ""}
+      <button data-action="external" data-url="${html(rank.twse_url || `https://misapi.twse.com.tw/stock/fibest.jsp?stock=${encodeURIComponent(detailCode)}`)}">TWSE</button>
+      <button data-action="external" data-url="${html(rank.moneydj_url || `https://www.moneydj.com/ETF/X/Basic/Basic0004.xdjhtm?etfid=${encodeURIComponent(detailCode)}.TW`)}">MoneyDJ</button>
+      <button data-action="external" data-url="${html(rank.etfinfo_url || `https://www.etfinfo.tw/etf/${encodeURIComponent(detailCode)}`)}">ETFInfo</button>
     </div>
     ${officialNotice}
     ${unavailable}
