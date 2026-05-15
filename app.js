@@ -1812,8 +1812,16 @@ function renderActiveEtfRanking() {
 
 function changeRows(rows = [], emptyText = "目前沒有異動資料", kind = "added") {
   const toneMap = { added: "tone-blue", increased: "tone-green", addinc: "tone-green", decreased: "tone-red", holdings: "tone-purple" };
+  // 條長 = 該列關鍵數字佔本列表最大值的比例：
+  // 完整持股看「權重」，新增/加碼·減碼/出清看「金額(±億)」(沒有就退而用張數)。
+  const barMetric = (r) => kind === "holdings"
+    ? Math.abs(Number(r.weight) || 0)
+    : Math.abs(Number(r.share_delta_billion ?? r.amount_delta_billion) || Number(r.share_delta) || 0);
+  const barMax = rows.reduce((m, r) => Math.max(m, barMetric(r)), 0);
   return rows.length ? rows.map(row => {
-    const width = Math.max(8, Math.min(100, Math.abs(row.weight || row.weight_delta || 1) * 10));
+    const width = barMax > 0
+      ? Math.max(8, Math.min(100, barMetric(row) / barMax * 100))
+      : 8;
     const marketLabel = stockMarketLabel(row);
     const note = changeNote(row, kind);
     const deltaText = actionDeltaText(row, kind);
