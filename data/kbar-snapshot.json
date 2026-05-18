@@ -1,5 +1,5 @@
 {
-    "generatedAt":  "2026-05-15T11:35:45+00:00",
+    "generatedAt":  "2026-05-18T12:56:09+00:00",
     "source":  "Yahoo Finance chart public endpoint",
     "range":  "6mo",
     "interval":  "1d",
@@ -9,16 +9,8 @@
                                 "symbol":  "3036.TW",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/3036.TW?range=6mo\u0026interval=1d",
                                 "count":  117,
-                                "latestDate":  "2026-05-15",
+                                "latestDate":  "2026-05-18",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-11-17",
-                                                 "open":  148,
-                                                 "high":  149.5,
-                                                 "low":  142.5,
-                                                 "close":  143,
-                                                 "volume":  7923488
-                                             },
                                              {
                                                  "date":  "2025-11-18",
                                                  "open":  135.5,
@@ -945,7 +937,15 @@
                                                  "high":  278,
                                                  "low":  267,
                                                  "close":  270,
-                                                 "volume":  15086645
+                                                 "volume":  14878882
+                                             },
+                                             {
+                                                 "date":  "2026-05-18",
+                                                 "open":  271,
+                                                 "high":  271,
+                                                 "low":  258.5,
+                                                 "close":  263.5,
+                                                 "volume":  8541006
                                              }
                                          ]
                             },
@@ -954,16 +954,8 @@
                                 "symbol":  "3491.TWO",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/3491.TWO?range=6mo\u0026interval=1d",
                                 "count":  117,
-                                "latestDate":  "2026-05-15",
+                                "latestDate":  "2026-05-18",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-11-17",
-                                                 "open":  469,
-                                                 "high":  470,
-                                                 "low":  454,
-                                                 "close":  454.5,
-                                                 "volume":  1285664
-                                             },
                                              {
                                                  "date":  "2025-11-18",
                                                  "open":  450,
@@ -1890,7 +1882,15 @@
                                                  "high":  1725,
                                                  "low":  1615,
                                                  "close":  1690,
-                                                 "volume":  2222688
+                                                 "volume":  2083929
+                                             },
+                                             {
+                                                 "date":  "2026-05-18",
+                                                 "open":  1695,
+                                                 "high":  1855,
+                                                 "low":  1650,
+                                                 "close":  1855,
+                                                 "volume":  2935270
                                              }
                                          ]
                             },
@@ -1899,16 +1899,8 @@
                                 "symbol":  "2327.TW",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/2327.TW?range=6mo\u0026interval=1d",
                                 "count":  117,
-                                "latestDate":  "2026-05-15",
+                                "latestDate":  "2026-05-18",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-11-17",
-                                                 "open":  236,
-                                                 "high":  236,
-                                                 "low":  226,
-                                                 "close":  226.5,
-                                                 "volume":  38124554
-                                             },
                                              {
                                                  "date":  "2025-11-18",
                                                  "open":  227,
@@ -2835,7 +2827,15 @@
                                                  "high":  492.5,
                                                  "low":  447.5,
                                                  "close":  455.5,
-                                                 "volume":  116634094
+                                                 "volume":  114743261
+                                             },
+                                             {
+                                                 "date":  "2026-05-18",
+                                                 "open":  475,
+                                                 "high":  501,
+                                                 "low":  467.5,
+                                                 "close":  501,
+                                                 "volume":  91830164
                                              }
                                          ]
                             },
@@ -2844,16 +2844,8 @@
                                 "symbol":  "6442.TW",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/6442.TW?range=6mo\u0026interval=1d",
                                 "count":  117,
-                                "latestDate":  "2026-05-15",
+                                "latestDate":  "2026-05-18",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-11-17",
-                                                 "open":  1020,
-                                                 "high":  1090,
-                                                 "low":  991,
-                                                 "close":  1090,
-                                                 "volume":  7001450
-                                             },
                                              {
                                                  "date":  "2025-11-18",
                                                  "open":  1080,
@@ -3780,7 +3772,15 @@
                                                  "high":  1890,
                                                  "low":  1700,
                                                  "close":  1740,
-                                                 "volume":  3247581
+                                                 "volume":  3041057
+                                             },
+                                             {
+                                                 "date":  "2026-05-18",
+                                                 "open":  1700,
+                                                 "high":  1840,
+                                                 "low":  1690,
+                                                 "close":  1815,
+                                                 "volume":  2265814
                                              }
                                          ]
                             },
@@ -3789,16 +3789,8 @@
                                 "symbol":  "2330.TW",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/2330.TW?range=6mo\u0026interval=1d",
                                 "count":  117,
-                                "latestDate":  "2026-05-15",
+                                "latestDate":  "2026-05-18",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-11-17",
-                                                 "open":  1450,
-                                                 "high":  1460,
-                                                 "low":  1445,
-                                                 "close":  1445,
-                                                 "volume":  26602730
-                                             },
                                              {
                                                  "date":  "2025-11-18",
                                                  "open":  1435,
@@ -4725,7 +4717,15 @@
                                                  "high":  2325,
                                                  "low":  2250,
                                                  "close":  2265,
-                                                 "volume":  31918359
+                                                 "volume":  29922154
+                                             },
+                                             {
+                                                 "date":  "2026-05-18",
+                                                 "open":  2225,
+                                                 "high":  2260,
+                                                 "low":  2215,
+                                                 "close":  2240,
+                                                 "volume":  28052858
                                              }
                                          ]
                             }
