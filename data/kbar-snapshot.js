@@ -1,5 +1,5 @@
 window.KBAR_SNAPSHOT = {
-    "generatedAt":  "2026-06-05T12:26:28+00:00",
+    "generatedAt":  "2026-06-08T13:53:28+00:00",
     "source":  "Yahoo Finance chart public endpoint",
     "range":  "6mo",
     "interval":  "1d",
@@ -9,16 +9,8 @@ window.KBAR_SNAPSHOT = {
                                 "symbol":  "3036.TW",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/3036.TW?range=6mo\u0026interval=1d",
                                 "count":  118,
-                                "latestDate":  "2026-06-05",
+                                "latestDate":  "2026-06-08",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-12-05",
-                                                 "open":  148,
-                                                 "high":  149,
-                                                 "low":  147,
-                                                 "close":  148.5,
-                                                 "volume":  2983620
-                                             },
                                              {
                                                  "date":  "2025-12-08",
                                                  "open":  148,
@@ -953,7 +945,15 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  284.5,
                                                  "low":  273,
                                                  "close":  281,
-                                                 "volume":  15060752
+                                                 "volume":  14991354
+                                             },
+                                             {
+                                                 "date":  "2026-06-08",
+                                                 "open":  247,
+                                                 "high":  254.5,
+                                                 "low":  246,
+                                                 "close":  250,
+                                                 "volume":  25185442
                                              }
                                          ]
                             },
@@ -962,16 +962,8 @@ window.KBAR_SNAPSHOT = {
                                 "symbol":  "3491.TWO",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/3491.TWO?range=6mo\u0026interval=1d",
                                 "count":  118,
-                                "latestDate":  "2026-06-05",
+                                "latestDate":  "2026-06-08",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-12-05",
-                                                 "open":  531,
-                                                 "high":  543,
-                                                 "low":  525,
-                                                 "close":  529,
-                                                 "volume":  1862704
-                                             },
                                              {
                                                  "date":  "2025-12-08",
                                                  "open":  545,
@@ -1906,7 +1898,15 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  1950,
                                                  "low":  1780,
                                                  "close":  1935,
-                                                 "volume":  1075148
+                                                 "volume":  956052
+                                             },
+                                             {
+                                                 "date":  "2026-06-08",
+                                                 "open":  1745,
+                                                 "high":  1820,
+                                                 "low":  1745,
+                                                 "close":  1785,
+                                                 "volume":  928288
                                              }
                                          ]
                             },
@@ -1915,16 +1915,8 @@ window.KBAR_SNAPSHOT = {
                                 "symbol":  "2327.TW",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/2327.TW?range=6mo\u0026interval=1d",
                                 "count":  118,
-                                "latestDate":  "2026-06-05",
+                                "latestDate":  "2026-06-08",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-12-05",
-                                                 "open":  236.5,
-                                                 "high":  238,
-                                                 "low":  235,
-                                                 "close":  237,
-                                                 "volume":  14518185
-                                             },
                                              {
                                                  "date":  "2025-12-08",
                                                  "open":  238.5,
@@ -2859,7 +2851,15 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  778,
                                                  "low":  670,
                                                  "close":  769,
-                                                 "volume":  28860803
+                                                 "volume":  26975172
+                                             },
+                                             {
+                                                 "date":  "2026-06-08",
+                                                 "open":  693,
+                                                 "high":  751,
+                                                 "low":  693,
+                                                 "close":  751,
+                                                 "volume":  26023946
                                              }
                                          ]
                             },
@@ -2868,16 +2868,8 @@ window.KBAR_SNAPSHOT = {
                                 "symbol":  "6442.TW",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/6442.TW?range=6mo\u0026interval=1d",
                                 "count":  118,
-                                "latestDate":  "2026-06-05",
+                                "latestDate":  "2026-06-08",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-12-05",
-                                                 "open":  1210,
-                                                 "high":  1230,
-                                                 "low":  1185,
-                                                 "close":  1185,
-                                                 "volume":  651517
-                                             },
                                              {
                                                  "date":  "2025-12-08",
                                                  "open":  1200,
@@ -3812,7 +3804,15 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  2170,
                                                  "low":  2000,
                                                  "close":  2055,
-                                                 "volume":  4572679
+                                                 "volume":  4348372
+                                             },
+                                             {
+                                                 "date":  "2026-06-08",
+                                                 "open":  1850,
+                                                 "high":  1970,
+                                                 "low":  1850,
+                                                 "close":  1970,
+                                                 "volume":  1140680
                                              }
                                          ]
                             },
@@ -3821,16 +3821,8 @@ window.KBAR_SNAPSHOT = {
                                 "symbol":  "2330.TW",
                                 "source":  "https://query1.finance.yahoo.com/v8/finance/chart/2330.TW?range=6mo\u0026interval=1d",
                                 "count":  118,
-                                "latestDate":  "2026-06-05",
+                                "latestDate":  "2026-06-08",
                                 "rows":  [
-                                             {
-                                                 "date":  "2025-12-05",
-                                                 "open":  1445,
-                                                 "high":  1460,
-                                                 "low":  1440,
-                                                 "close":  1460,
-                                                 "volume":  21072604
-                                             },
                                              {
                                                  "date":  "2025-12-08",
                                                  "open":  1465,
@@ -4765,7 +4757,15 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  2405,
                                                  "low":  2350,
                                                  "close":  2365,
-                                                 "volume":  38696140
+                                                 "volume":  32795780
+                                             },
+                                             {
+                                                 "date":  "2026-06-08",
+                                                 "open":  2230,
+                                                 "high":  2320,
+                                                 "low":  2230,
+                                                 "close":  2295,
+                                                 "volume":  51824183
                                              }
                                          ]
                             }
