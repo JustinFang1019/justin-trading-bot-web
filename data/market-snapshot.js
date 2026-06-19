@@ -1,10 +1,10 @@
 window.MARKET_SNAPSHOT = {
-    "generatedAt":  "2026-06-18T12:40:01+00:00",
+    "generatedAt":  "2026-06-19T13:01:30+00:00",
     "marketDate":  "20260618",
     "twseTitle":  "115年06月18日 當日日成交資訊 (股)",
     "sources":  {
                     "tpex":  "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes",
-                    "twse":  "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?date=20260618\u0026response=json\u0026_=1781786385"
+                    "twse":  "https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?date=20260619\u0026response=json\u0026_=1781874074"
                 },
     "counts":  {
                    "activeEtfs":  27,

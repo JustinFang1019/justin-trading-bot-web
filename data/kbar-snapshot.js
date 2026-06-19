@@ -1,5 +1,5 @@
 window.KBAR_SNAPSHOT = {
-    "generatedAt":  "2026-06-18T12:40:01+00:00",
+    "generatedAt":  "2026-06-19T13:01:31+00:00",
     "source":  "Yahoo Finance chart public endpoint",
     "range":  "6mo",
     "interval":  "1d",
@@ -953,7 +953,7 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  229,
                                                  "low":  220.5,
                                                  "close":  222.5,
-                                                 "volume":  15920172
+                                                 "volume":  15749729
                                              }
                                          ]
                             },
@@ -1906,7 +1906,7 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  1575,
                                                  "low":  1520,
                                                  "close":  1560,
-                                                 "volume":  1652667
+                                                 "volume":  1476410
                                              }
                                          ]
                             },
@@ -2859,7 +2859,7 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  1080,
                                                  "low":  974,
                                                  "close":  1080,
-                                                 "volume":  93330100
+                                                 "volume":  90546467
                                              }
                                          ]
                             },
@@ -3812,7 +3812,7 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  1950,
                                                  "low":  1840,
                                                  "close":  1945,
-                                                 "volume":  654516
+                                                 "volume":  576314
                                              }
                                          ]
                             },
@@ -4765,7 +4765,7 @@ window.KBAR_SNAPSHOT = {
                                                  "high":  2415,
                                                  "low":  2385,
                                                  "close":  2410,
-                                                 "volume":  48317253
+                                                 "volume":  46429815
                                              }
                                          ]
                             }
